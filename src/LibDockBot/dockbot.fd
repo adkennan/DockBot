@@ -1,0 +1,19 @@
+##base _DockBotBase
+##bias 30
+##public
+* Dock gadget functions
+GetDockGadgetBounds(obj,bounds)(a0/a1)
+* Drawing utilities
+DrawOutsetFrame(rp,bounds)(a0/a1)
+DrawInsetFrame(rp,bounds)(a0/a1)
+* Settings functions
+OpenSettingsRead(filename)(a0)
+OpenSettingsWrite(filename)(a0)
+CloseSettings(settings)(a0)
+ReadBeginBlock(settings)(a0)
+ReadEndBlock(settings)(a0)
+ReadSetting(settings,value)(a0/a1)
+WriteBeginBlock(settings)(a0)
+WriteEndBlock(settings)(a0)
+WriteSetting(settings,key,value)(a0/a1/a2)
+##end
