@@ -27,4 +27,4 @@ $(EXENAME): $(OBJECTS)
 
 clean:
 	@Delete $(OBJECTS)
-	@Delete $(EXEPATH)(EXENAME)(|.info)
+	@Delete $(EXEPATH)(EXENAME)

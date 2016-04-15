@@ -82,7 +82,6 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 			dgd->bounds.y = sb->b->y;			
             dgd->bounds.w = sb->b->w;
             dgd->bounds.h = sb->b->h;
-            printf("bounds = %d, %d, %d, %d\n", sb->b->x, sb->b->y, sb->b->w, sb->b->h);
 			break;
 
         case DM_GETBOUNDS:

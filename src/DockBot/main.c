@@ -15,11 +15,14 @@
 
 #include "dockbot.h"
 
+const char __ver[40] = "$VER:DockBot 1.0 (10.04.2016)";
+
 struct Library *LayersBase;
 struct Library *GfxBase;
 struct Library *IntuitionBase;
 struct Library *WorkbenchBase;
 struct Library *DockBotBase;
+struct Library *IconBase;
 
 int main(int argc, char** argv)
 {
@@ -31,21 +34,25 @@ int main(int argc, char** argv)
 
             if( IntuitionBase = OpenLibrary("intuition.library", 37) ) {
 
-                if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
+                if( IconBase = OpenLibrary("icon.library", 46) ) {
+
+                    if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
     
-                    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+                        if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
 
-                        if( dock = create_dock_window() ) {
+                            if( dock = create_dock_window() ) {
                     
-                            enable_layout(dock);
+                                enable_layout(dock);
 
-                            run_event_loop(dock);                     
+                                run_event_loop(dock);                     
         
-                            close_dock_window(dock);   
+                                close_dock_window(dock);   
+                            }
+                            CloseLibrary(DockBotBase);
                         }
-                        CloseLibrary(DockBotBase);
+                        CloseLibrary(WorkbenchBase);
                     }
-                    CloseLibrary(WorkbenchBase);
+                    CloseLibrary(IconBase);
                 }        
                 CloseLibrary(IntuitionBase);
             }

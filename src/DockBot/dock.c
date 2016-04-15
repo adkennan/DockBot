@@ -478,7 +478,7 @@ BOOL handle_window_event(struct DockWindow *dock)
     struct IntuiMessage *msg;
     struct DgNode *curr;
     BOOL done, redraw;
-    
+    UWORD ix = 0;    
 
     done = FALSE;
     redraw = FALSE;
@@ -495,11 +495,14 @@ BOOL handle_window_event(struct DockWindow *dock)
                         if( dock_gadget_hit_test(curr->dg, msg->MouseX, msg->MouseY) ) {
                 
                             dock_gadget_click(curr->dg, msg->MouseX, msg->MouseY);
+                            if( ix == 0 ) {
+                                done = TRUE;
+                            }
             
                         }
+                        ix++;
                     }
                 }
-                done = TRUE;
                 break;
 
             case IDCMP_CHANGEWINDOW:

@@ -18,7 +18,7 @@ int __saveds __UserLibInit(void)
 
     if(IntuitionBase = OpenLibrary("intuition.library", 37) ) {
         if( GfxBase = OpenLibrary("graphics.library", 37) ) {
-            if( DosBase = OpenLibrary("dos.library', 37) ) {
+            if( DOSBase = OpenLibrary("dos.library", 37) ) {
                 return 0;
             } else {
                 CloseLibrary(GfxBase);

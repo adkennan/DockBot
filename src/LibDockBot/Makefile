@@ -17,9 +17,9 @@ C_OPTS=		STREQ STRMER NOSTKCHK NOSTANDARDIO LIBCODE INCLUDEDIRECTORY=$(INC)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	gfx.c gadget.c settings.c
+C_SOURCES=	lib.c gfx.c gadget.c settings.c
 
-OBJECTS=	gfx.o gadget.o settings.o
+OBJECTS=	lib.o gfx.o gadget.o settings.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib
 
