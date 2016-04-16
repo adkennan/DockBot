@@ -17,3 +17,18 @@ VOID __asm __saveds GetDockGadgetBounds(
     msg.b = bounds;
     DoMethodA(obj, (Msg)&msg);
 }
+
+
+VOID __asm __saveds RequestDockQuit(
+	register __a0 Object *obj)
+{
+    DoMethod(obj, DM_REQ_QUIT);
+}
+
+
+VOID __asm __saveds RequestDockGadgetDraw(
+	register __a0 Object *obj) 
+{
+    DoMethod(obj, DM_REQ_DRAW);
+}
+

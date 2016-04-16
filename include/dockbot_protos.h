@@ -50,4 +50,12 @@ BOOL __asm __saveds WriteSetting(
     register __a1 STRPTR key, 
     register __a2 STRPTR value);
 
+
+VOID __asm __saveds RequestDockQuit(
+	register __a0 Object *obj);
+
+
+VOID __asm __saveds RequestDockGadgetDraw(
+	register __a0 Object *obj);
+
 #endif

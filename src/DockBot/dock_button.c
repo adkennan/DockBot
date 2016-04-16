@@ -60,6 +60,8 @@ struct DockButtonData
     UWORD imageH;
     struct DiskObject *diskObj;
     UWORD startType;
+    UWORD counter;
+    UWORD iconState;
 };
 
 struct Values StartValues[] = {
@@ -80,11 +82,14 @@ VOID dock_button_draw(Object *o, struct DockButtonData *dbd, struct DockMessageD
                 NULL, 
                 bounds.x + (bounds.w - dbd->imageW) / 2, 
                 bounds.y + (bounds.h - dbd->imageH) / 2,
-                0, NULL); 
+                dbd->iconState, NULL); 
     }
 
-    DrawOutsetFrame(dmd->rp, &bounds);
-
+    if( dbd->iconState == 0 ) {
+        DrawOutsetFrame(dmd->rp, &bounds);
+    } else {
+        DrawInsetFrame(dmd->rp, &bounds);
+    }
 }
 
 VOID dock_button_get_size(struct DockButtonData *dbd, struct DockMessageGetSize *gsm) {
@@ -240,18 +245,24 @@ VOID dock_button_click(struct DockButtonData *dbd, Msg msg)
 
 ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
 {
+    struct DockButtonData *dbd;
 
     switch( msg->MethodID ) 
     {
 		case OM_NEW:	
-			return DoSuperMethodA(c, o, msg);
+            o = (Object*)DoSuperMethodA(c, o, msg);
+			return (ULONG)o;
 
         case OM_DISPOSE:
             dispose_button_data(INST_DATA(c,o));
             return DoSuperMethodA(c, o, msg);            
 
         case DM_CLICK:
+            dbd = INST_DATA(c,o);
+            dbd->counter = 2;
+            dbd->iconState = 1;
             dock_button_click(INST_DATA(c,o), msg);
+            RequestDockGadgetDraw(o);
             break;
 
         case DM_DRAW:
@@ -265,6 +276,17 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
         case DM_READCONFIG:
             read_button_settings(INST_DATA(c, o), (struct DockMessageReadSettings*)msg);
             break;
+
+        case DM_TICK:
+            dbd = INST_DATA(c,o);
+            if( dbd->counter > 0 ) {
+                dbd->counter--;
+                if( dbd->counter <= 0 ) {
+                    dbd->iconState = 1 - dbd->iconState;
+                    RequestDockGadgetDraw(o);
+                }
+            }
+            break;            
 
         default:
             return DoSuperMethodA(c, o, msg);

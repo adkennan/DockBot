@@ -11,6 +11,10 @@ Class *init_dock_gadget_class(VOID);
 
 ULONG free_dock_gadget_class(Class * c);
 
+VOID dock_gadget_added(Object *obj, struct MsgPort *dockPort);
+
+VOID dock_gadget_removed(Object *obj);
+
 VOID dock_gadget_tick(Object *obj);
 
 VOID dock_gadget_click(Object *obj, UWORD x, UWORD y);

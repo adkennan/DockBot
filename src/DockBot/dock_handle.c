@@ -13,22 +13,32 @@
 #include "dock_gadget.h"
 #include "dock_handle.h"
 
-
-
 #define HANDLE_SIZE 6
 
+struct DockHandleData {
+    UWORD counter;
+};
 
-VOID dock_handle_draw(Object *o, struct RastPort *rp)
+
+VOID dock_handle_draw(Class *c, Object *o, struct RastPort *rp)
 {
+    struct DockHandleData *dhd;
     struct Rect bounds;
+
+    dhd = INST_DATA(c,o);
 
     GetDockGadgetBounds(o, &bounds);
 
-    DrawOutsetFrame(rp, &bounds);
+    if( dhd->counter == 0 ) {
+        DrawOutsetFrame(rp, &bounds);
+    } else {
+        DrawInsetFrame(rp, &bounds);
+    }
 }
 
 ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
 {
+    struct DockHandleData *dhd;
     struct DockMessageDraw *dm;
     struct DockMessageGetSize *gsm;
 
@@ -36,12 +46,25 @@ ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
     {
 
         case DM_CLICK:
+            dhd = INST_DATA(c,o);
+            dhd->counter = 2;
+            RequestDockGadgetDraw(o);
+            break;
 
+        case DM_TICK:
+            dhd = INST_DATA(c,o);
+            if( dhd->counter > 0 ) {
+                dhd->counter--;
+                if( dhd->counter == 0 ) {
+                    RequestDockGadgetDraw(o);
+                    RequestDockQuit(o);
+                }
+            }
             break;
 
         case DM_DRAW:
             dm = (struct DockMessageDraw *)msg;
-            dock_handle_draw(o, dm->rp);
+            dock_handle_draw(c, o, dm->rp);
             break;
 
         case DM_GETSIZE:
@@ -71,7 +94,7 @@ Class *init_dock_handle_class(VOID)
 {
     ULONG HookEntry();
     Class *c = NULL;
-    if( c = MakeClass(NULL, DB_ROOT_CLASS, NULL, 0, 0) )
+    if( c = MakeClass(NULL, DB_ROOT_CLASS, NULL, sizeof(struct DockHandleData), 0) )
     {
         c->cl_Dispatcher.h_Entry = HookEntry;
         c->cl_Dispatcher.h_SubEntry = dock_handle_dispatch;

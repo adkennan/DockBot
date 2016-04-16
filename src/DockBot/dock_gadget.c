@@ -2,12 +2,17 @@
 #include "dock_gadget.h"
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
+#include "gadget_msg.h"
 
+#include <exec/types.h>
+#include <exec/memory.h>
+#include <exec/ports.h>
 #include <utility/hooks.h>
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
 #include <intuition/cghooks.h>
 
+#include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 
@@ -15,6 +20,7 @@
 
 struct DockGadgetData {
 	struct Rect bounds;
+    struct MsgPort *dockPort;
 };
 
 
@@ -35,6 +41,25 @@ VOID read_settings(Msg msg)
     }    
 }
 
+VOID send_message_to_dock(Class *c, Object *o, GadgetMessageType gm)
+{
+	struct DockGadgetData *dgd = INST_DATA(c,o);
+    struct GadgetMessage *msg;
+
+    if( dgd->dockPort ) {
+        if( msg = AllocMem(sizeof(struct GadgetMessage), MEMF_CLEAR) ) {
+
+            msg->m.mn_Node.ln_Type = NT_MESSAGE;
+            msg->m.mn_Length = sizeof(struct GadgetMessage);
+            msg->m.mn_ReplyPort = NULL;
+            msg->messageType = gm;
+            msg->sender = o;
+
+            PutMsg(dgd->dockPort, (struct Message *)msg);
+        }
+    }
+}
+
 ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 {
 	struct DockMessageGetSize* gs;
@@ -42,7 +67,9 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
     struct DockMessageGetBounds* gb;
     struct DockMessageDraw* dm;
     struct DockMessageHitTest* ht;
+    struct DockMessageAdded *am;
 	struct DockGadgetData *dgd;
+    
 	Object *no = NULL;
 
 	switch( msg->MethodID ) 
@@ -112,6 +139,25 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
             read_settings(msg);
             break;
 
+        case DM_ADDED:
+            dgd = INST_DATA(c,o);
+            am = (struct DockMessageAdded*)msg;
+            dgd->dockPort = am->dockPort;
+            break;
+
+        case DM_REMOVED:
+            dgd = INST_DATA(c,o);
+            dgd->dockPort = NULL;
+            break;
+
+        case DM_REQ_QUIT:
+            send_message_to_dock(c, o, GM_QUIT);
+            break;
+
+        case DM_REQ_DRAW:
+            send_message_to_dock(c, o, GM_DRAW);
+            break;         
+
 		default:
 			return DoSuperMethodA(c, o, msg);
 			
@@ -139,6 +185,21 @@ ULONG free_dock_gadget_class(Class * c)
     RemoveClass(c);
 
     return (ULONG)FreeClass(c);
+}
+
+
+VOID dock_gadget_added(Object *obj, struct MsgPort *dockPort)
+{
+    struct DockMessageAdded msg = {
+        DM_ADDED
+    };
+    msg.dockPort = dockPort;
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID dock_gadget_removed(Object *obj)
+{
+    DoMethod(obj, DM_REMOVED);
 }
 
 VOID dock_gadget_tick(Object *obj)

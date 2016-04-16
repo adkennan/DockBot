@@ -2,7 +2,7 @@
 #include <exec/types.h>
 #include <exec/lists.h>
 #include <exec/memory.h>
-
+#include <exec/io.h>
 #include <workbench/workbench.h>
 #include <workbench/startup.h>
 #include <intuition/intuition.h>
@@ -15,6 +15,7 @@
 #include <clib/alib_protos.h>
 #include <clib/layers_protos.h>
 #include <clib/graphics_protos.h>
+#include <devices/timer.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -28,8 +29,17 @@
 #include "dock_handle.h"
 #include "dock_button.h"
 #include "dock_settings.h"
+#include "gadget_msg.h"
 
 #define CONFIG_FILE "ENV:DockBot.prefs"
+
+typedef enum {
+    RS_STARTING = 1,
+    RS_RUNNING = 2,
+    RS_LAYOUT = 3,
+    RS_QUITTING = 4,
+    RS_STOPPED = 5
+} RunState;
 
 struct DockWindow 
 {
@@ -44,12 +54,20 @@ struct DockWindow
     Class *buttonClass;
     struct MsgPort* notifyPort;
     struct NotifyRequest notifyReq; 
+    struct timerequest *timerReq;
+    struct MsgPort* timerPort;
+    struct MsgPort* gadgetPort;
+    RunState runState;
     BOOL disableLayout;
 };
 
 #define DOCK_SIG(dw) (1 << dw->awPort->mp_SigBit)
 #define WIN_SIG(dw) (1 << dw->win->UserPort->mp_SigBit)
 #define NOTIFY_SIG(dw) (1 << dw->notifyPort->mp_SigBit)
+#define TIMER_SIG(dw) (1 << dw->timerPort->mp_SigBit)
+#define GADGET_SIG(dw) (1 << dw->gadgetPort->mp_SigBit)
+
+#define TIMER_INTERVAL 250L
 
 #define S_ALIGN "align"
 #define S_POSITION "position"
@@ -222,11 +240,51 @@ BOOL create_dock_handle(struct DockWindow *dock)
     return FALSE;
 }
 
-struct DockWindow* create_dock_window(VOID)
+BOOL init_gadget_classes(struct DockWindow *dock)
+{
+    if( dock->gadgetPort = CreateMsgPort() ) {
+        if( dock->gadgetClass = init_dock_gadget_class() ) {
+            if( dock->handleClass = init_dock_handle_class() ) {
+                if( dock->buttonClass = init_dock_button_class() ) {
+                    return TRUE;
+                }
+            }
+        }   
+    }
+    return FALSE;
+}
+
+BOOL init_gadgets(struct DockWindow *dock)
+{
+    NewList((struct List *)&(dock->gadgets));
+
+    if( create_dock_handle(dock) ) {
+        if( load_config(dock) ) {
+            return TRUE;
+        }
+    }
+    return FALSE; 
+}
+
+BOOL init_config_notification(struct DockWindow *dock)
+{
+    if( dock->notifyPort = CreateMsgPort() ) {
+        dock->notifyReq.nr_Name = CONFIG_FILE;
+        dock->notifyReq.nr_Flags = NRF_SEND_MESSAGE | NRF_WAIT_REPLY;
+        dock->notifyReq.nr_stuff.nr_Msg.nr_Port = dock->notifyPort;
+    
+        if( StartNotify(&dock->notifyReq) ) {
+            return TRUE;
+        }
+    }
+    return FALSE; 
+}
+
+BOOL init_dock_window(struct DockWindow *dock)
 {
 	struct Screen *screen;
-	struct DockWindow *dock;
 	UWORD x,y;
+    BOOL result;
 
 	struct TagItem tags[] = {
 		{ WA_Left, 0 },
@@ -239,6 +297,7 @@ struct DockWindow* create_dock_window(VOID)
 		{ TAG_DONE, NULL }
 	};
 
+    result = FALSE;
 	if( screen = LockPubScreen(NULL) ) {
 		
 		x = get_window_left(screen, DA_CENTER, DP_RIGHT, DEFAULT_SIZE);
@@ -247,102 +306,103 @@ struct DockWindow* create_dock_window(VOID)
 		tags[0].ti_Data = x;
 		tags[1].ti_Data = y;
 
-        if( dock = (struct DockWindow *)AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
-		
-    		if( dock->win = OpenWindowTagList(NULL, tags) ) {
+  		if( dock->win = OpenWindowTagList(NULL, tags) ) {
 	    		
-                if( dock->awPort = CreateMsgPort() ) {
+            if( dock->awPort = CreateMsgPort() ) {
 
-                    if( dock->appWin = AddAppWindow(1, 0, dock->win, dock->awPort, NULL) ) {
+                if( dock->appWin = AddAppWindow(1, 0, dock->win, dock->awPort, NULL) ) {
+                    
+                   result = TRUE;
+                }
+            }   
+        }
+        UnlockPubScreen(NULL, screen);
+    }
+    
+    return result;     
+}
+
+BOOL init_timer_notification(struct DockWindow *dock)
+{
+    if( dock->timerPort = CreateMsgPort() ) {
+
+        if( dock->timerReq = (struct timerequest *)CreateExtIO(dock->timerPort, sizeof(struct timerequest) ) ) {
+            
+            if( OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)dock->timerReq, 0L) == 0 ) {
+
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+VOID set_timer(struct DockWindow *dock, ULONG milliseconds) {
+
+    dock->timerReq->tr_node.io_Command = TR_ADDREQUEST;
+    dock->timerReq->tr_time.tv_secs = milliseconds / 1000;
+    dock->timerReq->tr_time.tv_micro = (milliseconds % 1000) * 1000;
+
+    SendIO((struct IORequest *)dock->timerReq);
+}
+
+struct DockWindow* create_dock_window(VOID)
+{
+	struct DockWindow *dock;
+
+    if( dock = (struct DockWindow *)AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
+	
+        dock->runState = RS_STARTING;
+        dock->disableLayout = TRUE;
+        dock->align = DA_CENTER;
+        dock->pos = DP_RIGHT;
+
+        if( init_dock_window(dock) ) {
         
-                        dock->disableLayout = TRUE;
-                        dock->align = DA_CENTER;
-                        dock->pos = DP_RIGHT;
-
-                        if( dock->gadgetClass = init_dock_gadget_class() ) {
-
-                            if( dock->handleClass = init_dock_handle_class() ) {
-
-                                if( dock->buttonClass = init_dock_button_class() ) {
+            if( init_gadget_classes(dock) ) {
                         
-                                    NewList((struct List *)&(dock->gadgets));
-    
-                                    if( create_dock_handle(dock) ) {
-        
-                                        if( load_config(dock) ) {
-    
-                                            if( dock->notifyPort = CreateMsgPort() ) {
-                                                dock->notifyReq.nr_Name = CONFIG_FILE;
-                                                dock->notifyReq.nr_Flags = NRF_SEND_MESSAGE | NRF_WAIT_REPLY;
-                                                dock->notifyReq.nr_stuff.nr_Msg.nr_Port = dock->notifyPort;
-    
-                                                if( StartNotify(&dock->notifyReq) ) {
-        
-                                                } else {
-                                                    // Can't notify.
-                                                }
-                                            } else {
-                                                // Can't create notify port.
-                                                goto error;
-                                            }
-    
-                                        } else {
-                                            // Config is borked.
-                                            goto error;
-                                        }
+                if( init_gadgets(dock) ) {    
+                
+                    if( init_config_notification(dock) ) {
+                        
+                        if( init_timer_notification(dock) ) {
 
-                                    } else {
-                                        // Can't create handle
-                                        goto error;
-                                    }
-                                } else {
-                                    // Can't create button class
-                                    goto error;
-                                }
-                            } else {
-    
-                                // Can't create handle class
-                                goto error;
-                            }
+                            dock->runState = RS_RUNNING;
+                            set_timer(dock, TIMER_INTERVAL);
+
                         } else {
-
-                            // Can't create gadget root class
+                            // Unable to initialize timer
                             goto error;
-                        }
-    	            } else {
-                        // Can't add AppWindow
+                        }        
+                    } else {
+                        // Unable to initialize config notifications.
                         goto error;
                     }
                 } else {
-                    // Can't create port
+    
+                    // Can't initialize gadgets
                     goto error;
                 }
-
-	    	} else {
-		    	// Can't open window
+            } else {
+                // Can't create gadget classes
                 goto error;
-    		}
-
-		} else {
-			// Can't allocate dock
-		}
-		UnlockPubScreen(NULL, screen);
-	}
-	else 
-	{
-		// Can't lock pub screen
-		return NULL;
+            }
+        } else {
+		    // Can't open window
+            goto error;
+        }
+	} else {
+        // Can't allocate dock
 	}
 	return dock;
 
 error:
     printf("Failed to create window\n");
+    
     if( dock ) {
-        close_dock_window(dock);
-    }
+        dock->runState = RS_STOPPED;
 
-    if( screen ) {
-        UnlockPubScreen(NULL, screen);
+        close_dock_window(dock);
     }
 
     return NULL;
@@ -356,6 +416,7 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
     while( ! IsListEmpty((struct List *)&dock->gadgets) ) {
         if( dg = (struct DgNode *)RemTail((struct List *)&dock->gadgets) ) {
+            dock_gadget_removed(dg->dg);
             DisposeObject(dg->dg);
             FreeMem(dg, sizeof(struct DgNode));
         }
@@ -400,6 +461,21 @@ VOID close_dock_window(struct DockWindow* dock)
         free_dock_gadget_class(dock->gadgetClass);
     }
     
+    if( dock->timerPort ) {
+
+        DeletePort(dock->timerPort);
+
+        if( dock->timerReq ) {
+            CloseDevice((struct IORequest *)dock->timerReq);    
+            DeleteExtIO((struct IORequest *)dock->timerReq);    
+        }    
+    }
+
+    if( dock->gadgetPort ) {
+
+        DeletePort(dock->gadgetPort);
+    }
+
 	FreeMem(dock, sizeof(struct DockWindow));
 }
 
@@ -437,23 +513,11 @@ VOID draw_gadgets(struct DockWindow *dock)
     struct Window *win = dock->win;
     struct RastPort *rp = win->RPort;
     struct DgNode *curr;
-/*    struct Region *origClipRegion;
-    struct Region *newClipRegion;
-    struct Rectangle r;
 
-    r.MinX = win->BorderLeft;
-    r.MinY = win->BorderTop;
-    r.MaxX = win->Width - win->BorderRight - 1;
-    r.MaxY = win->Height - win->BorderBottom - 1;
+    LockLayer(NULL, win->WLayer);
     
-    LockLayerInfo(&win->WScreen->LayerInfo);
-
-    newClipRegion = NewRegion();
-    OrRectRegion(newClipRegion, &r);
-
-    origClipRegion = InstallClipRegion(win->WLayer, newClipRegion);
-*/
-    BeginRefresh(win);
+    SetAPen(rp, 0);
+    RectFill(rp, 0, 0, win->Width, win->Height);
 
     for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
                 curr->n.mln_Succ; 
@@ -462,63 +526,67 @@ VOID draw_gadgets(struct DockWindow *dock)
         dock_gadget_draw(curr->dg, rp);
     }
 
-    EndRefresh(win, TRUE);
-/*
-    InstallClipRegion(win->WLayer, origClipRegion);
-
-    UnlockLayerInfo(&win->WScreen->LayerInfo);
-
-    DisposeRegion(newClipRegion);
-*/
+    UnlockLayer(win->WLayer);
 }
 
 
-BOOL handle_window_event(struct DockWindow *dock)
+VOID draw_gadget(struct DockWindow *dock, Object *gadget) {
+    struct Window *win = dock->win;
+    struct RastPort *rp = win->RPort;
+    struct Rect gb;
+
+    GetDockGadgetBounds(gadget, &gb);
+
+    LockLayer(NULL, win->WLayer);
+
+    SetAPen(rp, 0);
+    RectFill(rp, gb.x, gb.y, gb.w, gb.h);
+    
+    dock_gadget_draw(gadget, rp);
+
+    UnlockLayer(win->WLayer);
+}
+
+
+VOID handle_window_event(struct DockWindow *dock)
 {
     struct IntuiMessage *msg;
     struct DgNode *curr;
-    BOOL done, redraw;
     UWORD ix = 0;    
 
-    done = FALSE;
-    redraw = FALSE;
     while( msg = (struct IntuiMessage *)GetMsg(dock->win->UserPort) ) {
     
-        switch( msg->Class )
-        {
-            case IDCMP_MOUSEBUTTONS: 
-                if( msg->Code == SELECTUP ) {
-                    for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
-                         curr->n.mln_Succ;
-                         curr = (struct DgNode *)curr->n.mln_Succ ) {
+        if( dock->runState == RS_RUNNING ) {
+
+            switch( msg->Class )
+            {
+                case IDCMP_MOUSEBUTTONS: 
+                    if( msg->Code == SELECTUP ) {
+                        for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
+                             curr->n.mln_Succ;
+                             curr = (struct DgNode *)curr->n.mln_Succ ) {
                         
-                        if( dock_gadget_hit_test(curr->dg, msg->MouseX, msg->MouseY) ) {
+                            if( dock_gadget_hit_test(curr->dg, msg->MouseX, msg->MouseY) ) {
                 
-                            dock_gadget_click(curr->dg, msg->MouseX, msg->MouseY);
-                            if( ix == 0 ) {
-                                done = TRUE;
+                                dock_gadget_click(curr->dg, msg->MouseX, msg->MouseY);
                             }
-            
+                            ix++;
                         }
-                        ix++;
                     }
-                }
-                break;
-
-            case IDCMP_CHANGEWINDOW:
-            case IDCMP_REFRESHWINDOW:
-                redraw = TRUE;
-                break;
-
+                    break;
+    
+                case IDCMP_CHANGEWINDOW:
+                case IDCMP_REFRESHWINDOW:
+                    BeginRefresh(dock->win);
+                    draw_gadgets(dock);
+                    EndRefresh(dock->win, TRUE);
+                    break;
+            }
         }
         
         ReplyMsg((struct Message *)msg);
 
     }
-    if( redraw ) {
-        draw_gadgets(dock);
-    }
-    return done;
 }
 
 VOID handle_notify_message(struct DockWindow *dock)
@@ -529,31 +597,101 @@ VOID handle_notify_message(struct DockWindow *dock)
         ReplyMsg(msg);
     }
 
-    remove_dock_gadgets(dock);
+    if( dock->runState == RS_RUNNING ) {
 
-    create_dock_handle(dock);
+        remove_dock_gadgets(dock);
 
-    load_config(dock);
+        create_dock_handle(dock);
 
-    enable_layout(dock);
+        load_config(dock);
+
+        enable_layout(dock);
+    }
+}
+
+VOID handle_timer_message(struct DockWindow *dock)
+{
+    struct DgNode *curr;
+    struct Message *msg;
+
+    while( msg = GetMsg(dock->timerPort) ) {
+    }
+
+    for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
+                curr->n.mln_Succ; 
+                curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+        dock_gadget_tick(curr->dg);
+    }
+
+    switch( dock->runState ) {
+
+        case RS_QUITTING:
+            dock->runState = RS_STOPPED;
+            break;
+
+        case RS_RUNNING:
+            set_timer(dock, TIMER_INTERVAL);
+            break;
+
+        default:
+            break;
+    }
+}
+
+VOID handle_gadget_message(struct DockWindow *dock)
+{
+    struct DgNode *curr;
+    struct GadgetMessage *msg;
+    BOOL exists = FALSE;
+    
+    while( msg = (struct GadgetMessage *)GetMsg(dock->gadgetPort) ) {
+        if( dock->runState == RS_RUNNING ) {
+
+            for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
+                 curr->n.mln_Succ; 
+                 curr = (struct DgNode *)curr->n.mln_Succ ) {
+                if( msg->sender == curr->dg ) {
+                    exists = TRUE;
+                    break;
+                }
+            }
+
+            if( exists ) {
+
+                switch( msg->messageType ) {
+                    case GM_DRAW:
+                        draw_gadget(dock, msg->sender);
+                        break;
+
+                    case GM_QUIT:
+                        dock->runState = RS_QUITTING;
+                        break;    
+                }
+            }
+        }
+
+        FreeMem(msg, sizeof(struct GadgetMessage));
+    }
 }
 
 VOID run_event_loop(struct DockWindow *dock)
 {
-    BOOL done = FALSE;
-    ULONG signals, winsig, docksig, notifysig;
+    ULONG signals, winsig, docksig, notifysig, timersig, gadgetsig;
     
     winsig = WIN_SIG(dock);
     docksig = DOCK_SIG(dock);
     notifysig = NOTIFY_SIG(dock);
+    timersig = TIMER_SIG(dock);
+    gadgetsig = GADGET_SIG(dock);
 
-    while( !done ) {
+    while( dock->runState != RS_STOPPED ) {
 
-        signals = Wait( winsig | docksig | notifysig );
+        signals = Wait( winsig | docksig | notifysig | timersig | gadgetsig );
 
         if( signals & winsig ) {
             
-            done = handle_window_event(dock);          
+            handle_window_event(dock);          
         }
 
         if( signals & docksig ) {
@@ -564,6 +702,17 @@ VOID run_event_loop(struct DockWindow *dock)
         if( signals & notifysig ) {
 
             handle_notify_message(dock);
+        }
+
+        if( signals & timersig ) {
+        
+            handle_timer_message(dock);
+        }
+
+        if( signals & gadgetsig ) {
+
+            handle_gadget_message(dock);
+
         }
     }
 }
@@ -580,6 +729,8 @@ VOID layout_gadgets(struct DockWindow *dock)
     if( dock->disableLayout ) {
         return;
     }
+
+    dock->runState = RS_LAYOUT;
 
     if( screen = LockPubScreen(NULL)) {
 
@@ -622,7 +773,6 @@ VOID layout_gadgets(struct DockWindow *dock)
                     x += sizes[i];
                 }                
 
-                ChangeWindowBox(dock->win, 0,0,1,1);
                 ChangeWindowBox(dock->win, 
                     get_window_left(screen, dock->pos, dock->align, x),
                     get_window_top(screen, dock->pos, dock->align, max),
@@ -654,7 +804,6 @@ VOID layout_gadgets(struct DockWindow *dock)
                     y += sizes[i];
                 }                
 
-                ChangeWindowBox(dock->win, 0,0,1,1);
                 ChangeWindowBox(dock->win, 
                     get_window_left(screen, dock->pos, dock->align, max),
                     get_window_top(screen, dock->pos, dock->align, y),
@@ -667,6 +816,16 @@ VOID layout_gadgets(struct DockWindow *dock)
 
         UnlockPubScreen(NULL, screen);
     }
+
+    dock->runState = RS_RUNNING;
+/*
+    for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
+         curr->n.mln_Succ; 
+         curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+        RequestDockGadgetDraw(curr->dg);
+    }
+*/
 }
 
 VOID add_dock_gadget(struct DockWindow *dock, Object *dg)
@@ -675,6 +834,8 @@ VOID add_dock_gadget(struct DockWindow *dock, Object *dg)
     if( n = AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
         n->dg = dg;
         AddTail((struct List *)&(dock->gadgets), (struct Node *)n);
+
+        dock_gadget_added(dg, dock->gadgetPort);
     }
 
     layout_gadgets(dock);
@@ -687,7 +848,8 @@ VOID remove_dock_gadget(struct DockWindow *dock, Object *dg)
                 curr->n.mln_Succ; 
                 curr = (struct DgNode *)curr->n.mln_Succ ) {
         if( curr->dg == dg ) {
-
+            dock_gadget_removed(curr->dg);
+            DisposeObject(curr->dg);
             Remove((struct Node *)curr);
             FreeMem(curr, sizeof(struct DgNode));
             break;

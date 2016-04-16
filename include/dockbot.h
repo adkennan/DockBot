@@ -37,8 +37,18 @@ typedef enum {
 	DM_DRAW			= 0x1205,
 	DM_HITTEST		= 0x1206,
     DM_GETBOUNDS    = 0x1207,
-	DM_READCONFIG	= 0x1208
+	DM_READCONFIG	= 0x1208,
+    DM_ADDED        = 0x1209,
+    DM_REMOVED      = 0x1210,
+    DM_REQ_QUIT     = 0x1211,
+    DM_REQ_DRAW     = 0x1212
 } DockMessage;
+
+struct DockMessageAdded
+{
+    ULONG MethodID;
+    struct MsgPort *dockPort;
+};
 
 struct DockMessageClick
 {

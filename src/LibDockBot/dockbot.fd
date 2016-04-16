@@ -3,6 +3,8 @@
 ##public
 * Dock gadget functions
 GetDockGadgetBounds(obj,bounds)(a0/a1)
+RequestDockQuit(obj)(a0)
+RequestDockGadgetDraw(obj)(a0)
 * Drawing utilities
 DrawOutsetFrame(rp,bounds)(a0/a1)
 DrawInsetFrame(rp,bounds)(a0/a1)
