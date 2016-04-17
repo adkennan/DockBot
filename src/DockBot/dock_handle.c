@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
@@ -57,7 +64,6 @@ ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
                 dhd->counter--;
                 if( dhd->counter == 0 ) {
                     RequestDockGadgetDraw(o);
-                    RequestDockQuit(o);
                 }
             }
             break;

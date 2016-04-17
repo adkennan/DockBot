@@ -1,4 +1,10 @@
-
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #include <intuition/intuition.h>
 #include <clib/intuition_protos.h>

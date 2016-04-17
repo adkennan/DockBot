@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #ifndef __DOCK_GADGET_H__
 #define __DOCK_GADGET_H__
@@ -19,7 +26,7 @@ VOID dock_gadget_tick(Object *obj);
 
 VOID dock_gadget_click(Object *obj, UWORD x, UWORD y);
 
-VOID dock_gadget_drop(Object *obj, STRPTR path);
+VOID dock_gadget_drop(Object *obj, STRPTR *paths, UWORD count);
 
 VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds);
 

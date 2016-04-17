@@ -1,6 +1,13 @@
 ##base _DockBotBase
 ##bias 30
 ##public
+***********************************
+*                                  
+*  DockBot - A Dock For AmigaOS 3  
+*                                  
+*  © 2016 Andrew Kennan            
+*                                  
+***********************************
 * Dock gadget functions
 GetDockGadgetBounds(obj,bounds)(a0/a1)
 RequestDockQuit(obj)(a0)

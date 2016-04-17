@@ -1,3 +1,10 @@
+/************************************/
+/*                                  */
+/*  DockBot - A Dock For AmigaOS 3  */
+/*                                  */
+/*  © 2016 Andrew Kennan            */
+/*                                  */
+/************************************/
 /* Dock gadget functions*/
 #pragma libcall DockBotBase GetDockGadgetBounds 1e 9802
 #pragma libcall DockBotBase RequestDockQuit 24 801

@@ -11,9 +11,9 @@ LIBS=		LIB:sc.lib LIB:amiga.lib
 
 C_OPTS=		INCLUDEDIRECTORY=$(INC)
 
-C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c
+C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c events.c gadgets.c layout.c settings.c
 
-OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o dock_button.o
+OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o dock_button.o events.o gadgets.o layout.o settings.o
 
 $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<
@@ -27,4 +27,4 @@ $(EXENAME): $(OBJECTS)
 
 clean:
 	@Delete $(OBJECTS)
-	@Delete $(EXEPATH)(EXENAME)
+	@Delete $(EXEPATH)$(EXENAME)

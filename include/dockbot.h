@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #ifndef __DOCKBOT_H__
 #define __DOCKBOT_H__
@@ -59,7 +66,8 @@ struct DockMessageClick
 struct DockMessageDrop
 {
 	ULONG MethodID;
-	STRPTR path;
+	STRPTR* paths;
+	UWORD pathCount;
 };
 
 struct DockMessageSetBounds

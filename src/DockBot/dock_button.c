@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
@@ -168,13 +175,21 @@ VOID dispose_button_data(struct DockButtonData *dbd)
     }
 }
 
-VOID dock_button_click(struct DockButtonData *dbd, Msg msg) 
+#define COPY_STRING(src, dst) \
+    l = strlen(src);\
+    CopyMem(src, dst, l);\
+    dst += l;\
+    *dst = ' ';\
+    dst++; 
+
+VOID dock_button_launch(struct DockButtonData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
 {
     STRPTR cmd;
+    STRPTR pos;
     STRPTR con;
-    ULONG wbslen, plen, alen, clen;
     BPTR fhIn;
     BPTR fhOut;
+    UWORD i, len, l;
 
     struct TagItem shellTags[] = {
         { SYS_UserShell, TRUE },
@@ -184,68 +199,62 @@ VOID dock_button_click(struct DockButtonData *dbd, Msg msg)
         { TAG_DONE, 0 }
     };
 
-    plen = strlen(dbd->path);
-    alen = strlen(dbd->args);
-    if( dbd->startType == ST_SH ) {
-        clen = plen + alen + 2;
-        if( cmd = (STRPTR)AllocMem(clen, MEMF_CLEAR) ) {
-            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
-                con = dbd->con;
-                if( con == NULL ) {
-                    con = DEFAULT_CONSOLE;
-                }
-                if( fhOut = Open(con, MODE_OLDFILE) ) {
-
-                    shellTags[2].ti_Data = fhIn;
-                    shellTags[3].ti_Data = fhOut;
-
-                    CopyMem(dbd->path, cmd, plen);
-                    cmd[plen] = ' ';
-                    CopyMem(dbd->args, cmd + plen + 1, alen);
-                    cmd[plen + alen + 1] = '\0';
-
-                    if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
-                        Close(fhIn);
-                        Close(fhOut);
-                    }
-                } else {
-                    Close(fhIn);
-                }
-            } 
-            FreeMem(cmd, clen);
-        }       
-    } else {
-        wbslen = strlen(WBSTART);
-        clen = wbslen + plen + alen + 3;
-        if( cmd = (STRPTR)AllocMem(clen, MEMF_CLEAR) ) {
-            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
-                if( fhOut = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
-                    shellTags[2].ti_Data = fhIn;
-                    shellTags[3].ti_Data = fhOut;
-
-                    CopyMem(WBSTART, cmd, wbslen);
-                    cmd[wbslen] = ' ';
-                    CopyMem(dbd->path, cmd + wbslen + 1, plen);
-                    cmd[wbslen + plen + 1] = ' ';
-                    CopyMem(dbd->args, cmd + wbslen + plen + 2, alen);
-                    cmd[wbslen + plen + alen + 2] = '\0';
-
-                    if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
-                        Close(fhIn);
-                        Close(fhOut);
-                    }
-                } else {
-                    Close(fhIn);
-                }
-            }
-            FreeMem(cmd, clen);
+    
+    len = dbd->startType == ST_WB ? (strlen(WBSTART) + 1) : 0;
+    len += strlen(dbd->path) + 1;
+    if( dbd->args ) {
+        len += strlen(dbd->args) + 1;
+    }
+    for( i = 0; i < dropCount; i++ ) {
+        len += strlen(dropNames[i]) + 1;
+    }
+    if( cmd = (STRPTR)AllocMem(len, MEMF_CLEAR) ) {
+        
+        pos = cmd;
+        if( dbd->startType == ST_WB ) {
+            COPY_STRING(WBSTART, pos);
         }
+        
+        COPY_STRING(dbd->path, pos);
+                
+        if( dbd->args ) {
+            COPY_STRING(dbd->args, pos);
+        }
+
+        for( i = 0; i < dropCount; i++ ) {
+            COPY_STRING(dropNames[i], pos);
+        }
+        pos--;
+        *pos = '\0';
+
+        con = dbd->con;
+        if( con == NULL ) {
+            con = DEFAULT_CONSOLE;
+        }
+
+        if( fhOut = Open(con, MODE_OLDFILE) ) {
+            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
+
+                shellTags[2].ti_Data = fhIn;
+                shellTags[3].ti_Data = fhOut;
+
+                if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
+                    Close(fhIn);
+                    Close(fhOut);
+                }
+
+            } else {
+                Close(fhOut);
+            }
+        }
+        FreeMem(cmd, len);
     }
 }
 
 ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
 {
     struct DockButtonData *dbd;
+    struct DockMessageDrop *dmd;
 
     switch( msg->MethodID ) 
     {
@@ -261,7 +270,16 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             dbd = INST_DATA(c,o);
             dbd->counter = 2;
             dbd->iconState = 1;
-            dock_button_click(INST_DATA(c,o), msg);
+            dock_button_launch(INST_DATA(c,o), msg, NULL, 0);
+            RequestDockGadgetDraw(o);
+            break;
+
+        case DM_DROP:
+            dmd = (struct DockMessageDrop*)msg;
+            dbd = INST_DATA(c,o);
+            dbd->counter = 2;
+            dbd->iconState = 1;
+            dock_button_launch(INST_DATA(c,o), msg, dmd->paths, dmd->pathCount);
             RequestDockGadgetDraw(o);
             break;
 

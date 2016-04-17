@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #ifndef __DOCK_SETTINGS_H__
 #define __DOCK_SETTINGS_H__

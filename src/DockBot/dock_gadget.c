@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #include "dock_gadget.h"
 #include "dockbot_protos.h"
@@ -218,12 +225,13 @@ VOID dock_gadget_click(Object *obj, UWORD x, UWORD y)
 	DoMethodA(obj, (Msg)&msg);
 }
 
-VOID dock_gadget_drop(Object *obj, STRPTR path)
+VOID dock_gadget_drop(Object *obj, STRPTR* paths, UWORD count)
 {
 	struct DockMessageDrop msg = {
 		DM_DROP
 	};
-	msg.path = path;
+	msg.paths = paths;
+    msg.pathCount = count;
 	
 	DoMethodA(obj, (Msg)&msg);
 }

@@ -1,19 +1,14 @@
-#include <exec/types.h>
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
+
 #include <exec/libraries.h>
-#include <intuition/intuition.h>
-#include <intuition/intuitionbase.h>
-#include <intuition/screens.h>
 
 #include <clib/exec_protos.h>
-#include <clib/dos_protos.h>
-#include <clib/intuition_protos.h>
-
-#include <stdio.h>
-
-#include "dock.h"
-#include "dock_gadget.h"
-
-#include "dockbot.h"
 
 const char __ver[40] = "$VER:DockBot 1.0 (10.04.2016)";
 
@@ -23,6 +18,14 @@ struct Library *IntuitionBase;
 struct Library *WorkbenchBase;
 struct Library *DockBotBase;
 struct Library *IconBase;
+struct Library *GadToolsBase;
+
+struct DockWindow;
+
+struct DockWindow *create_dock_window(VOID);
+VOID enable_layout(struct DockWindow *);
+VOID run_event_loop(struct DockWindow *);
+VOID close_dock_window(struct DockWindow *);
 
 int main(int argc, char** argv)
 {
@@ -34,25 +37,29 @@ int main(int argc, char** argv)
 
             if( IntuitionBase = OpenLibrary("intuition.library", 37) ) {
 
-                if( IconBase = OpenLibrary("icon.library", 46) ) {
-
-                    if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
-    
-                        if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
-
-                            if( dock = create_dock_window() ) {
-                    
-                                enable_layout(dock);
-
-                                run_event_loop(dock);                     
+                if( GadToolsBase = OpenLibrary("gadtools.library", 37) ) {
         
-                                close_dock_window(dock);   
+                    if( IconBase = OpenLibrary("icon.library", 46) ) {
+
+                        if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
+    
+                            if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+
+                                if( dock = create_dock_window() ) {
+                    
+                                    enable_layout(dock);
+
+                                    run_event_loop(dock);                     
+        
+                                    close_dock_window(dock);   
+                                }
+                                CloseLibrary(DockBotBase);
                             }
-                            CloseLibrary(DockBotBase);
+                            CloseLibrary(WorkbenchBase);
                         }
-                        CloseLibrary(WorkbenchBase);
+                        CloseLibrary(IconBase);
                     }
-                    CloseLibrary(IconBase);
+                    CloseLibrary(GadToolsBase);
                 }        
                 CloseLibrary(IntuitionBase);
             }
