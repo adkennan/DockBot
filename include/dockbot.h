@@ -36,19 +36,20 @@ struct Rect
 #define DEFAULT_SIZE 48
 
 typedef enum {
-	DM_TICK 		= 0x1200,
-	DM_CLICK 		= 0x1201,
-	DM_DROP 		= 0x1202,
-	DM_SETBOUNDS 	= 0x1203,
-	DM_GETSIZE 		= 0x1204,
-	DM_DRAW			= 0x1205,
-	DM_HITTEST		= 0x1206,
-    DM_GETBOUNDS    = 0x1207,
-	DM_READCONFIG	= 0x1208,
-    DM_ADDED        = 0x1209,
-    DM_REMOVED      = 0x1210,
-    DM_REQ_QUIT     = 0x1211,
-    DM_REQ_DRAW     = 0x1212
+	DM_TICK 		    = 0x1200,
+	DM_CLICK 		    = 0x1201,
+	DM_DROP 		    = 0x1202,
+	DM_SETBOUNDS 	    = 0x1203,
+	DM_GETSIZE 		    = 0x1204,
+	DM_DRAW			    = 0x1205,
+	DM_HITTEST		    = 0x1206,
+    DM_GETBOUNDS        = 0x1207,
+	DM_READCONFIG	    = 0x1208,
+    DM_ADDED            = 0x1209,
+    DM_REMOVED          = 0x1210,
+    DM_REQ_QUIT         = 0x1211,
+    DM_REQ_DRAW         = 0x1212,
+    DM_SETTINGS_CLASS   = 0x1213
 } DockMessage;
 
 struct DockMessageAdded

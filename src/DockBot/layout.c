@@ -16,6 +16,9 @@
 
 #include "dock_gadget.h"
 
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
+
 VOID layout_gadgets(struct DockWindow *dock)
 {
     UWORD w, h, x, y, i, max;
@@ -42,7 +45,7 @@ VOID layout_gadgets(struct DockWindow *dock)
             gadgetCount++;
         }
 
-        if( sizes = (UWORD*)AllocMem(sizeof(UWORD) * gadgetCount, MEMF_CLEAR) ) {
+        if( sizes = (UWORD*)DB_AllocMem(sizeof(UWORD) * gadgetCount, MEMF_CLEAR) ) {
 
             max = 0;
 
@@ -110,7 +113,7 @@ VOID layout_gadgets(struct DockWindow *dock)
      
             }
 
-            FreeMem(sizes, sizeof(UWORD) * gadgetCount);
+            DB_FreeMem(sizes, sizeof(UWORD) * gadgetCount);
         }
 
         UnlockPubScreen(NULL, screen);
@@ -143,7 +146,7 @@ VOID enable_layout(struct DockWindow *dock)
 
 ULONG get_window_top(struct Screen* screen, DockPosition pos, DockAlign align, UWORD height)
 {
-	ULONG t;
+	ULONG t = 0;
 	switch( pos ) 
 	{
 		case DP_LEFT:
@@ -174,7 +177,7 @@ ULONG get_window_top(struct Screen* screen, DockPosition pos, DockAlign align, U
 
 ULONG get_window_left(struct Screen* screen, DockPosition pos, DockAlign align, UWORD width)
 {
-	ULONG l;
+	ULONG l = 0;
 	switch( pos )
 	{
 		case DP_TOP:

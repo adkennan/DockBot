@@ -10,6 +10,8 @@
 
 #include <clib/exec_protos.h>
 
+#include "debug.h"
+
 const char __ver[40] = "$VER:DockBot 1.0 (10.04.2016)";
 
 struct Library *LayersBase;
@@ -52,6 +54,8 @@ int main(int argc, char** argv)
                                     run_event_loop(dock);                     
         
                                     close_dock_window(dock);   
+                    
+                                    LOG_MEMORY
                                 }
                                 CloseLibrary(DockBotBase);
                             }

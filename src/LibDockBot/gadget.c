@@ -13,7 +13,7 @@
 #include "dockbot_protos.h"
 
 
-VOID __asm __saveds GetDockGadgetBounds(
+VOID __asm __saveds DB_GetDockGadgetBounds(
 	register __a0 Object *obj, 
 	register __a1 struct Rect *bounds)
 {
@@ -26,14 +26,14 @@ VOID __asm __saveds GetDockGadgetBounds(
 }
 
 
-VOID __asm __saveds RequestDockQuit(
+VOID __asm __saveds DB_RequestDockQuit(
 	register __a0 Object *obj)
 {
     DoMethod(obj, DM_REQ_QUIT);
 }
 
 
-VOID __asm __saveds RequestDockGadgetDraw(
+VOID __asm __saveds DB_RequestDockGadgetDraw(
 	register __a0 Object *obj) 
 {
     DoMethod(obj, DM_REQ_DRAW);

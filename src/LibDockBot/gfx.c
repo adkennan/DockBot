@@ -65,14 +65,14 @@ static VOID draw_frame(struct RastPort *rp, struct Rect* b, int p1, int p2)
     DrawBorder(rp, &shineBorder, 0, 0);
 }
 
-VOID __asm __saveds DrawOutsetFrame(
+VOID __asm __saveds DB_DrawOutsetFrame(
 	register __a0 struct RastPort *rp, 
 	register __a1 struct Rect *bounds)
 {
     draw_frame(rp, bounds, SHADOWPEN, SHINEPEN);
 }
 
-VOID __asm __saveds DrawInsetFrame(
+VOID __asm __saveds DB_DrawInsetFrame(
 	register __a0 struct RastPort *rp,  
 	register __a1 struct Rect *bounds)
 {

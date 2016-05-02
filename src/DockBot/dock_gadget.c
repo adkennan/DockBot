@@ -33,7 +33,7 @@ struct DockGadgetData {
 
 VOID draw_default_image(Class *c, Object *o, struct RastPort *rp, struct DockGadgetData *dgd)
 {
-    DrawOutsetFrame(rp, &dgd->bounds);
+    DB_DrawOutsetFrame(rp, &dgd->bounds);
 }
 
 VOID read_settings(Msg msg)
@@ -43,7 +43,7 @@ VOID read_settings(Msg msg)
 
     m = (struct DockMessageReadSettings *)msg;
 
-    while( ReadSetting(m->settings, &v) ) {
+    while( DB_ReadSetting(m->settings, &v) ) {
         // Do nothing
     }    
 }
@@ -54,7 +54,7 @@ VOID send_message_to_dock(Class *c, Object *o, GadgetMessageType gm)
     struct GadgetMessage *msg;
 
     if( dgd->dockPort ) {
-        if( msg = AllocMem(sizeof(struct GadgetMessage), MEMF_CLEAR) ) {
+        if( msg = DB_AllocMem(sizeof(struct GadgetMessage), MEMF_CLEAR) ) {
 
             msg->m.mn_Node.ln_Type = NT_MESSAGE;
             msg->m.mn_Length = sizeof(struct GadgetMessage);
@@ -77,7 +77,7 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
     struct DockMessageAdded *am;
 	struct DockGadgetData *dgd;
     
-	Object *no = NULL;
+	Object *no;
 
 	switch( msg->MethodID ) 
 	{
@@ -175,7 +175,7 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 Class *init_dock_gadget_class(VOID)
 {
 	ULONG HookEntry();
-	Class	*c = NULL;
+	Class *c;
 	if( c = MakeClass(DB_ROOT_CLASS, ROOTCLASS, NULL, sizeof(struct DockGadgetData), 0) )
 	{
         c->cl_Dispatcher.h_Entry = HookEntry;
@@ -187,11 +187,11 @@ Class *init_dock_gadget_class(VOID)
 	return c;
 }
 
-ULONG free_dock_gadget_class(Class * c)
+BOOL free_dock_gadget_class(Class * c)
 {
     RemoveClass(c);
 
-    return (ULONG)FreeClass(c);
+    return FreeClass(c);
 }
 
 
@@ -244,15 +244,6 @@ VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds)
 	msg.b = bounds;
 
 	DoMethodA(obj, (Msg)&msg);
-}
-
-VOID dock_gadget_get_bounds(Object *obj, struct Rect *bounds)
-{
-    struct DockMessageGetBounds msg = {
-        DM_GETBOUNDS
-    };
-    DoMethodA(obj, (Msg)&msg);
-    msg.b = bounds;
 }
 
 BOOL dock_gadget_hit_test(Object *obj, UWORD x, UWORD y)

@@ -23,6 +23,9 @@
 
 #include "dock.h"
 
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
+
 #include "dock_gadget.h"
 #include "dock_handle.h"
 #include "dock_button.h"
@@ -97,8 +100,9 @@ BOOL init_dock_window(struct DockWindow *dock)
 struct DockWindow* create_dock_window(VOID)
 {
 	struct DockWindow *dock;
+    const char *err;
 
-    if( dock = (struct DockWindow *)AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
+    if( dock = (struct DockWindow *)DB_AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
 	
         dock->runState = RS_STARTING;
         dock->disableLayout = TRUE;
@@ -120,32 +124,37 @@ struct DockWindow* create_dock_window(VOID)
 
                         } else {
                             // Unable to initialize timer
+                            err = "Timer";
                             goto error;
                         }        
                     } else {
                         // Unable to initialize config notifications.
+                        err = "Notification";
                         goto error;
                     }
-                } else {
-    
+                } else {    
                     // Can't initialize gadgets
+                    err = "Config";
                     goto error;
                 }
             } else {
                 // Can't create gadget classes
+                err = "Classes";
                 goto error;
             }
         } else {
 		    // Can't open window
+            err = "Window";
             goto error;
         }
 	} else {
         // Can't allocate dock
+        err = "Dock";
 	}
 	return dock;
 
 error:
-    printf("Failed to create window\n");
+    printf("Failed to create window: %s\n", err);
     
     if( dock ) {
         dock->runState = RS_STOPPED;
@@ -161,15 +170,22 @@ VOID close_dock_window(struct DockWindow* dock)
 {
     struct Message *msg;
 
+    printf("Close dock window.\n");
+
+    printf(" * gadgets\n");
     remove_dock_gadgets(dock);
 
     if( dock->appWin ) {
+        printf(" * appWin\n");
         RemoveAppWindow(dock->appWin);
     }
 
     if( dock->win ) {
+        printf(" * window\n");
 
         if( dock->menu ) {
+            printf(" * * menu\n");
+
             ClearMenuStrip(dock->win);
             FreeMenus(dock->menu);
         }
@@ -178,6 +194,8 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->awPort ) {
+        printf(" * awPort\n");
+
         while( msg = GetMsg(dock->awPort)) {
             ReplyMsg(msg);
         }
@@ -185,37 +203,57 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->notifyPort ) {
+        printf(" * notifyPort\n");
+
         EndNotify(&dock->notifyReq);
         DeleteMsgPort(dock->notifyPort);
     }
 
     if( dock->buttonClass ) {
-        free_dock_button_class(dock->buttonClass);
+        printf(" * buttonClass\n");
+
+        if( ! free_dock_button_class(dock->buttonClass) ) {
+            printf("Could not free button class\n");
+        }
     }
 
     if( dock->handleClass ) {
-        free_dock_handle_class(dock->handleClass);
+        printf(" * handleClass\n");
+
+        if( ! free_dock_handle_class(dock->handleClass) ) {
+            printf("Could not free handle class\n");
+        }
     }
 
     if( dock->gadgetClass ) {
-        free_dock_gadget_class(dock->gadgetClass);
+        printf(" * gadgetClass\n");
+
+        if( !free_dock_gadget_class(dock->gadgetClass) ) {
+            printf("Could not free root class\n");
+        }
     }
     
     if( dock->timerPort ) {
+        printf(" * timerPort\n");
 
         DeletePort(dock->timerPort);
 
         if( dock->timerReq ) {
+            printf(" * timerReq\n");
+
             CloseDevice((struct IORequest *)dock->timerReq);    
             DeleteExtIO((struct IORequest *)dock->timerReq);    
         }    
     }
 
     if( dock->gadgetPort ) {
+        printf(" * gadgetPort\n");
 
         DeletePort(dock->gadgetPort);
     }
 
-	FreeMem(dock, sizeof(struct DockWindow));
+	DB_FreeMem(dock, sizeof(struct DockWindow));
+
+    printf("Done\n");
 }
 

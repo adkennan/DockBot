@@ -57,9 +57,12 @@ struct DgNode
 {
     struct MinNode n;
     Object *dg;
+	struct Library *lib;
 };
 
 #define TIMER_INTERVAL 250L
+
+VOID log_memory(VOID);
 
 // Settings
 
@@ -111,7 +114,7 @@ VOID draw_gadgets(struct DockWindow *dock);
 
 VOID draw_gadget(struct DockWindow *dock, Object *gadget);
 
-VOID add_dock_gadget(struct DockWindow *dock, Object *dg);
+VOID add_dock_gadget(struct DockWindow *dock, Object *dg, struct Library *lib);
 
 VOID remove_dock_gadget(struct DockWindow *dock, Object *dg);
 

@@ -13,6 +13,6 @@
 
 Class *init_dock_button_class(VOID);
 
-VOID free_dock_button_class(Class *c);
+BOOL free_dock_button_class(Class *c);
 
 #endif

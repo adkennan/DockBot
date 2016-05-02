@@ -81,7 +81,7 @@ VOID dock_button_draw(Object *o, struct DockButtonData *dbd, struct DockMessageD
 {
     struct Rect bounds;
     
-    GetDockGadgetBounds(o, &bounds);  
+    DB_GetDockGadgetBounds(o, &bounds);  
 
     if( dbd->diskObj ) {
 
@@ -93,9 +93,9 @@ VOID dock_button_draw(Object *o, struct DockButtonData *dbd, struct DockMessageD
     }
 
     if( dbd->iconState == 0 ) {
-        DrawOutsetFrame(dmd->rp, &bounds);
+        DB_DrawOutsetFrame(dmd->rp, &bounds);
     } else {
-        DrawInsetFrame(dmd->rp, &bounds);
+        DB_DrawInsetFrame(dmd->rp, &bounds);
     }
 }
 
@@ -129,7 +129,7 @@ VOID read_button_settings(struct DockButtonData *dbd, struct DockMessageReadSett
     struct Screen *screen;
     UWORD len;
 
-    while( ReadSetting(m->settings, &v) ) {
+    while( DB_ReadSetting(m->settings, &v) ) {
         
         if( IS_KEY(S_NAME, v) ) {
             GET_STRING(v, dbd->name)     
@@ -208,7 +208,7 @@ VOID dock_button_launch(struct DockButtonData *dbd, Msg msg, STRPTR* dropNames, 
     for( i = 0; i < dropCount; i++ ) {
         len += strlen(dropNames[i]) + 1;
     }
-    if( cmd = (STRPTR)AllocMem(len, MEMF_CLEAR) ) {
+    if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
         
         pos = cmd;
         if( dbd->startType == ST_WB ) {
@@ -247,7 +247,7 @@ VOID dock_button_launch(struct DockButtonData *dbd, Msg msg, STRPTR* dropNames, 
                 Close(fhOut);
             }
         }
-        FreeMem(cmd, len);
+        DB_FreeMem(cmd, len);
     }
 }
 
@@ -271,7 +271,7 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             dbd->counter = 2;
             dbd->iconState = 1;
             dock_button_launch(INST_DATA(c,o), msg, NULL, 0);
-            RequestDockGadgetDraw(o);
+            DB_RequestDockGadgetDraw(o);
             break;
 
         case DM_DROP:
@@ -280,7 +280,7 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             dbd->counter = 2;
             dbd->iconState = 1;
             dock_button_launch(INST_DATA(c,o), msg, dmd->paths, dmd->pathCount);
-            RequestDockGadgetDraw(o);
+            DB_RequestDockGadgetDraw(o);
             break;
 
         case DM_DRAW:
@@ -301,7 +301,7 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
                 dbd->counter--;
                 if( dbd->counter <= 0 ) {
                     dbd->iconState = 1 - dbd->iconState;
-                    RequestDockGadgetDraw(o);
+                    DB_RequestDockGadgetDraw(o);
                 }
             }
             break;            
@@ -316,7 +316,7 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
 Class *init_dock_button_class(VOID) 
 {
     ULONG HookEntry();
-    Class *c = NULL;
+    Class *c;
     if( c = MakeClass(CLASS_NAME, DB_ROOT_CLASS, NULL, sizeof(struct DockButtonData), 0) )
     {
         c->cl_Dispatcher.h_Entry = HookEntry;
@@ -328,9 +328,9 @@ Class *init_dock_button_class(VOID)
     return c;
 }
 
-VOID free_dock_button_class(Class *c)
+BOOL free_dock_button_class(Class *c)
 {
     RemoveClass(c);
 
-    FreeClass(c);
+    return FreeClass(c);
 }

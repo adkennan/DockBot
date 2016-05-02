@@ -9,11 +9,11 @@ LINKER=		SC:c/slink
 
 LIBS=		LIB:sc.lib LIB:amiga.lib 
 
-C_OPTS=		INCLUDEDIRECTORY=$(INC)
+C_OPTS=		opt cpu=68030 INCLUDEDIRECTORY=$(INC) def DEBUG_MEM
 
-C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c events.c gadgets.c layout.c settings.c
+C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c events.c gadgets.c layout.c settings.c debug.c
 
-OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o dock_button.o events.o gadgets.o layout.o settings.o
+OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o dock_button.o events.o gadgets.o layout.o settings.o debug.o
 
 $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<

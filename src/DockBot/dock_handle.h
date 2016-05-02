@@ -13,6 +13,6 @@
 
 Class *init_dock_handle_class(VOID);
 
-VOID free_dock_handle_class(Class *c);
+BOOL free_dock_handle_class(Class *c);
 
 #endif

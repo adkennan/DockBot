@@ -34,12 +34,12 @@ VOID dock_handle_draw(Class *c, Object *o, struct RastPort *rp)
 
     dhd = INST_DATA(c,o);
 
-    GetDockGadgetBounds(o, &bounds);
+    DB_GetDockGadgetBounds(o, &bounds);
 
     if( dhd->counter == 0 ) {
-        DrawOutsetFrame(rp, &bounds);
+        DB_DrawOutsetFrame(rp, &bounds);
     } else {
-        DrawInsetFrame(rp, &bounds);
+        DB_DrawInsetFrame(rp, &bounds);
     }
 }
 
@@ -55,7 +55,7 @@ ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
         case DM_CLICK:
             dhd = INST_DATA(c,o);
             dhd->counter = 2;
-            RequestDockGadgetDraw(o);
+            DB_RequestDockGadgetDraw(o);
             break;
 
         case DM_TICK:
@@ -63,7 +63,7 @@ ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
             if( dhd->counter > 0 ) {
                 dhd->counter--;
                 if( dhd->counter == 0 ) {
-                    RequestDockGadgetDraw(o);
+                    DB_RequestDockGadgetDraw(o);
                 }
             }
             break;
@@ -99,7 +99,7 @@ ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
 Class *init_dock_handle_class(VOID) 
 {
     ULONG HookEntry();
-    Class *c = NULL;
+    Class *c;
     if( c = MakeClass(NULL, DB_ROOT_CLASS, NULL, sizeof(struct DockHandleData), 0) )
     {
         c->cl_Dispatcher.h_Entry = HookEntry;
@@ -109,7 +109,7 @@ Class *init_dock_handle_class(VOID)
     return c;
 }
 
-VOID free_dock_handle_class(Class *c)
+BOOL free_dock_handle_class(Class *c)
 {
-    FreeClass(c);
+    return FreeClass(c);
 }

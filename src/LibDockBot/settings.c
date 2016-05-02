@@ -38,7 +38,12 @@ struct DockSettings
     BPTR fh;
 };
 
-struct DockSettings * __asm __saveds OpenSettingsRead(
+VOID* AllocMemInternal(ULONG byteSize, ULONG attributes);
+
+VOID FreeMemInternal(VOID *memoryBlock, ULONG byteSize);
+
+
+struct DockSettings * __asm __saveds DB_OpenSettingsRead(
     register __a0 STRPTR filename)
 {
     BPTR fh;
@@ -53,17 +58,17 @@ struct DockSettings * __asm __saveds OpenSettingsRead(
 
             if( ExamineFH(fh, fib) ) {
     
-                if( s = (struct DockSettings *)AllocMem(sizeof(struct DockSettings), MEMF_CLEAR) ) {
+                if( s = (struct DockSettings *)AllocMemInternal(sizeof(struct DockSettings), MEMF_CLEAR) ) {
                     
                     s->size = fib->fib_Size;
-                    s->buffer = (STRPTR)AllocMem(s->size, MEMF_CLEAR);
+                    s->buffer = (STRPTR)AllocMemInternal(s->size, MEMF_CLEAR);
                     s->pos = 0;
                     s->depth = 0;
                     s->fh = 0;
                     if( ! Read(fh, s->buffer, s->size) ) {
         
-                        FreeMem(s->buffer, s->size);
-                        FreeMem(s, sizeof(struct DockSettings));
+                        FreeMemInternal(s->buffer, s->size);
+                        FreeMemInternal(s, sizeof(struct DockSettings));
                         s = NULL;
                     }
                 }
@@ -76,7 +81,7 @@ struct DockSettings * __asm __saveds OpenSettingsRead(
     return s;
 }
 
-struct DockSettings * __asm __saveds OpenSettingsWrite(
+struct DockSettings * __asm __saveds DB_OpenSettingsWrite(
     register __a0 STRPTR filename)
 {
     BPTR fh;
@@ -85,7 +90,7 @@ struct DockSettings * __asm __saveds OpenSettingsWrite(
     s = NULL;
     if( fh = Open(filename, MODE_READWRITE) ) {
     
-        if( s = (struct DockSettings *)AllocMem(sizeof(struct DockSettings *), MEMF_CLEAR) ) {
+        if( s = (struct DockSettings *)AllocMemInternal(sizeof(struct DockSettings *), MEMF_CLEAR) ) {
             s->size = 0;
             s->buffer = NULL;
             s->pos = 0;
@@ -99,7 +104,7 @@ struct DockSettings * __asm __saveds OpenSettingsWrite(
     return s;
 }
 
-VOID __asm __saveds CloseSettings(
+VOID __asm __saveds DB_CloseSettings(
     register __a0 struct DockSettings *settings)
 {
     if( settings->fh != 0 ) {
@@ -107,9 +112,9 @@ VOID __asm __saveds CloseSettings(
     }
 
     if( settings->buffer ) {
-        FreeMem(settings->buffer, settings->size);
+        FreeMemInternal(settings->buffer, settings->size);
     }
-    FreeMem(settings, sizeof(struct DockSettings));
+    FreeMemInternal(settings, sizeof(struct DockSettings));
 }
 
 static BOOL WriteIndent(struct DockSettings *settings)
@@ -187,7 +192,7 @@ static BOOL ReadTo(struct DockSettings *settings, UBYTE b, UWORD *len, BOOL allo
     return FALSE;
 }
 
-BOOL __asm __saveds ReadBeginBlock(
+BOOL __asm __saveds DB_ReadBeginBlock(
     register __a0 struct DockSettings *settings)
 {
     UWORD pos;
@@ -205,7 +210,7 @@ BOOL __asm __saveds ReadBeginBlock(
     return FALSE;
 }
 
-BOOL __asm __saveds ReadEndBlock(
+BOOL __asm __saveds DB_ReadEndBlock(
     register __a0 struct DockSettings *settings)
 {
     UWORD pos;
@@ -224,7 +229,7 @@ BOOL __asm __saveds ReadEndBlock(
     return FALSE;
 }
 
-BOOL __asm __saveds ReadSetting(
+BOOL __asm __saveds DB_ReadSetting(
     register __a0 struct DockSettings *settings, 
     register __a1 struct DockSettingValue *value)
 {
@@ -249,7 +254,7 @@ BOOL __asm __saveds ReadSetting(
     return TRUE;
 }
 
-BOOL __asm __saveds WriteBeginBlock(
+BOOL __asm __saveds DB_WriteBeginBlock(
     register __a0 struct DockSettings *settings)
 {
     LONG len;
@@ -267,7 +272,7 @@ BOOL __asm __saveds WriteBeginBlock(
     return TRUE;
 }
 
-BOOL __asm __saveds WriteEndBlock(
+BOOL __asm __saveds DB_WriteEndBlock(
     register __a0 struct DockSettings *settings)
 {
     LONG len;
@@ -285,7 +290,7 @@ BOOL __asm __saveds WriteEndBlock(
     return TRUE;
 }
 
-BOOL __asm __saveds WriteSetting(
+BOOL __asm __saveds DB_WriteSetting(
     register __a0 struct DockSettings *settings, 
     register __a1 STRPTR key, 
     register __a2 STRPTR value)

@@ -17,6 +17,8 @@
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
+#include <stdio.h>
+
 #define CONFIG_FILE "ENV:DockBot.prefs"
 
 #define S_ALIGN "align"
@@ -44,15 +46,32 @@ BOOL create_dock_gadget(struct DockWindow *dock, struct DockSettings *settings)
     struct DockSettingValue v;
     Object *gad;
     char gadName[50];
+    char libName[50];
+    struct Library *lib;
 
-    while( ReadSetting(settings, &v) ) {
+    STRPTR suffix = ".class";
+
+    while( DB_ReadSetting(settings, &v) ) {
         if( IS_KEY(S_GADGET, v) ) {
+            CopyMem(v.Value, &libName, v.ValueLength);
+            CopyMem(suffix, &libName[v.ValueLength], 7);
+            printf("Trying to open \"%s\"\n", libName);
+            if( lib = OpenLibrary(libName, 1) ) {
+                printf("Opened library\n");
+            }
+            
             CopyMem(v.Value, &gadName, v.ValueLength);
             if( gad = NewObjectA(NULL, gadName, TAG_DONE ) ) {
+                printf("Created gadget %s\n", gadName);
                 dock_gadget_read_settings(gad, settings);
-                add_dock_gadget(dock, gad);
+                add_dock_gadget(dock, gad, lib);
 
                 return TRUE;                
+            } else {
+                printf("Can't create instance of %s\n", gadName);
+                if( lib ) {
+                    CloseLibrary(lib);
+                }
             }
             break;
         }
@@ -70,26 +89,26 @@ BOOL load_config(struct DockWindow *dock)
     BOOL r;
 
     r = TRUE;
-    if( s = OpenSettingsRead(CONFIG_FILE) ) {
+    if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 
-        if( ReadBeginBlock(s) ) {
+        if( DB_ReadBeginBlock(s) ) {
 
             while( TRUE ) {
 
-                if( ReadBeginBlock(s) ) {
+                if( DB_ReadBeginBlock(s) ) {
                     if( ! create_dock_gadget(dock, s) ) {
                         r = FALSE;
                         break;
                     }
-                    if( !ReadEndBlock(s) ) {
+                    if( !DB_ReadEndBlock(s) ) {
                         r = FALSE;
                         break;
                     }
                 }
-                if( ReadEndBlock(s) ) {
+                if( DB_ReadEndBlock(s) ) {
                     break;
                 }
-                if( ReadSetting(s, &v) ) {
+                if( DB_ReadSetting(s, &v) ) {
                     if( IS_KEY(S_ALIGN, v) ) {
                         GET_VALUE(v, AlignValues, vals, l, dock->align)
                     }
@@ -100,7 +119,7 @@ BOOL load_config(struct DockWindow *dock)
                 }
             }
         }
-        CloseSettings(s);
+        DB_CloseSettings(s);
     }
     return r;
     

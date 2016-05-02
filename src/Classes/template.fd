@@ -1,0 +1,13 @@
+##base _DockGadgetBase
+##bias 30
+##public
+***********************************
+*                                  
+*  DockBot - A Dock For AmigaOS 3  
+*                                  
+*  © 2016 Andrew Kennan            
+*                                  
+***********************************
+* 
+_GetEngine()
+##end

@@ -27,7 +27,7 @@ BOOL create_dock_handle(struct DockWindow *dock)
     
     if( gad = NewObjectA(dock->handleClass, NULL, TAG_DONE) ) {
 
-        add_dock_gadget(dock, gad);
+        add_dock_gadget(dock, gad, NULL);
 
         return TRUE;
     }
@@ -72,7 +72,7 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
         if( dg = (struct DgNode *)RemTail((struct List *)&dock->gadgets) ) {
             dock_gadget_removed(dg->dg);
             DisposeObject(dg->dg);
-            FreeMem(dg, sizeof(struct DgNode));
+            DB_FreeMem(dg, sizeof(struct DgNode));
         }
     }
 }
@@ -106,7 +106,7 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
     struct RastPort *rp = win->RPort;
     struct Rect gb;
 
-    GetDockGadgetBounds(gadget, &gb);
+    DB_GetDockGadgetBounds(gadget, &gb);
 
     LockLayer(NULL, win->WLayer);
 
@@ -119,11 +119,12 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 }
 
 
-VOID add_dock_gadget(struct DockWindow *dock, Object *dg)
+VOID add_dock_gadget(struct DockWindow *dock, Object *dg, struct Library *lib)
 {
     struct DgNode *n;
-    if( n = AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
+    if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
         n->dg = dg;
+        n->lib = lib;
         AddTail((struct List *)&(dock->gadgets), (struct Node *)n);
 
         dock_gadget_added(dg, dock->gadgetPort);
@@ -141,8 +142,13 @@ VOID remove_dock_gadget(struct DockWindow *dock, Object *dg)
         if( curr->dg == dg ) {
             dock_gadget_removed(curr->dg);
             DisposeObject(curr->dg);
+            
+            if( curr->lib ) {
+                CloseLibrary(curr->lib);
+            }
+
             Remove((struct Node *)curr);
-            FreeMem(curr, sizeof(struct DgNode));
+            DB_FreeMem(curr, sizeof(struct DgNode));
             break;
         }     
     } 

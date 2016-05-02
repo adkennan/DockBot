@@ -9,20 +9,24 @@
 *                                  
 ***********************************
 * Dock gadget functions
-GetDockGadgetBounds(obj,bounds)(a0/a1)
-RequestDockQuit(obj)(a0)
-RequestDockGadgetDraw(obj)(a0)
+DB_GetDockGadgetBounds(obj,bounds)(a0/a1)
+DB_RequestDockQuit(obj)(a0)
+DB_RequestDockGadgetDraw(obj)(a0)
 * Drawing utilities
-DrawOutsetFrame(rp,bounds)(a0/a1)
-DrawInsetFrame(rp,bounds)(a0/a1)
+DB_DrawOutsetFrame(rp,bounds)(a0/a1)
+DB_DrawInsetFrame(rp,bounds)(a0/a1)
 * Settings functions
-OpenSettingsRead(filename)(a0)
-OpenSettingsWrite(filename)(a0)
-CloseSettings(settings)(a0)
-ReadBeginBlock(settings)(a0)
-ReadEndBlock(settings)(a0)
-ReadSetting(settings,value)(a0/a1)
-WriteBeginBlock(settings)(a0)
-WriteEndBlock(settings)(a0)
-WriteSetting(settings,key,value)(a0/a1/a2)
+DB_OpenSettingsRead(filename)(a0)
+DB_OpenSettingsWrite(filename)(a0)
+DB_CloseSettings(settings)(a0)
+DB_ReadBeginBlock(settings)(a0)
+DB_ReadEndBlock(settings)(a0)
+DB_ReadSetting(settings,value)(a0/a1)
+DB_WriteBeginBlock(settings)(a0)
+DB_WriteEndBlock(settings)(a0)
+DB_WriteSetting(settings,key,value)(a0/a1/a2)
+* Memory Management
+DB_AllocMem(byteSize,attributes)(d0/d1)
+DB_FreeMem(memoryBlock,byteSize)(a0,d0)
+DB_GetMemInfo()
 ##end

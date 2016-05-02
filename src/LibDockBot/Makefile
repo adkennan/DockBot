@@ -17,14 +17,14 @@ C_OPTS=		STREQ STRMER NOSTKCHK NOSTANDARDIO LIBCODE INCLUDEDIRECTORY=$(INC)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c gfx.c gadget.c settings.c
+C_SOURCES=	lib.c gfx.c gadget.c settings.c memory.c
 
-OBJECTS=	lib.o gfx.o gadget.o settings.o
+OBJECTS=	lib.o gfx.o gadget.o settings.o memory.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib
 
 LIBENT=		LIB:libent.o
-LIBINIT=	LIB:libinitr.o
+LIBINIT=	LIB:libinit.o
 
 ################
 #

@@ -16,7 +16,7 @@
 
 Class *init_dock_gadget_class(VOID);
 
-ULONG free_dock_gadget_class(Class * c);
+BOOL free_dock_gadget_class(Class * c);
 
 VOID dock_gadget_added(Object *obj, struct MsgPort *dockPort);
 
@@ -29,8 +29,6 @@ VOID dock_gadget_click(Object *obj, UWORD x, UWORD y);
 VOID dock_gadget_drop(Object *obj, STRPTR *paths, UWORD count);
 
 VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds);
-
-VOID dock_gadget_get_bounds(Object *obj, struct Rect *bounds);
 
 VOID dock_gadget_get_size(Object *obj
 			, DockPosition position, DockAlign align

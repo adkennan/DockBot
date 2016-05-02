@@ -18,8 +18,14 @@
 #include <stdio.h>
 
 #include "dock.h"
+
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
+
 #include "dock_gadget.h"
 #include "gadget_msg.h"
+
+#include "debug.h"
 
 #define DOCK_SIG(dw) (1 << dw->awPort->mp_SigBit)
 #define WIN_SIG(dw) (1 << dw->win->UserPort->mp_SigBit)
@@ -58,7 +64,7 @@ VOID handle_drop_event(struct DockWindow* dock)
     struct WBArg *arg;
     UWORD i, len;
     STRPTR tmpBuf = NULL;
-    STRPTR* buffers = NULL;
+    STRPTR* buffers;
     Object *gadget;
 
     while( msg = (struct AppMessage *)GetMsg(dock->awPort)) {
@@ -68,17 +74,17 @@ VOID handle_drop_event(struct DockWindow* dock)
             arg = msg->am_ArgList;
 
             if( tmpBuf == NULL ) {
-                tmpBuf = AllocMem(2048, MEMF_CLEAR);
+                tmpBuf = DB_AllocMem(2048, MEMF_CLEAR);
             }
 
-            buffers = AllocMem(msg->am_NumArgs * sizeof(STRPTR), MEMF_ANY);
+            buffers = DB_AllocMem(msg->am_NumArgs * sizeof(STRPTR), MEMF_ANY);
             for( i = 0; i < msg->am_NumArgs; i++ ) {
 
                 NameFromLock(arg->wa_Lock, tmpBuf, 2048);
                 AddPart(tmpBuf, arg->wa_Name, 2048);
                 len = strlen(tmpBuf);
 
-                buffers[i] = AllocMem(len + 1, MEMF_ANY);
+                buffers[i] = DB_AllocMem(len + 1, MEMF_ANY);
                 CopyMem(tmpBuf, buffers[i], len + 1);
 
                 arg++;
@@ -87,16 +93,16 @@ VOID handle_drop_event(struct DockWindow* dock)
             dock_gadget_drop(gadget, buffers, msg->am_NumArgs);
 
             for( i = 0; i < msg->am_NumArgs; i++ ) {
-                FreeMem(buffers[i], strlen(buffers[i]) + 1);
+                DB_FreeMem(buffers[i], strlen(buffers[i]) + 1);
             }
-            FreeMem(buffers, msg->am_NumArgs * sizeof(STRPTR));
+            DB_FreeMem(buffers, msg->am_NumArgs * sizeof(STRPTR));
         }
 
         ReplyMsg((struct Message*)msg);
     }
 
     if( tmpBuf != NULL ) {
-        FreeMem(tmpBuf, 2048);
+        DB_FreeMem(tmpBuf, 2048);
     }
 }
 
@@ -200,6 +206,8 @@ VOID handle_timer_message(struct DockWindow *dock)
         default:
             break;
     }
+
+    LOG_MEMORY_TIMED
 }
 
 VOID handle_gadget_message(struct DockWindow *dock)
@@ -234,7 +242,7 @@ VOID handle_gadget_message(struct DockWindow *dock)
             }
         }
 
-        FreeMem(msg, sizeof(struct GadgetMessage));
+        DB_FreeMem(msg, sizeof(struct GadgetMessage));
     }
 }
 
