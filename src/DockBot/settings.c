@@ -41,37 +41,24 @@ struct Values PositionValues[] = {
 };
 
 
-BOOL create_dock_gadget(struct DockWindow *dock, struct DockSettings *settings)
+BOOL read_dock_gadget(struct DockWindow *dock, struct DockSettings *settings)
 {
     struct DockSettingValue v;
     Object *gad;
     char gadName[50];
-    char libName[50];
-    struct Library *lib;
-
-    STRPTR suffix = ".class";
 
     while( DB_ReadSetting(settings, &v) ) {
         if( IS_KEY(S_GADGET, v) ) {
-            CopyMem(v.Value, &libName, v.ValueLength);
-            CopyMem(suffix, &libName[v.ValueLength], 7);
-            printf("Trying to open \"%s\"\n", libName);
-            if( lib = OpenLibrary(libName, 1) ) {
-                printf("Opened library\n");
-            }
             
             CopyMem(v.Value, &gadName, v.ValueLength);
-            if( gad = NewObjectA(NULL, gadName, TAG_DONE ) ) {
+            if( gad = create_dock_gadget(dock, gadName) ) {
                 printf("Created gadget %s\n", gadName);
                 dock_gadget_read_settings(gad, settings);
-                add_dock_gadget(dock, gad, lib);
+                add_dock_gadget(dock, gad);
 
                 return TRUE;                
             } else {
                 printf("Can't create instance of %s\n", gadName);
-                if( lib ) {
-                    CloseLibrary(lib);
-                }
             }
             break;
         }
@@ -96,7 +83,7 @@ BOOL load_config(struct DockWindow *dock)
             while( TRUE ) {
 
                 if( DB_ReadBeginBlock(s) ) {
-                    if( ! create_dock_gadget(dock, s) ) {
+                    if( ! read_dock_gadget(dock, s) ) {
                         r = FALSE;
                         break;
                     }

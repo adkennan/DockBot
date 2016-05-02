@@ -1,6 +1,6 @@
 
 EXENAME=	DockBot
-EXEPATH=	//bin/WbStartup/
+EXEPATH=	//bin/
 
 INC=		//include
 

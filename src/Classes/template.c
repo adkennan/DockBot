@@ -286,10 +286,7 @@ Class* __saveds __asm _GetEngine(
     ULONG __saveds METHOD_READCONFIG (Class *c, Object *o, Msg msg);
 #endif
 
-ULONG __saveds /* __asm*/ GadgetDispatch(
-    /*register __a0*/ Class *c, 
-    /*register __a2*/ Object *o, 
-    /*register __a1*/ Msg msg)
+ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 {
 #ifdef METHOD_NEW
     Object *newObj;
@@ -358,19 +355,12 @@ Class __saveds __stdargs *InitClass(VOID)
     ULONG HookEntry();
     Class *c;
 
-//    ShowMessage("Creating class...");
-
     if( c = MakeClass(CLASS_NAME, PARENT_CLASS, NULL, sizeof(struct PRIVATE_DATA), 0) )
     {
         c->cl_Dispatcher.h_Entry = HookEntry; //(ULONG (*) ())GadgetDispatch;
         c->cl_Dispatcher.h_SubEntry = GadgetDispatch;
 
         AddClass(c);
-
-//        ShowMessage("Created class.");
-//
-//    } else {
-//        ShowMessage("Could not make class.");
     }
 
     return c;

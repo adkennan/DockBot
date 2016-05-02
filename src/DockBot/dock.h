@@ -40,6 +40,7 @@ struct DockWindow
     struct AppWindow *appWin;
     struct MsgPort *awPort;
 	struct MinList gadgets;
+	struct MinList libs;
     Class *gadgetClass;
     Class *handleClass;
     Class *buttonClass;
@@ -57,7 +58,12 @@ struct DgNode
 {
     struct MinNode n;
     Object *dg;
-	struct Library *lib;
+};
+
+struct LibNode
+{
+	struct MinNode n;
+	struct Library *lib;	
 };
 
 #define TIMER_INTERVAL 250L
@@ -65,8 +71,6 @@ struct DgNode
 VOID log_memory(VOID);
 
 // Settings
-
-BOOL create_dock_gadget(struct DockWindow *dock, struct DockSettings *settings);
 
 BOOL load_config(struct DockWindow *dock);
 
@@ -114,13 +118,17 @@ VOID draw_gadgets(struct DockWindow *dock);
 
 VOID draw_gadget(struct DockWindow *dock, Object *gadget);
 
-VOID add_dock_gadget(struct DockWindow *dock, Object *dg, struct Library *lib);
+VOID add_dock_gadget(struct DockWindow *dock, Object *dg);
 
 VOID remove_dock_gadget(struct DockWindow *dock, Object *dg);
 
 VOID remove_dock_gadgets(struct DockWindow *dock);
 
 Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y);
+
+Object *create_dock_gadget(struct DockWindow *dock, STRPTR name);
+
+VOID close_class_libs(struct DockWindow *dock);
 
 // Layout
 

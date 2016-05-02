@@ -174,6 +174,7 @@ VOID close_dock_window(struct DockWindow* dock)
 
     printf(" * gadgets\n");
     remove_dock_gadgets(dock);
+    close_class_libs(dock);
 
     if( dock->appWin ) {
         printf(" * appWin\n");

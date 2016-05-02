@@ -6,7 +6,7 @@ REVISION=	0
 INC=		//include
 
 LIBFILE=	$(LIBNAME).library
-LIBDIR=		//bin/Libs/
+LIBDIR=		//bin/
 
 FD_CONV=	SC:c/fd2pragma
 FD_FILE=	$(LIBNAME).fd

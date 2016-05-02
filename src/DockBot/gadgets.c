@@ -27,7 +27,7 @@ BOOL create_dock_handle(struct DockWindow *dock)
     
     if( gad = NewObjectA(dock->handleClass, NULL, TAG_DONE) ) {
 
-        add_dock_gadget(dock, gad, NULL);
+        add_dock_gadget(dock, gad);
 
         return TRUE;
     }
@@ -52,6 +52,7 @@ BOOL init_gadget_classes(struct DockWindow *dock)
 BOOL init_gadgets(struct DockWindow *dock)
 {
     NewList((struct List *)&(dock->gadgets));
+    NewList((struct List *)&(dock->libs));
 
     if( create_dock_handle(dock) ) {
         if( load_config(dock) ) {
@@ -119,12 +120,11 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 }
 
 
-VOID add_dock_gadget(struct DockWindow *dock, Object *dg, struct Library *lib)
+VOID add_dock_gadget(struct DockWindow *dock, Object *dg)
 {
     struct DgNode *n;
     if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
         n->dg = dg;
-        n->lib = lib;
         AddTail((struct List *)&(dock->gadgets), (struct Node *)n);
 
         dock_gadget_added(dg, dock->gadgetPort);
@@ -143,10 +143,6 @@ VOID remove_dock_gadget(struct DockWindow *dock, Object *dg)
             dock_gadget_removed(curr->dg);
             DisposeObject(curr->dg);
             
-            if( curr->lib ) {
-                CloseLibrary(curr->lib);
-            }
-
             Remove((struct Node *)curr);
             DB_FreeMem(curr, sizeof(struct DgNode));
             break;
@@ -170,5 +166,59 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
         }
     }
     return NULL;    
+}
+
+VOID close_class_libs(struct DockWindow *dock)
+{
+    struct LibNode *ln;
+
+    while( ! IsListEmpty((struct List *)&dock->libs) ) {
+        if( ln = (struct LibNode *)RemTail((struct List *)&dock->libs) ) {
+            CloseLibrary(ln->lib);
+            DB_FreeMem(ln, sizeof(struct LibNode));
+        }
+    }
+}
+
+Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
+{
+    Object *o;
+    char libName[50];
+    struct Library *lib;
+    UWORD len;
+    struct LibNode *ln = NULL;
+    STRPTR suffix = ".class";
+
+    if( ! (o = NewObjectA(NULL, name, TAG_DONE) ) ) {
+
+        len = strlen(name);
+        CopyMem(name, &libName, len);
+        CopyMem(suffix, &libName[len], strlen(suffix));
+
+        if( lib = OpenLibrary(libName, 1) ) {
+
+            if( ln = (struct LibNode *)DB_AllocMem(sizeof(struct LibNode), MEMF_CLEAR) ) {
+
+                if( o = NewObjectA(NULL, name, TAG_DONE) ) {
+
+                    ln->lib = lib;
+                    AddTail((struct List*)&(dock->libs), (struct Node *)ln);
+
+                    return o;
+                }           
+            }
+        }
+        if( o ) {
+            DisposeObject(o);
+        }
+        if( lib ) {
+            CloseLibrary(lib);
+        }
+        if( ln ) {
+            DB_FreeMem(ln, sizeof(struct LibNode));
+        }
+    }
+
+    return o;
 }
 

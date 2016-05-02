@@ -14,7 +14,7 @@
 #undef GADGET_LIB_INIT
 
 #undef METHOD_NEW
-#undef METHOD_DISPOSE
+#define METHOD_DISPOSE      clock_dispose
 #define METHOD_DRAW         clock_draw
 #define METHOD_TICK         clock_tick
 #undef METHOD_CLICK       
@@ -24,7 +24,14 @@
 
 struct ClockGadgetData 
 {
+  struct Library *utilityBase;
+  struct Library *timerBase;
+  struct timerequest *tr;
+  struct timeval *tv;
+  struct ClockData *clockData;
   ULONG counter;
+  UWORD hours;
+  UWORD minutes;
   char time[10];
 };
 

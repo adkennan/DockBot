@@ -25,6 +25,33 @@
 
 #include "class_def.h"
 
+struct Library *TimerBase;
+struct Library *UtilityBase;
+
+ULONG __saveds clock_dispose(Class *c, Object *o, Msg m)
+{
+    struct ClockGadgetData *cd = INST_DATA(c, o);
+
+    if( cd->clockData ) {
+        DB_FreeMem(cd->clockData, sizeof(struct ClockData));
+    }
+    
+    if( cd->tv ) {  
+        DB_FreeMem(cd->tv, sizeof(struct timeval));
+    }
+
+    if( cd->tr ) {    
+        CloseDevice((struct IORequest*)cd->tr);
+        DB_FreeMem(cd->tr, sizeof(struct timerequest));
+    }
+    
+    if( cd->utilityBase ) {
+        CloseLibrary(cd->utilityBase);
+    }
+
+    return 1;
+}
+
 ULONG __saveds clock_draw(Class *c, Object *o, Msg m)
 {   
     struct Rect b;
@@ -68,73 +95,83 @@ ULONG __saveds clock_draw(Class *c, Object *o, Msg m)
     return 1;    
 }
 
-struct Library *TimerBase;
-struct Library *UtilityBase;
+VOID __saveds init_clock(struct ClockGadgetData *cd)
+{
+    if( cd->tv ) {
+        return;
+    }
+
+    if( cd->utilityBase = OpenLibrary("utility.library", 37) ) {
+
+        if( cd->tr = DB_AllocMem(sizeof(struct timerequest), MEMF_CLEAR) ) {
+
+            if( cd->tv = DB_AllocMem(sizeof(struct timeval), MEMF_CLEAR) ) {
+
+                if( cd->clockData = DB_AllocMem(sizeof(struct ClockData), MEMF_CLEAR) ) {
+
+                    if( !(OpenDevice("timer.device", UNIT_VBLANK, (struct IORequest *)cd->tr, 0) ) ) {
+
+                        UtilityBase = cd->utilityBase;
+                        TimerBase = (struct Library *)cd->tr->tr_node.io_Device;
+                        return;
+                    }
+                    DB_FreeMem(cd->clockData, sizeof(struct ClockData));
+                }
+                DB_FreeMem(cd->tv, sizeof(struct timeval));
+            }
+            DB_FreeMem(cd->tr, sizeof(struct timerequest));
+        }
+        CloseLibrary(cd->utilityBase);
+    }
+    cd->tv = NULL;
+}
 
 ULONG __saveds clock_tick(Class *c, Object *o, Msg m)
 {
     struct ClockGadgetData *cd = INST_DATA(c, o);
-    struct ClockData *clockData;
-    struct timerequest *tr;
-    struct timeval *tv;
 
-    if( cd->counter == 0 ) {
-        cd->counter = 20;
-    }
-    cd->counter--;
-
-    if( UtilityBase = OpenLibrary("utility.library", 37) ) {
-
-        if( tr = DB_AllocMem(sizeof(struct timerequest), MEMF_CLEAR) ) {
-
-            if( tv = DB_AllocMem(sizeof(struct timeval), MEMF_CLEAR) ) {
-
-                if( clockData = DB_AllocMem(sizeof(struct ClockData), MEMF_CLEAR) ) {
-
-                    if( !(OpenDevice("timer.device", UNIT_VBLANK, (struct IORequest *)tr, 0) ) ) {
-
-                        TimerBase = (struct Library *)tr->tr_node.io_Device;
-                
-                        GetSysTime(tv);
-
-                        Amiga2Date(tv->tv_secs, clockData);
-
-                        sprintf((STRPTR)&cd->time, "%0d:%0d", clockData->hour, clockData->min);
-
-                        CloseDevice((struct IORequest *)tr);
-
-                        DB_RequestDockGadgetDraw(o);
-                    }     
-                    DB_FreeMem(clockData, sizeof(struct ClockData));
-                }
-
-                DB_FreeMem(tv, sizeof(struct timeval));
-            }
-
-            DB_FreeMem(tr, sizeof(struct timerequest));
-        }
-
-        CloseLibrary(UtilityBase);
+    if( cd->counter > 0 ) {
+        cd->counter--;
+        return 1;
     }
 
-    return 1;
-}
+    cd->counter = 20;
 
-ULONG __saveds clock_click(Class *c, Object *o, Msg m)
-{
-    return 1;
-}
+    init_clock(cd);
+                    
+    GetSysTime(cd->tv);
 
-ULONG __saveds clock_drop(Class *c, Object *o, Msg m)
-{
+    Amiga2Date(cd->tv->tv_secs, cd->clockData);
+
+    if( cd->hours != cd->clockData->hour 
+     || cd->minutes != cd->clockData->min ) {
+    
+        sprintf((STRPTR)&cd->time, "%0d:%0d", cd->clockData->hour, cd->clockData->min);
+    
+        DB_RequestDockGadgetDraw(o);
+    }
+
     return 1;
 }
 
 ULONG __saveds clock_get_size(Class *c, Object *o, Msg m)
 {
+    struct Screen *screen;
+    struct DrawInfo *drawInfo;
     struct DockMessageGetSize *s = (struct DockMessageGetSize *)m;
-    s->w = DEFAULT_SIZE;
-    s->h = 16;
+
+    if( screen = LockPubScreen(NULL) ) {
+    
+        if( drawInfo = GetScreenDrawInfo(screen) ) {
+
+            s->h = drawInfo->dri_Font->tf_YSize + 4;
+            s->w = DEFAULT_SIZE;
+
+            FreeScreenDrawInfo(screen, drawInfo);
+        }
+
+        UnlockPubScreen(NULL, screen);            
+    }    
 
     return 1;
 }
