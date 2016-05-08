@@ -9,7 +9,10 @@ LINKER=		SC:c/slink
 
 LIBS=		LIB:sc.lib LIB:amiga.lib 
 
-C_OPTS=		opt cpu=68030 INCLUDEDIRECTORY=$(INC) def DEBUG_MEM
+CPU=		68030
+DEF_DEBUG_MEM=
+
+C_OPTS=		opt cpu=$(CPU) INCLUDEDIRECTORY=$(INC) $(DEF_DEBUG_MEM)
 
 C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c events.c gadgets.c layout.c settings.c debug.c
 

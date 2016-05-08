@@ -168,6 +168,7 @@ VOID dispose_button_data(struct DockButtonData *dbd)
     FREE_STRING(dbd->name);
     FREE_STRING(dbd->path);
     FREE_STRING(dbd->icon);
+    FREE_STRING(dbd->args);
     FREE_STRING(dbd->con);    
 
     if( dbd->diskObj ) {

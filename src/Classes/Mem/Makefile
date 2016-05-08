@@ -1,5 +1,5 @@
 
-LIBNAME=	DockClock
+LIBNAME=	DockMem
 VERSION=	1
 REVISION=	0
 
@@ -19,14 +19,11 @@ C_OPTS=		CPU=$(CPU) STREQ STRMER NOSTKCHK NOSTANDARDIO $(INC)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c clock.c
+C_SOURCES=	lib.c mem.c
 
-OBJECTS=	lib.o clock.o
+OBJECTS=	lib.o mem.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib
-
-#LIBENT=		LIB:libent.o
-#LIBINIT=	LIB:libinit.o
 
 ################
 #
@@ -38,11 +35,6 @@ TO $(LIBDIR)$(LIBFILE)
 FROM $(OBJECTS)
 LIB $(LIBS)
 <
-
-#LIBFD $(FD_FILE)
-#LIBVERSION $(VERSION)
-#LIBREVISION $(REVISION)
-
 
 $(PRAGMA_FILE): $(FD_FILE).h
 
@@ -60,7 +52,3 @@ clean:
 	@Delete $(LIBDIR)$(LIBFILE)(|.info)
 	@Delete $(PRAGMA_FILE)
 
-reload:
-	@copy $(LIBDIR)$(LIBFILE) LIBS:
-	@version $(LIBFILE)
-	@flushlibs

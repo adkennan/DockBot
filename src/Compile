@@ -1,0 +1,121 @@
+.key HELP/S,CLEAN/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S
+
+IF <HELP$NOHELP> EQ HELP
+  ECHO "Options: "
+  ECHO "  HELP/S       Show this help message."
+  ECHO "  CLEAN/S      Remove object files and binaries."
+  ECHO "  CPU/K        Sets the CPU to target. Defaults to CPU of this machine."
+  ECHO "  NOEXE/S      Do not compile the DockBot executable."
+  ECHO "  NOLIB/S      Do not compile dockbot.library."
+  ECHO "  NOCLASSES/S  Do not compile loadable gadget modules."
+  ECHO "  NOPREFS/S    Do not compile the preferences application."
+  ECHO "  DEBUGMEM/S   Output memory debugging information."
+  ECHO
+  QUIT
+ENDIF
+
+ECHO Checking Requirements
+
+ECHO NOLINE "  SAS/C: "
+IF NOT EXISTS sc:c/sc
+  ECHO Not Found
+  QUIT
+ENDIF
+VERSION sc:c/sc 6 58 >NIL:
+IF WARN
+  ECHO Need version 6.58
+  QUIT
+ENDIF
+ECHO OK
+
+IF <NOPREFS$PREFS> EQ PREFS
+  ECHO NOLINE "  MUI: "
+  IF NOT EXISTS Libs:muimaster.library
+    ECHO Not Found
+    QUIT
+  ENDIF
+  VERSION Libs:muimaster.library 3 8 >NIL:
+  IF WARN
+    ECHO Need version 3.8
+    QUIT
+  ENDIF
+  ECHO OK
+ENDIF
+
+ECHO NOLINE "  MUI Includes: "
+IF NOT EXISTS MUI:Developer/C/Include
+  ECHO Not Found
+  QUIT
+ENDIF
+ECHO OK
+
+ECHO NOLINE "  icon.library 46: "
+VERSION icon.library 46 >NIL:
+IF WARN
+  ECHO Not Found
+  QUIT
+ENDIF
+ECHO OK
+
+ECHO NOLINE "  wbrun: "
+IF NOT EXISTS c:wbrun 
+  ECHO Not Found
+  QUIT
+ENDIF
+ECHO OK
+
+; Decide on a CPU to compile for.
+CPU CHECK 68040 >NIL:
+IF WARN 
+  CPU CHECK 68030 >NIL:
+  IF WARN
+    CPU CHECK 68020 >NIL:
+    IF WARN
+      SET defcpu 68000
+    ELSE
+      SET defcpu 68020
+    ENDIF
+  ELSE
+    SET defcpu 68030
+  ENDIF
+ELSE
+  SET defcpu 68040
+ENDIF
+
+.def CPU $defcpu
+
+echo Compiling for <CPU>
+
+IF <DEBUGMEM$NODEBUGMEM> EQ DEBUGMEM
+  echo Enabling Memory Debug Output
+  SET DEFDEBUGMEM "define=DEBUG_MEM"
+ELSE
+  SET DEFDEBUGMEM "define=NO_DEBUG_MEM"
+ENDIF
+
+IF <NOLIB$LIB> EQ LIB
+  echo Compiling dockbot.library
+  cd LibDockBot
+  smake <CLEAN> CPU=<CPU>
+  cd /
+ENDIF
+
+IF <NOEXE$EXE> EQ EXE
+  echo Compiling DockBot
+  cd DockBot
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM
+  cd /
+ENDIF
+
+IF <NOCLASSES$CLASSES> EQ CLASSES
+  echo Compiling Classes/Clock
+  cd Classes/Clock
+  smake <CLEAN> CPU=<CPU>
+  cd //
+
+  echo Compiling Classes/Mem
+  cd Classes/Mem
+  smake <CLEAN> CPU=<CPU>
+  cd //
+ENDIF
+

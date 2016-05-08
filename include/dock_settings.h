@@ -24,8 +24,9 @@ struct Values
 #define IS_KEY(key, setting) (strncmp(key, setting.Key, strlen(key)) == 0)
 
 #define GET_STRING(setting, dest) \
-    dest = (STRPTR)AllocMem(setting.ValueLength + 1, MEMF_CLEAR); \ 
-    CopyMem(setting.Value, dest, setting.ValueLength); 
+    dest = (STRPTR)DB_AllocMem(setting.ValueLength + 1, MEMF_CLEAR); \ 
+    CopyMem(setting.Value, dest, setting.ValueLength); \
+    dest[setting.ValueLength] = '\0'; 
 
 #define GET_VALUE(setting, values, curr, len, dest) \
     curr = &values[0];\
@@ -40,6 +41,6 @@ struct Values
 
 #define FREE_STRING(str) \
     if( str ) \
-        FreeMem(str, strlen(str) + 1)
+        DB_FreeMem(str, strlen(str) + 1)
 
 #endif

@@ -45,21 +45,25 @@ BOOL read_dock_gadget(struct DockWindow *dock, struct DockSettings *settings)
 {
     struct DockSettingValue v;
     Object *gad;
-    char gadName[50];
+    STRPTR gadName;
 
     while( DB_ReadSetting(settings, &v) ) {
         if( IS_KEY(S_GADGET, v) ) {
-            
-            CopyMem(v.Value, &gadName, v.ValueLength);
+
+            GET_STRING(v, gadName);
+                        
             if( gad = create_dock_gadget(dock, gadName) ) {
-                printf("Created gadget %s\n", gadName);
                 dock_gadget_read_settings(gad, settings);
                 add_dock_gadget(dock, gad);
+
+                FREE_STRING(gadName);
 
                 return TRUE;                
             } else {
                 printf("Can't create instance of %s\n", gadName);
             }
+
+            FREE_STRING(gadName);
             break;
         }
     }
@@ -108,8 +112,7 @@ BOOL load_config(struct DockWindow *dock)
         }
         DB_CloseSettings(s);
     }
-    return r;
-    
+    return r;    
 }
 
 

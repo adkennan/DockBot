@@ -65,15 +65,25 @@ Class * __saveds __asm _GetEngine(
 
 /**** Utility Functions ****/
 
-VOID __saveds __stdargs CloseLibs(VOID);
+VOID __saveds CloseLibs(VOID);
 
-VOID __saveds __stdargs FreeLib(struct ClassLibrary *cb);
+VOID __saveds FreeLib(struct ClassLibrary *cb);
 
-Class* __saveds __stdargs InitClass(VOID);
+Class* __saveds InitClass(VOID);
 
-VOID __saveds __stdargs CleanUpClass(struct ClassLibrary *cb);
+VOID __saveds CleanUpClass(struct ClassLibrary *cb);
 
-VOID __saveds __stdargs ShowMessage(char *msg);
+VOID __saveds ShowMessage(char *msg);
+
+/**** Class library constructor/destructor ****/
+#ifdef GADGET_LIB_INIT
+ULONG GADGET_LIB_INIT(struct GADGET_LIB_DATA *gld);
+#endif
+
+#ifdef GADGET_LIB_EXPUNGE
+ULONG GADGET_LIB_EXPUNGE(struct GADGET_LIB_DATA *gld);
+#endif
+
 
 /**** Prevent Execution ****/
 
@@ -174,7 +184,7 @@ struct ClassLibrary * __saveds __asm InitLib(
             if( cb->cl_GadgetClass = InitClass() ) {
 
 #ifdef GADGET_LIB_INIT
-                if( GADGET_LIB_INIT(cb) ) {
+                if( GADGET_LIB_INIT(&cb->cl_Data) ) {
 #endif
                     cb->cl_IntuitionBase = (struct Library *)IntuitionBase;
                     cb->cl_DockBotBase = DockBotBase;
@@ -223,6 +233,10 @@ BPTR __saveds __asm _LibExpunge(
 
     if( ClassLibraryBase->cl_Lib.lib_OpenCnt == 0 ) {
         
+#ifdef GADGET_LIB_EXPUNGE
+        GADGET_LIB_EXPUNGE(&ClassLibraryBase->cl_Data);
+#endif
+
         segList = ClassLibraryBase->cl_SegList;
 
         Remove((struct Node*)ClassLibraryBase);
@@ -298,7 +312,9 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 #ifdef METHOD_NEW
         case OM_NEW:
             if( newObj = (Object *)DoSuperMethodA(c, o, msg) ) {
-                return METHOD_NEW(c, o, msg);
+                if( METHOD_NEW(c, newObj, msg) ) {
+                    return (ULONG)newObj;
+                }
             }
             break;
 #endif
@@ -338,6 +354,7 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 
 #ifdef METHOD_READCONFIG
         case DM_READCONFIG:
+            return METHOD_READCONFIG (c, o, msg);
 #endif
 
         case DM_SETTINGS_CLASS:
@@ -350,7 +367,7 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 }
 
 
-Class __saveds __stdargs *InitClass(VOID)
+Class __saveds *InitClass(VOID)
 {
     ULONG HookEntry();
     Class *c;
@@ -366,7 +383,7 @@ Class __saveds __stdargs *InitClass(VOID)
     return c;
 }
 
-VOID __saveds __stdargs CleanUpClass(struct ClassLibrary *cb)
+VOID __saveds CleanUpClass(struct ClassLibrary *cb)
 
 {
     if( cb->cl_GadgetClass ) {
@@ -376,7 +393,7 @@ VOID __saveds __stdargs CleanUpClass(struct ClassLibrary *cb)
 }
 
 
-VOID __saveds __stdargs CloseLibs(VOID)
+VOID __saveds CloseLibs(VOID)
 {
     if( DockBotBase ) {
         CloseLibrary(DockBotBase);
@@ -387,7 +404,7 @@ VOID __saveds __stdargs CloseLibs(VOID)
     }
 }
 
-VOID __saveds __stdargs FreeLib(struct ClassLibrary *cb)
+VOID __saveds FreeLib(struct ClassLibrary *cb)
 {
     ULONG neg, pos, full;
     UBYTE* negPtr = (UBYTE*)cb;
@@ -400,7 +417,7 @@ VOID __saveds __stdargs FreeLib(struct ClassLibrary *cb)
     FreeMem(negPtr, full);
 }
 
-VOID __saveds __stdargs ShowMessage(char *msg)
+VOID __saveds ShowMessage(char *msg)
 {
     struct EasyStruct es = {
         sizeof(struct EasyStruct),

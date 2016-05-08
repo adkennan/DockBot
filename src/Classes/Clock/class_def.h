@@ -2,7 +2,7 @@
 #ifndef __CLASS_DEF_H__
 #define __CLASS_DEF_H__
 
-#define CLASS_NAME      "clock.dg"
+#define CLASS_NAME      "DockClock"
 #define CLASS_VERSION   1
 #define CLASS_REVISION  0
 #define CLASS_VER_STR   " 1.0 (25/04/2016)"
@@ -10,29 +10,37 @@
 #define PARENT_CLASS    DB_ROOT_CLASS
 #define SETTINGS_CLASS  "clockdg.mcc"
 
-#undef GADGET_LIB_DATA
-#undef GADGET_LIB_INIT
+#define GADGET_LIB_DATA     ClockLibData
 
-#undef METHOD_NEW
+#define GADGET_LIB_INIT     clock_lib_init
+#define GADGET_LIB_EXPUNGE  clock_lib_expunge
+
+#define METHOD_NEW          clock_new
 #define METHOD_DISPOSE      clock_dispose
 #define METHOD_DRAW         clock_draw
 #define METHOD_TICK         clock_tick
 #undef METHOD_CLICK       
 #undef METHOD_DROP        
 #define METHOD_GETSIZE      clock_get_size
-#undef METHOD_READCONFIG   
+#define METHOD_READCONFIG   clock_read_config
+
+#define MAX_DISPLAY_LENGTH 20
+
+struct ClockLibData
+{
+  struct Library *localeBase;
+  struct Library *dosBase;
+};
 
 struct ClockGadgetData 
 {
-  struct Library *utilityBase;
-  struct Library *timerBase;
-  struct timerequest *tr;
-  struct timeval *tv;
-  struct ClockData *clockData;
+  struct Locale *locale;
+  STRPTR format;
   ULONG counter;
-  UWORD hours;
   UWORD minutes;
-  char time[10];
+  UWORD pos;  
+  UWORD formatLen;
+  char time[MAX_DISPLAY_LENGTH];
 };
 
 #endif

@@ -154,8 +154,6 @@ struct DockWindow* create_dock_window(VOID)
 	return dock;
 
 error:
-    printf("Failed to create window: %s\n", err);
-    
     if( dock ) {
         dock->runState = RS_STOPPED;
 
@@ -170,22 +168,16 @@ VOID close_dock_window(struct DockWindow* dock)
 {
     struct Message *msg;
 
-    printf("Close dock window.\n");
-
-    printf(" * gadgets\n");
     remove_dock_gadgets(dock);
     close_class_libs(dock);
 
     if( dock->appWin ) {
-        printf(" * appWin\n");
         RemoveAppWindow(dock->appWin);
     }
 
     if( dock->win ) {
-        printf(" * window\n");
 
         if( dock->menu ) {
-            printf(" * * menu\n");
 
             ClearMenuStrip(dock->win);
             FreeMenus(dock->menu);
@@ -195,7 +187,6 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->awPort ) {
-        printf(" * awPort\n");
 
         while( msg = GetMsg(dock->awPort)) {
             ReplyMsg(msg);
@@ -204,14 +195,12 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->notifyPort ) {
-        printf(" * notifyPort\n");
 
         EndNotify(&dock->notifyReq);
         DeleteMsgPort(dock->notifyPort);
     }
 
     if( dock->buttonClass ) {
-        printf(" * buttonClass\n");
 
         if( ! free_dock_button_class(dock->buttonClass) ) {
             printf("Could not free button class\n");
@@ -219,7 +208,6 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->handleClass ) {
-        printf(" * handleClass\n");
 
         if( ! free_dock_handle_class(dock->handleClass) ) {
             printf("Could not free handle class\n");
@@ -227,7 +215,6 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->gadgetClass ) {
-        printf(" * gadgetClass\n");
 
         if( !free_dock_gadget_class(dock->gadgetClass) ) {
             printf("Could not free root class\n");
@@ -235,12 +222,10 @@ VOID close_dock_window(struct DockWindow* dock)
     }
     
     if( dock->timerPort ) {
-        printf(" * timerPort\n");
 
         DeletePort(dock->timerPort);
 
         if( dock->timerReq ) {
-            printf(" * timerReq\n");
 
             CloseDevice((struct IORequest *)dock->timerReq);    
             DeleteExtIO((struct IORequest *)dock->timerReq);    
@@ -248,13 +233,10 @@ VOID close_dock_window(struct DockWindow* dock)
     }
 
     if( dock->gadgetPort ) {
-        printf(" * gadgetPort\n");
 
         DeletePort(dock->gadgetPort);
     }
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));
-
-    printf("Done\n");
 }
 

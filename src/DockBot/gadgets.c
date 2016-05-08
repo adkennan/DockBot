@@ -175,6 +175,9 @@ VOID close_class_libs(struct DockWindow *dock)
     while( ! IsListEmpty((struct List *)&dock->libs) ) {
         if( ln = (struct LibNode *)RemTail((struct List *)&dock->libs) ) {
             CloseLibrary(ln->lib);
+            Forbid();
+            RemLibrary(ln->lib);
+            Permit();
             DB_FreeMem(ln, sizeof(struct LibNode));
         }
     }
@@ -193,7 +196,7 @@ Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
 
         len = strlen(name);
         CopyMem(name, &libName, len);
-        CopyMem(suffix, &libName[len], strlen(suffix));
+        CopyMem(suffix, &libName[len], strlen(suffix) + 1);
 
         if( lib = OpenLibrary(libName, 1) ) {
 
