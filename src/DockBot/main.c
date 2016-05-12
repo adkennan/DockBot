@@ -24,10 +24,9 @@ struct Library *GadToolsBase;
 
 struct DockWindow;
 
-struct DockWindow *create_dock_window(VOID);
-VOID enable_layout(struct DockWindow *);
+struct DockWindow *create_dock(VOID);
 VOID run_event_loop(struct DockWindow *);
-VOID close_dock_window(struct DockWindow *);
+VOID free_dock(struct DockWindow *);
 
 int main(int argc, char** argv)
 {
@@ -47,13 +46,11 @@ int main(int argc, char** argv)
     
                             if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
 
-                                if( dock = create_dock_window() ) {
+                                if( dock = create_dock() ) {
                     
-                                    enable_layout(dock);
-
                                     run_event_loop(dock);                     
         
-                                    close_dock_window(dock);   
+                                    free_dock(dock);   
                     
                                     LOG_MEMORY
                                 }

@@ -27,10 +27,20 @@
 typedef enum {
     RS_STARTING = 1,
     RS_RUNNING = 2,
-    RS_LAYOUT = 3,
-    RS_QUITTING = 4,
-    RS_STOPPED = 5
+    RS_LOADING = 3,
+	RS_HIDING = 4,
+	RS_SHOWING = 5,
+    RS_QUITTING = 6,
+    RS_STOPPED = 7
 } RunState;
+
+typedef enum {
+    MI_ABOUT = 1,
+    MI_SETTINGS = 2,
+    MI_QUIT = 3,
+	MI_HIDE = 4,
+    MI_HELP = 5
+} MenuIndex;
 
 struct DockWindow 
 {
@@ -39,6 +49,7 @@ struct DockWindow
 	struct Window *win;
     struct AppWindow *appWin;
     struct MsgPort *awPort;
+    struct MsgPort *aiPort;
 	struct MinList gadgets;
 	struct MinList libs;
     Class *gadgetClass;
@@ -49,6 +60,8 @@ struct DockWindow
     struct timerequest *timerReq;
     struct MsgPort* timerPort;
     struct MsgPort* gadgetPort;
+	struct DiskObject* iconObj;
+	struct AppIcon* appIcon;
     struct Menu* menu;
     RunState runState;
     BOOL disableLayout;
@@ -78,15 +91,17 @@ BOOL init_config_notification(struct DockWindow *dock);
 
 // Window
 
-struct DockWindow* create_dock_window(VOID);
+struct DockWindow* create_dock(VOID);
 
-VOID close_dock_window(struct DockWindow* dock);
+VOID free_dock(struct DockWindow *dock);
 
-BOOL init_dock_window(struct DockWindow *dock);
+VOID hide_dock_window(struct DockWindow* dock);
 
-struct DockWindow* create_dock_window(VOID);
+BOOL show_dock_window(struct DockWindow* dock);
 
-VOID close_dock_window(struct DockWindow* dock);
+VOID show_about(VOID);
+
+VOID delete_port(struct MsgPort *port);
 
 // Events
 
@@ -105,6 +120,10 @@ VOID handle_timer_message(struct DockWindow *dock);
 VOID handle_gadget_message(struct DockWindow *dock);
 
 VOID run_event_loop(struct DockWindow *dock);
+
+BOOL show_app_icon(struct DockWindow *dock);
+
+VOID free_app_icon(struct DockWindow *dock);
 
 // Gadgets
 

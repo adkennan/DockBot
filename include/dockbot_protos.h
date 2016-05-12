@@ -26,6 +26,9 @@ VOID __asm __saveds DB_DrawInsetFrame(
 	register __a0 struct RastPort *rp, 
 	register __a1 struct Rect *bounds);
 
+VOID __asm __saveds DB_ShowMessage(
+	register __a0 STRPTR message);
+
 
 struct DockSettings * __asm __saveds DB_OpenSettingsRead(
     register __a0 STRPTR filename);

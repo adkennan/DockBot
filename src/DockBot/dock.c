@@ -32,20 +32,39 @@
 
 struct NewMenu mainMenu[] = {
     { NM_TITLE, "Project",     0, 0, 0, 0 },
-    {  NM_ITEM, "About",       0, 0, 0, 0 },
-    {  NM_ITEM, "Settings",    0, 0, 0, 0 },
+    {  NM_ITEM, "Settings...", 0, 0, 0, (APTR)MI_SETTINGS },
     {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
-    {  NM_ITEM, "Quit",      "Q", 0, 0, 0 },
+    {  NM_ITEM, "About...",   "?",0, 0, (APTR)MI_ABOUT },
+    {  NM_ITEM, "Help",        0, 0, 0, (APTR)MI_HELP },
+    {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
+    {  NM_ITEM, "Iconify",    "I",0, 0, (APTR)MI_HIDE },
+    {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
+    {  NM_ITEM, "Quit",       "Q",0, 0, (APTR)MI_QUIT },
 
     { NM_END,   NULL,          0, 0, 0, 0 }
 };
 
-BOOL init_dock_window(struct DockWindow *dock)
+VOID show_about(VOID)
+{
+    DB_ShowMessage("DockBot 1.0\n\nA Dock For AmigaOS 3\n\n© 2016 Andrew Kennan");
+}
+
+VOID delete_port(struct MsgPort *port) {
+    struct Message *msg;
+
+    if( port ) {
+        while( msg = GetMsg(port) ) {
+            ReplyMsg(msg);
+        }
+        DeleteMsgPort(port);
+    }
+}
+
+BOOL show_dock_window(struct DockWindow *dock)
 {
 	struct Screen *screen;
     APTR* vi;
-	UWORD x,y;
-    BOOL result;
+    BOOL result = FALSE;
 
 	struct TagItem tags[] = {
 		{ WA_Left, 0 },
@@ -54,18 +73,12 @@ BOOL init_dock_window(struct DockWindow *dock)
 		{ WA_Height, 1 },
 		{ WA_Borderless, TRUE },
         { WA_SmartRefresh, TRUE },
+        { WA_NewLookMenus, TRUE },
 		{ WA_IDCMP, IDCMP_MOUSEBUTTONS | IDCMP_REFRESHWINDOW | IDCMP_CHANGEWINDOW | IDCMP_MENUPICK },
 		{ TAG_DONE, NULL }
 	};
 
-    result = FALSE;
 	if( screen = LockPubScreen(NULL) ) {
-		
-		x = get_window_left(screen, DA_CENTER, DP_RIGHT, DEFAULT_SIZE);
-		y = get_window_top(screen, DA_CENTER, DP_RIGHT, DEFAULT_SIZE);
-
-		tags[0].ti_Data = x;
-		tags[1].ti_Data = y;
 
   		if( dock->win = OpenWindowTagList(NULL, tags) ) {
 	
@@ -82,7 +95,6 @@ BOOL init_dock_window(struct DockWindow *dock)
                                 if( dock->appWin = AddAppWindow(1, 0, dock->win, dock->awPort, NULL) ) {
                     
                                     result = TRUE;
-
                                 }
                             }
                         }
@@ -97,10 +109,33 @@ BOOL init_dock_window(struct DockWindow *dock)
     return result;     
 }
 
-struct DockWindow* create_dock_window(VOID)
+VOID hide_dock_window(struct DockWindow *dock)
+{
+    if( dock->appWin ) {
+        RemoveAppWindow(dock->appWin);
+        dock->appWin = NULL;
+
+        delete_port(dock->awPort);
+        dock->awPort = NULL;
+    }
+
+    if( dock->win ) {
+
+        if( dock->menu ) {
+
+            ClearMenuStrip(dock->win);
+            FreeMenus(dock->menu);
+            dock->menu = NULL;
+        }
+
+    	CloseWindow(dock->win);
+        dock->win = NULL;
+    }
+}
+
+struct DockWindow* create_dock(VOID)
 {
 	struct DockWindow *dock;
-    const char *err;
 
     if( dock = (struct DockWindow *)DB_AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
 	
@@ -109,7 +144,7 @@ struct DockWindow* create_dock_window(VOID)
         dock->align = DA_CENTER;
         dock->pos = DP_RIGHT;
 
-        if( init_dock_window(dock) ) {
+        if( dock->awPort = CreateMsgPort() ) {
         
             if( init_gadget_classes(dock) ) {
                         
@@ -119,85 +154,32 @@ struct DockWindow* create_dock_window(VOID)
                         
                         if( init_timer_notification(dock) ) {
 
-                            dock->runState = RS_RUNNING;
-                            set_timer(dock, TIMER_INTERVAL);
-
-                        } else {
-                            // Unable to initialize timer
-                            err = "Timer";
-                            goto error;
+                            return dock;
                         }        
-                    } else {
-                        // Unable to initialize config notifications.
-                        err = "Notification";
-                        goto error;
                     }
-                } else {    
-                    // Can't initialize gadgets
-                    err = "Config";
-                    goto error;
                 }
-            } else {
-                // Can't create gadget classes
-                err = "Classes";
-                goto error;
             }
-        } else {
-		    // Can't open window
-            err = "Window";
-            goto error;
         }
-	} else {
-        // Can't allocate dock
-        err = "Dock";
-	}
-	return dock;
 
-error:
-    if( dock ) {
-        dock->runState = RS_STOPPED;
-
-        close_dock_window(dock);
+        // Uh oh!    
+        free_dock(dock);
     }
 
     return NULL;
 }
 
-
-VOID close_dock_window(struct DockWindow* dock)
+VOID free_dock(struct DockWindow* dock)
 {
-    struct Message *msg;
+    hide_dock_window(dock);
 
     remove_dock_gadgets(dock);
+
     close_class_libs(dock);
-
-    if( dock->appWin ) {
-        RemoveAppWindow(dock->appWin);
-    }
-
-    if( dock->win ) {
-
-        if( dock->menu ) {
-
-            ClearMenuStrip(dock->win);
-            FreeMenus(dock->menu);
-        }
-
-    	CloseWindow(dock->win);
-    }
-
-    if( dock->awPort ) {
-
-        while( msg = GetMsg(dock->awPort)) {
-            ReplyMsg(msg);
-        }
-        DeleteMsgPort(dock->awPort);
-    }
 
     if( dock->notifyPort ) {
 
         EndNotify(&dock->notifyReq);
-        DeleteMsgPort(dock->notifyPort);
+        delete_port(dock->notifyPort);
     }
 
     if( dock->buttonClass ) {
@@ -223,19 +205,18 @@ VOID close_dock_window(struct DockWindow* dock)
     
     if( dock->timerPort ) {
 
-        DeletePort(dock->timerPort);
-
         if( dock->timerReq ) {
 
             CloseDevice((struct IORequest *)dock->timerReq);    
             DeleteExtIO((struct IORequest *)dock->timerReq);    
         }    
+
+        delete_port(dock->timerPort);
     }
 
-    if( dock->gadgetPort ) {
+    delete_port(dock->gadgetPort);
 
-        DeletePort(dock->gadgetPort);
-    }
+    free_app_icon(dock);
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));
 }

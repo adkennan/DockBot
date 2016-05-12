@@ -73,8 +73,6 @@ Class* __saveds InitClass(VOID);
 
 VOID __saveds CleanUpClass(struct ClassLibrary *cb);
 
-VOID __saveds ShowMessage(char *msg);
-
 /**** Class library constructor/destructor ****/
 #ifdef GADGET_LIB_INIT
 ULONG GADGET_LIB_INIT(struct GADGET_LIB_DATA *gld);
@@ -417,20 +415,6 @@ VOID __saveds FreeLib(struct ClassLibrary *cb)
     FreeMem(negPtr, full);
 }
 
-VOID __saveds ShowMessage(char *msg)
-{
-    struct EasyStruct es = {
-        sizeof(struct EasyStruct),
-        0,
-        "Message",
-        "Hi!",
-        "Ok"
-    };
-
-    es.es_TextFormat = msg;
-
-    EasyRequest(NULL, &es, NULL);
-}
 
 VOID *_XCEXIT = NULL;
 

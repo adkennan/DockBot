@@ -55,9 +55,7 @@ BOOL init_gadgets(struct DockWindow *dock)
     NewList((struct List *)&(dock->libs));
 
     if( create_dock_handle(dock) ) {
-        if( load_config(dock) ) {
-            return TRUE;
-        }
+        return TRUE;
     }
     return FALSE; 
 }

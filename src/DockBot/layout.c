@@ -32,8 +32,6 @@ VOID layout_gadgets(struct DockWindow *dock)
         return;
     }
 
-    dock->runState = RS_LAYOUT;
-
     if( screen = LockPubScreen(NULL)) {
 
         y = 0;

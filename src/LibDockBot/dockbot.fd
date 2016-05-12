@@ -29,4 +29,6 @@ DB_WriteSetting(settings,key,value)(a0/a1/a2)
 DB_AllocMem(byteSize,attributes)(d0/d1)
 DB_FreeMem(memoryBlock,byteSize)(a0,d0)
 DB_GetMemInfo()
+* UI Functions
+DB_ShowMessage(message)(a0)
 ##end
