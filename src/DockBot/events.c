@@ -88,7 +88,6 @@ BOOL show_app_icon(struct DockWindow *dock)
 VOID free_app_icon(struct DockWindow *dock)
 {
     if( dock->appIcon ) {
-
         RemoveAppIcon(dock->appIcon);
         dock->appIcon = NULL;
     }
@@ -97,7 +96,6 @@ VOID free_app_icon(struct DockWindow *dock)
     dock->aiPort = NULL;
 
     if( dock->iconObj ) {
-        
         FreeDiskObject(dock->iconObj);
         dock->iconObj = NULL;
     }
@@ -215,7 +213,7 @@ VOID handle_window_event(struct DockWindow *dock)
                             break;
 
                        case MI_ABOUT:
-                            show_about();
+                            show_about(dock);
                             break;
 
                        case MI_HIDE:
@@ -353,31 +351,25 @@ VOID run_event_loop(struct DockWindow *dock)
                 break;
 
             case RS_HIDING:
-                printf("Hiding...");
                 disable_layout(dock);
                 hide_dock_window(dock);
                 if( ! show_app_icon(dock) ) {
                     return;
                 }
                 dock->runState = RS_RUNNING;
-                printf("Hidden\n");
                 break;
 
             case RS_SHOWING:
-                printf("Showing...");
                 if( ! show_dock_window(dock) ) {
                     return;
                 }
                 free_app_icon(dock);
                 enable_layout(dock);
                 dock->runState = RS_RUNNING;
-                printf("Shown\n");
                 break;
 
             case RS_RUNNING:
             case RS_QUITTING:
-            
-                printf("Running\n");
                 while( dock->runState == RS_RUNNING || dock->runState == RS_QUITTING ) {
 
                     winsig = WIN_SIG(dock);

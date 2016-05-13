@@ -19,9 +19,9 @@ C_OPTS=		CPU=$(CPU) STREQ STRMER NOSTKCHK NOSTANDARDIO LIBCODE INCLUDEDIRECTORY=
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c gfx.c gadget.c settings.c memory.c ui.c
+C_SOURCES=	lib.c gfx.c gadget.c settings.c memory.c
 
-OBJECTS=	lib.o gfx.o gadget.o settings.o memory.o ui.o
+OBJECTS=	lib.o gfx.o gadget.o settings.o memory.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib
 
@@ -56,6 +56,5 @@ clean:
 	@Delete $(PRAGMA_FILE)
 
 reload:
-	@copy $(LIBDIR)$(LIBFILE) LIBS:
 	@version $(LIBFILE)
 	@flushlibs

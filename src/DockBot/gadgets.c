@@ -79,48 +79,61 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
 VOID draw_gadgets(struct DockWindow *dock)
 {
-    struct Window *win = dock->win;
-    struct RastPort *rp = win->RPort;
+    struct Window *win;
+    struct RastPort *rp;
     struct DgNode *curr;
 
-    LockLayer(NULL, win->WLayer);
+    if( dock->win ) {
     
-    SetAPen(rp, 0);
-    RectFill(rp, 0, 0, win->Width, win->Height);
+        win = dock->win;
+        rp = win->RPort;
 
-    for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                curr->n.mln_Succ; 
-                curr = (struct DgNode *)curr->n.mln_Succ ) {
+        LockLayer(NULL, win->WLayer);
+    
+        SetAPen(rp, 0);
+        RectFill(rp, 0, 0, win->Width, win->Height);
 
-        dock_gadget_draw(curr->dg, rp);
+        for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
+                    curr->n.mln_Succ; 
+                    curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+            dock_gadget_draw(curr->dg, rp);
+        }
+
+        UnlockLayer(win->WLayer);
     }
-
-    UnlockLayer(win->WLayer);
 }
 
 
 VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 {
-    struct Window *win = dock->win;
-    struct RastPort *rp = win->RPort;
+    struct Window *win;
+    struct RastPort *rp;
     struct Rect gb;
 
-    DB_GetDockGadgetBounds(gadget, &gb);
-
-    LockLayer(NULL, win->WLayer);
-
-    SetAPen(rp, 0);
-    RectFill(rp, gb.x, gb.y, gb.w, gb.h);
+    if( dock->win ) {
     
-    dock_gadget_draw(gadget, rp);
+        win = dock->win;
+        rp = win->RPort;
 
-    UnlockLayer(win->WLayer);
+        DB_GetDockGadgetBounds(gadget, &gb);
+
+        LockLayer(NULL, win->WLayer);
+
+        SetAPen(rp, 0);
+        RectFill(rp, gb.x, gb.y, gb.w, gb.h);
+    
+        dock_gadget_draw(gadget, rp);
+    
+        UnlockLayer(win->WLayer);
+    }
 }
 
 
 VOID add_dock_gadget(struct DockWindow *dock, Object *dg)
 {
     struct DgNode *n;
+
     if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
         n->dg = dg;
         AddTail((struct List *)&(dock->gadgets), (struct Node *)n);

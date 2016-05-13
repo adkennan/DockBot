@@ -109,6 +109,12 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 		case DM_DROP:
 			break;
 
+        case DM_BUILTIN:
+            return (ULONG)FALSE;
+    
+        case DM_GETINFO:
+            break;
+
 		case DM_SETBOUNDS:
 			sb = (struct DockMessageSetBounds *)msg;			
 			dgd = INST_DATA(c, o);
@@ -292,4 +298,27 @@ VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings)
 
     DoMethodA(obj, (Msg)&msg);
 }
+
+BOOL dock_gadget_builtin(Object *obj) 
+{
+    
+    return (BOOL)DoMethod(obj, DM_BUILTIN);
+}
+
+VOID dock_gadget_get_info(Object *obj
+            , STRPTR *name, STRPTR *version
+            , STRPTR *description, STRPTR *copyright) 
+{
+    struct DockMessageGetInfo msg = {
+        DM_GETINFO
+    };
+
+    DoMethodA(obj, (Msg)&msg);
+
+    *name = msg.name;
+    *version = msg.version;
+    *description = msg.description;
+    *copyright = msg.copyright;
+}
+
 

@@ -40,4 +40,10 @@ BOOL dock_gadget_hit_test(Object *obj, UWORD x, UWORD y);
 
 VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings);
 
+BOOL dock_gadget_builtin(Object *obj);
+
+VOID dock_gadget_get_info(Object *obj
+            , STRPTR *name, STRPTR *version
+            , STRPTR *description, STRPTR *copyright);
+
 #endif 

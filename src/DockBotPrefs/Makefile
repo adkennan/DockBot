@@ -1,6 +1,6 @@
 
 EXENAME=	DockBotPrefs
-EXEPATH=	//bin/Prefs/
+EXEPATH=	//bin/
 
 INC=		INCLUDEDIRECTORY=//include INCLUDEDIRECTORY=MUI:Developer/C/Include
 

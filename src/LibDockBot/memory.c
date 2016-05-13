@@ -9,6 +9,7 @@
 #include <exec/memory.h>
 #include <clib/exec_protos.h>
 #include <pragmas/exec_pragmas.h>
+#include <string.h>
 
 struct MemoryControl
 {
@@ -51,6 +52,8 @@ VOID CleanUpMem(VOID)
 VOID* AllocMemInternal(ULONG byteSize, ULONG attributes)
 {
     VOID *result;
+    ULONG i;
+  
     if( (attributes & MEMF_CHIP) || ! mc->fastPool ) {
        
         if( result = AllocPooled(mc->chipPool, byteSize) ) {
@@ -64,6 +67,14 @@ VOID* AllocMemInternal(ULONG byteSize, ULONG attributes)
             mc->fastAllocCount++;
         }
     }
+
+    if( result && (attributes & MEMF_CLEAR ) ) {
+        // TODO: Make this faster
+        for( i = 0;i < byteSize; i++ ) {
+            *(((UBYTE*)result) + i) = 0;
+        }
+    }
+
     return result;    
 }
 

@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2016 Andrew Kennan
+**
+************************************/
 
 #ifndef __CLASS_DEF_H__
 #define __CLASS_DEF_H__
@@ -5,7 +12,9 @@
 #define CLASS_NAME      "DockClock"
 #define CLASS_VERSION   1
 #define CLASS_REVISION  0
-#define CLASS_VER_STR   " 1.0 (25/04/2016)"
+#define CLASS_VER_STR   "1.0 (25/04/2016)"
+#define CLASS_DESC		"A clock for DockBot"
+#define CLASS_COPYRIGHT "© 2016 Andrew Kennan"
 #define PRIVATE_DATA    ClockGadgetData
 #define PARENT_CLASS    DB_ROOT_CLASS
 #define SETTINGS_CLASS  "clockdg.mcc"

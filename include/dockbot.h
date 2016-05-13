@@ -49,7 +49,9 @@ typedef enum {
     DM_REMOVED          = 0x1210,
     DM_REQ_QUIT         = 0x1211,
     DM_REQ_DRAW         = 0x1212,
-    DM_SETTINGS_CLASS   = 0x1213
+    DM_SETTINGS_CLASS   = 0x1213,
+    DM_BUILTIN          = 0x1214,
+    DM_GETINFO          = 0x1215
 } DockMessage;
 
 struct DockMessageAdded
@@ -99,6 +101,14 @@ struct DockMessageHitTest {
 struct DockMessageGetBounds {
     ULONG MethodID;
     struct Rect *b;
+};
+
+struct DockMessageGetInfo {
+    ULONG MethodID;
+    STRPTR name;
+    STRPTR version;
+    STRPTR description;
+    STRPTR copyright;
 };
 
 struct DockWindow;

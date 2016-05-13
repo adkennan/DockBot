@@ -307,6 +307,9 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             }
             break;            
 
+        case DM_BUILTIN:
+            return (ULONG)TRUE;
+
         default:
             return DoSuperMethodA(c, o, msg);
     }

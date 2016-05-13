@@ -89,6 +89,9 @@ ULONG __saveds dock_handle_dispatch(Class *c, Object *o, Msg msg)
             }
             break;
 
+        case DM_BUILTIN:
+            return (ULONG)TRUE;
+
         default:
             return DoSuperMethodA(c, o, msg);
     }

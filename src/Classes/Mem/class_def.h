@@ -5,7 +5,9 @@
 #define CLASS_NAME      "DockMem"
 #define CLASS_VERSION   1
 #define CLASS_REVISION  0
-#define CLASS_VER_STR   " 1.0 (06/05/2016)"
+#define CLASS_VER_STR   "1.0 (06/05/2016)"
+#define CLASS_DESC		"A memory meter for DockBot"
+#define CLASS_COPYRIGHT "© 2016 Andrew Kennan"
 #define PRIVATE_DATA    MemGadgetData
 #define PARENT_CLASS    DB_ROOT_CLASS
 #define SETTINGS_CLASS  "Mem.mcc"

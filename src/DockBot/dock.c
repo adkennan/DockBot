@@ -44,9 +44,77 @@ struct NewMenu mainMenu[] = {
     { NM_END,   NULL,          0, 0, 0, 0 }
 };
 
-VOID show_about(VOID)
+
+VOID show_about(struct DockWindow *dock)
 {
-    DB_ShowMessage("DockBot 1.0\n\nA Dock For AmigaOS 3\n\n© 2016 Andrew Kennan");
+    STRPTR msg;
+    STRPTR p;
+    STRPTR name;
+    STRPTR version;
+    STRPTR desc;
+    STRPTR copy;
+    ULONG msgLen, l;
+    struct DgNode *curr;
+    struct EasyStruct es = {
+            sizeof(struct EasyStruct),
+            0,
+            "About " APP_NAME,
+            APP_NAME " Version " APP_VERSION "\n\n"
+            APP_DESCRIPTION "\n\n" APP_COPYRIGHT "\n\n%s",
+            "OK"
+    };
+
+ 
+    msgLen = 0;
+    for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
+         curr->n.mln_Succ;
+         curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+        if( ! dock_gadget_builtin(curr->dg) ) {
+
+            dock_gadget_get_info(curr->dg, &name, &version, &desc, &copy);
+
+            msgLen += strlen(name) + strlen(version) + strlen(desc) + strlen(copy) + 8;
+        }
+    } 
+
+    if( msg = (STRPTR)DB_AllocMem(msgLen, MEMF_CLEAR) ) {
+
+        p = msg;
+        for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
+             curr->n.mln_Succ;
+             curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+            if( ! dock_gadget_builtin(curr->dg) ) {
+
+                dock_gadget_get_info(curr->dg, &name, &version, &desc, &copy);
+
+                l = strlen(name);
+                CopyMem(name, p, l);
+                p += l;
+                *(p++) = ' ';
+                l = strlen(version);
+                CopyMem(version, p, l);
+                p += l;
+                *(p++) = '\n';
+                l = strlen(desc);
+                CopyMem(desc, p, l);
+                p += l;
+                *(p++) = '\n';
+                l = strlen(copy);
+                CopyMem(copy, p, l);
+                p += l;
+                *(p++) = '\n';
+                *(p++) = '\n';
+            }
+        } 
+        *p = '\0';
+    
+        EasyRequest(NULL, &es, NULL, msg);
+
+
+        DB_FreeMem(msg, msgLen);
+    }
 }
 
 VOID delete_port(struct MsgPort *port) {
@@ -114,11 +182,11 @@ VOID hide_dock_window(struct DockWindow *dock)
     if( dock->appWin ) {
         RemoveAppWindow(dock->appWin);
         dock->appWin = NULL;
-
-        delete_port(dock->awPort);
-        dock->awPort = NULL;
     }
 
+    delete_port(dock->awPort);
+    dock->awPort = NULL;
+    
     if( dock->win ) {
 
         if( dock->menu ) {
@@ -138,25 +206,22 @@ struct DockWindow* create_dock(VOID)
 	struct DockWindow *dock;
 
     if( dock = (struct DockWindow *)DB_AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
-	
+
         dock->runState = RS_STARTING;
         dock->disableLayout = TRUE;
         dock->align = DA_CENTER;
         dock->pos = DP_RIGHT;
 
-        if( dock->awPort = CreateMsgPort() ) {
-        
-            if( init_gadget_classes(dock) ) {
+        if( init_gadget_classes(dock) ) {
                         
-                if( init_gadgets(dock) ) {    
+            if( init_gadgets(dock) ) {    
                 
-                    if( init_config_notification(dock) ) {
+                if( init_config_notification(dock) ) {
                         
-                        if( init_timer_notification(dock) ) {
+                    if( init_timer_notification(dock) ) {
 
-                            return dock;
-                        }        
-                    }
+                        return dock;
+                    }        
                 }
             }
         }

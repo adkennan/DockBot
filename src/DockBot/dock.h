@@ -9,6 +9,10 @@
 #ifndef __DOCK_H__
 #define __DOCK_H__
 
+#define APP_NAME        "DockBot"
+#define APP_VERSION     "1.0"
+#define APP_DESCRIPTION "A Dock For AmigaOS 3"
+#define APP_COPYRIGHT   "© 2016 Andrew Kennan"
 
 #include <exec/types.h>
 #include <exec/lists.h>
@@ -21,7 +25,6 @@
 
 #include "dockbot.h"
 
-#include "dock.h"
 #include "dock_settings.h"
 
 typedef enum {
@@ -44,25 +47,41 @@ typedef enum {
 
 struct DockWindow 
 {
+    // Dock Settings
 	DockPosition pos;
 	DockAlign align;
+
+    // Window
 	struct Window *win;
     struct AppWindow *appWin;
     struct MsgPort *awPort;
-    struct MsgPort *aiPort;
+    struct Menu* menu;
+
+    // Gadgets
 	struct MinList gadgets;
 	struct MinList libs;
+
+    // Built in classes
     Class *gadgetClass;
     Class *handleClass;
     Class *buttonClass;
+
+    // Prefs file change notification
     struct MsgPort* notifyPort;
     struct NotifyRequest notifyReq; 
+
+    // Timer
     struct timerequest *timerReq;
     struct MsgPort* timerPort;
+
+    // Gadget communication
     struct MsgPort* gadgetPort;
+
+    // AppIcon
+    struct MsgPort *aiPort;
 	struct DiskObject* iconObj;
 	struct AppIcon* appIcon;
-    struct Menu* menu;
+
     RunState runState;
     BOOL disableLayout;
 };
@@ -99,7 +118,7 @@ VOID hide_dock_window(struct DockWindow* dock);
 
 BOOL show_dock_window(struct DockWindow* dock);
 
-VOID show_about(VOID);
+VOID show_about(struct DockWindow *dock);
 
 VOID delete_port(struct MsgPort *port);
 

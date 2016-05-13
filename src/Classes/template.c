@@ -117,7 +117,7 @@ APTR EndResident;
 
 
 char __aligned ClassLibName[]   = CLASS_NAME ".class";
-char __aligned ClassLibId[]     = CLASS_NAME CLASS_VER_STR; 
+char __aligned ClassLibId[]     = CLASS_NAME " " CLASS_VER_STR; 
 
 
 struct InitDataTable {
@@ -298,6 +298,18 @@ Class* __saveds __asm _GetEngine(
     ULONG __saveds METHOD_READCONFIG (Class *c, Object *o, Msg msg);
 #endif
 
+ULONG __saveds GetGadgetInfo(Class *c, Object *o, Msg msg)
+{
+    struct DockMessageGetInfo *i = (struct DockMessageGetInfo *)msg;
+    
+    i->name = CLASS_NAME;
+    i->description = CLASS_DESC;
+    i->version = CLASS_VER_STR;
+    i->copyright = CLASS_COPYRIGHT;
+
+    return TRUE;
+}
+
 ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 {
 #ifdef METHOD_NEW
@@ -357,6 +369,9 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 
         case DM_SETTINGS_CLASS:
             return (ULONG)SETTINGS_CLASS;
+
+        case DM_GETINFO:
+            return GetGadgetInfo(c, o, msg);
 
         default:
             return DoSuperMethodA(c, o, msg);
