@@ -124,7 +124,12 @@ VOID delete_port(struct MsgPort *port) {
         while( msg = GetMsg(port) ) {
             ReplyMsg(msg);
         }
-        DeleteMsgPort(port);
+
+        if( port->mp_Node.ln_Name ) {
+            DeletePort(port);
+        } else {
+            DeleteMsgPort(port);
+        }
     }
 }
 
@@ -212,15 +217,17 @@ struct DockWindow* create_dock(VOID)
         dock->align = DA_CENTER;
         dock->pos = DP_RIGHT;
 
-        if( init_gadget_classes(dock) ) {
+        if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
+            if( init_gadget_classes(dock) ) {
                         
-            if( init_gadgets(dock) ) {    
+                if( init_gadgets(dock) ) {    
                 
-                if( init_config_notification(dock) ) {
+                    if( init_config_notification(dock) ) {
                         
-                    if( init_timer_notification(dock) ) {
+                        if( init_timer_notification(dock) ) {
 
-                        return dock;
+                            return dock;
+                        }
                     }        
                 }
             }
@@ -247,27 +254,8 @@ VOID free_dock(struct DockWindow* dock)
         delete_port(dock->notifyPort);
     }
 
-    if( dock->buttonClass ) {
+    free_gadget_classes(dock);
 
-        if( ! free_dock_button_class(dock->buttonClass) ) {
-            printf("Could not free button class\n");
-        }
-    }
-
-    if( dock->handleClass ) {
-
-        if( ! free_dock_handle_class(dock->handleClass) ) {
-            printf("Could not free handle class\n");
-        }
-    }
-
-    if( dock->gadgetClass ) {
-
-        if( !free_dock_gadget_class(dock->gadgetClass) ) {
-            printf("Could not free root class\n");
-        }
-    }
-    
     if( dock->timerPort ) {
 
         if( dock->timerReq ) {
@@ -279,9 +267,9 @@ VOID free_dock(struct DockWindow* dock)
         delete_port(dock->timerPort);
     }
 
-    delete_port(dock->gadgetPort);
-
     free_app_icon(dock);
+
+    delete_port(dock->pubPort);
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));
 }

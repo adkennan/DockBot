@@ -38,15 +38,35 @@ BOOL create_dock_handle(struct DockWindow *dock)
 BOOL init_gadget_classes(struct DockWindow *dock)
 {
     if( dock->gadgetPort = CreateMsgPort() ) {
-        if( dock->gadgetClass = init_dock_gadget_class() ) {
-            if( dock->handleClass = init_dock_handle_class() ) {
-                if( dock->buttonClass = init_dock_button_class() ) {
-                    return TRUE;
-                }
+        if( dock->handleClass = init_dock_handle_class() ) {
+            if( dock->buttonClass = init_dock_button_class() ) {
+                return TRUE;
             }
         }   
     }
     return FALSE;
+}
+
+BOOL free_gadget_classes(struct DockWindow *dock)
+{
+    if( dock->buttonClass ) {
+        if( ! free_dock_button_class(dock->buttonClass) ) {
+            return FALSE;
+        }
+        dock->buttonClass = NULL;
+    }
+
+    if( dock->handleClass ) {
+        if( ! free_dock_handle_class(dock->handleClass) ) {
+            return FALSE;
+        }
+        dock->handleClass = NULL;
+    }
+    
+    delete_port(dock->gadgetPort);
+    dock->gadgetPort = NULL;        
+
+    return TRUE;
 }
 
 BOOL init_gadgets(struct DockWindow *dock)

@@ -10,6 +10,8 @@
 #include <clib/exec_protos.h>
 #include <pragmas/exec_pragmas.h>
 
+#include "dock_gadget.h"
+
 int __saveds __UserLibInit(void);
 void __saveds __UserLibCleanup(void);
 
@@ -17,6 +19,7 @@ struct Library *SysBase = NULL;
 struct Library *DOSBase = NULL;
 struct Library *GfxBase = NULL;
 struct Library *IntuitionBase = NULL;
+Class *gadgetClass = NULL;
 
 VOID InitMem(VOID);
 
@@ -32,14 +35,18 @@ int __saveds __UserLibInit(void)
 
                 InitMem();
 
-                return 0;
-            } else {
-                CloseLibrary(GfxBase);
-                CloseLibrary(IntuitionBase);
+                if( gadgetClass = init_dock_gadget_class() ) {
+                    return 0;
+                }
+
+                CleanUpMem();
+
+                CloseLibrary(DOSBase);
             }
-        } else {
-            CloseLibrary(IntuitionBase);
+
+            CloseLibrary(GfxBase);
         }
+        CloseLibrary(IntuitionBase);
     }    
 
     return 1;
@@ -48,6 +55,8 @@ int __saveds __UserLibInit(void)
 
 void __saveds __UserLibCleanup(void)
 {
+    free_dock_gadget_class(gadgetClass);
+
     CleanUpMem();
 
     CloseLibrary(GfxBase);

@@ -12,7 +12,7 @@ LIBS=		LIB:sc.lib LIB:amiga.lib
 CPU=		68030
 DEF_DEBUG_MEM=
 
-C_OPTS=		opt cpu=$(CPU) INCLUDEDIRECTORY=$(INC) $(DEF_DEBUG_MEM)
+C_OPTS=		opt noicons cpu=$(CPU) INCLUDEDIRECTORY=$(INC) $(DEF_DEBUG_MEM)
 
 C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c events.c gadgets.c layout.c settings.c debug.c
 
@@ -22,12 +22,14 @@ $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<
  TO $(EXEPATH)$(EXENAME)
  FROM LIB:c.o $(OBJECTS)
- LIBRARY $(LIBS)
+ LIBRARY $(LIBS) NOICONS
 <
+	@Copy /Images/$(EXENAME).info $(EXEPATH)
+	@Copy /Images/$(EXENAME)Min.info $(EXEPATH)
 
 .c.o:
 	$(COMPILER) $(C_OPTS) $*.c
 
 clean:
 	@Delete $(OBJECTS)
-	@Delete $(EXEPATH)$(EXENAME)
+	@Delete $(EXEPATH)$(EXENAME) $(EXEPATH)$(EXENAME).info $(EXEPATH)$(EXENAME)Min.info

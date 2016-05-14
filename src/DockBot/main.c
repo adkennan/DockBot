@@ -28,10 +28,22 @@ struct DockWindow *create_dock(VOID);
 VOID run_event_loop(struct DockWindow *);
 VOID free_dock(struct DockWindow *);
 
+BOOL already_running(VOID)
+{
+    if( FindPort("DockBot") ) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 int main(int argc, char** argv)
 {
     struct DockWindow *dock;
-    
+ 
+    if( already_running() ) {
+        return 0;
+    }
+   
     if( GfxBase = OpenLibrary("graphics.library", 37) ) {
 
         if( LayersBase = OpenLibrary("layers.library", 37) ) {

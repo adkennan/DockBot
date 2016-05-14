@@ -14,10 +14,6 @@
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
 
-Class *init_dock_gadget_class(VOID);
-
-BOOL free_dock_gadget_class(Class * c);
-
 VOID dock_gadget_added(Object *obj, struct MsgPort *dockPort);
 
 VOID dock_gadget_removed(Object *obj);

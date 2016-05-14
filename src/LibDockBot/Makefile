@@ -15,13 +15,13 @@ PRAGMA_FILE=	$(INC)/$(LIBNAME)_pragmas.h
 C_COMPILER=	SC:c/sc
 
 CPU=		68030
-C_OPTS=		CPU=$(CPU) STREQ STRMER NOSTKCHK NOSTANDARDIO LIBCODE INCLUDEDIRECTORY=$(INC)
+C_OPTS=		CPU=$(CPU) NOICONS STREQ STRMER NOSTKCHK NOSTANDARDIO LIBCODE INCLUDEDIRECTORY=$(INC)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c gfx.c gadget.c settings.c memory.c
+C_SOURCES=	lib.c gfx.c gadget.c settings.c memory.c dock_gadget.c
 
-OBJECTS=	lib.o gfx.o gadget.o settings.o memory.o
+OBJECTS=	lib.o gfx.o gadget.o settings.o memory.o dock_gadget.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib
 
@@ -39,7 +39,7 @@ FROM $(LIBENT) $(LIBINIT) $(OBJECTS)
 LIBFD $(FD_FILE)
 LIBVERSION $(VERSION)
 LIBREVISION $(REVISION)
-LIB $(LIBS)
+LIB $(LIBS) NOICONS
 <
 
 $(PRAGMA_FILE): $(FD_FILE).h

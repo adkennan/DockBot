@@ -62,7 +62,6 @@ struct DockWindow
 	struct MinList libs;
 
     // Built in classes
-    Class *gadgetClass;
     Class *handleClass;
     Class *buttonClass;
 
@@ -82,6 +81,9 @@ struct DockWindow
 	struct DiskObject* iconObj;
 	struct AppIcon* appIcon;
 
+    // Public message port.
+    struct MsgPort *pubPort;
+
     RunState runState;
     BOOL disableLayout;
 };
@@ -99,6 +101,8 @@ struct LibNode
 };
 
 #define TIMER_INTERVAL 250L
+
+#define MIN_ICON "PROGDIR:" APP_NAME "Min"
 
 VOID log_memory(VOID);
 
@@ -149,6 +153,8 @@ VOID free_app_icon(struct DockWindow *dock);
 BOOL create_dock_handle(struct DockWindow *dock);
 
 BOOL init_gadget_classes(struct DockWindow *dock);
+
+BOOL free_gadget_classes(struct DockWindow *dock);
 
 BOOL init_gadgets(struct DockWindow *dock);
 

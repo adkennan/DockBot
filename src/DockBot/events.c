@@ -61,10 +61,9 @@ VOID set_timer(struct DockWindow *dock, ULONG milliseconds)
     SendIO((struct IORequest *)dock->timerReq);
 }
 
-
 BOOL show_app_icon(struct DockWindow *dock)
 {
-    if( dock->iconObj = GetDefDiskObject(WBDISK) ) {
+    if( dock->iconObj = GetDiskObjectNew(MIN_ICON) ) {
         dock->iconObj->do_Type = NULL;
 
         if( dock->aiPort = CreateMsgPort() ) {
