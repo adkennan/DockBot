@@ -1,0 +1,17 @@
+begin
+  align=left
+  position=bottom
+  begin
+    gadget=DockClock
+    format=%H:%M
+  end
+  begin
+    gadget=DockMem
+  end
+  begin
+    gadget=dockbutton
+    name=Multiview
+    path=System:Utilities/Multiview
+    start=wb
+  end
+end

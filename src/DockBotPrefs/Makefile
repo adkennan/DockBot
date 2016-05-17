@@ -11,9 +11,9 @@ LIBS=		LIB:sc.lib LIB:amiga.lib
 
 C_OPTS=		$(INC)
 
-C_SOURCES=	main.c 
+C_SOURCES=	main.c pref_editor.c
 
-OBJECTS=	main.o 
+OBJECTS=	main.o pref_editor.o
 
 $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<

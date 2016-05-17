@@ -1,0 +1,24 @@
+	SC:c/sc INCLUDEDIRECTORY=//include INCLUDEDIRECTORY=MUI:Developer/C/Include pref_editor.c
+SAS/C Amiga Compiler 6.58
+Copyright (c) 1988-1995 SAS Institute Inc.
+
+====================
+            if( !(gi = get_gadget_info(config, s, gadName) [33;7m)[0m ) {
+pref_editor.c 100 Warning 225: pointer type mismatch
+                               "struct GadgetInfo *" does not match "struct DockGadgetInfo *"
+
+====================
+            AddTail((struct List *)&(config->gadgets), gi[33;7m)[0m;
+pref_editor.c 105 Warning 88: argument type incorrect
+                              Expecting "struct Node *", found "struct GadgetInfo *"
+pref_editor.c 91 Warning 93: no reference to identifier "gad"
+	SC:c/slink WITH temp_smk.tmp
+Slink - Version 6.58
+Copyright (c) 1988-1995 SAS Institute, Inc.  All Rights Reserved.
+
+[4mUndefined symbols       [0m [4mFirst Referenced[0m
+_DockBotBase             File 'pref_editor.o'
+Enter a DEFINE value for _DockBotBase (default ___stub): Error 510: _DockBotBase symbol - Near Reference to data item not in near data section
+
+  First Reference in Unit pref_editor.c at offset 00000018 in file 'pref_editor.o'
+  To Unit _stub.c at offset 000089a0 in file 'LIB:sc.lib'

@@ -1,0 +1,92 @@
+;
+; DockBot Installer
+;
+
+(set #welcome "This is the installer for DockBot." )
+(set #app-dir "SYS:DockBot" )
+(set #run-on-start "Yes" )
+(set #launcher-dir "SYS:WbStartup")
+(set #launcher-name "DockBotStart")
+(set #prefs-file "ENVARC:DockBot.prefs")
+(set #prefs-file-curr "ENV:DockBot.prefs")
+
+(set #copy-prefs "Yes")
+
+(message #welcome)
+(welcome)
+(complete 0)
+(if (> @user-level 0)
+	(
+		(set #app-dir
+			(askdir
+				(prompt "Please select the location to install DockBot.")
+				(default "Sys:DockBot")
+				(help "This is the directory DockBot will be placed in.")
+			)
+		)
+		(set #run-on-start
+			(askbool
+				(prompt "Do you want DockBot to be run when Workbench starts?")
+				(choices "Yes" "No")
+				(help (cat "If you select No the WbStartup launcher will be placed in "
+							#app-dir)
+				)
+			)
+		)
+	)
+)
+(if (exists #prefs-file) 
+	(set #copy-prefs 
+		(askbool
+			(prompt "Do you want to replace your existing DockBot configuration?")
+			(choices "Yes" "No")
+			(help "An existing DockBot.prefs file was found. Choosing Yes will overwrite it. Choosing No will leave it alone.")
+		)
+	)
+)
+(set @default-dest #app-dir)
+(complete 35)
+(copyfiles (source "bin/")
+		   (dest #app-dir)
+ 		   (help copyfiles-help)
+		   (all)
+           (infos)
+)
+(complete 50)
+(if (= #copy-prefs "Yes" )
+	(
+
+		(copyfiles 
+			(source "Default.prefs")
+			(dest #prefs-file)
+			(help copyfiles-help)
+		)
+		(copyfiles 
+			(source "Default.prefs")
+			(dest #prefs-file-curr)
+			(help copyfiles-help)
+		)
+	)
+)
+(complete 70)
+(if (= #run-on-start "No" )
+	(
+	(set #launcher-dir #app-dir)
+	)
+)
+(set #launcher (tackon #launcher-dir #launcher-name))
+(if (exists #launcher) 
+	(delete #launcher)
+)
+(copyfiles
+	(source "src/Images/DockBotStart.info")
+	(dest #launcher-dir)
+	(help copyfiles-help)
+)
+
+(textfile 
+	(dest #launcher)
+	(append (cat "C:WBRUN " (tackon #app-dir "DockBot")))
+	(safe)
+)
+(complete 100)

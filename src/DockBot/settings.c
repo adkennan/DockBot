@@ -13,33 +13,12 @@
 #include <clib/intuition_protos.h>
 
 #include "dock_gadget.h"
+#include "dock_settings.h"
 
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
 #include <stdio.h>
-
-#define CONFIG_FILE "ENV:DockBot.prefs"
-
-#define S_ALIGN "align"
-#define S_POSITION "position"
-#define S_GADGET "gadget"
-
-struct Values AlignValues[] = {
-    { "left", DA_LEFT },
-    { "center", DA_CENTER },
-    { "right", DA_RIGHT },
-    { NULL, 0 }
-};
-
-struct Values PositionValues[] = {
-    { "left", DP_LEFT },
-    { "right", DP_RIGHT },
-    { "top", DP_TOP },
-    { "bottom", DP_BOTTOM },
-    { NULL, 0 }
-};
-
 
 BOOL read_dock_gadget(struct DockWindow *dock, struct DockSettings *settings)
 {
