@@ -3,17 +3,13 @@
 #define __PREF_EDITOR_H__
 
 #include "dockbot.h"
+#include "dock_settings.h"
 
 #include <exec/lists.h>
 #include <intuition/classes.h>
 
 struct DockGadgetInfo {
 	struct MinNode n;
-	STRPTR gadgetName;
-	STRPTR name;
-	STRPTR description;
-	STRPTR version;
-	STRPTR copyright;
 	Object *editor;
 };
 
@@ -37,6 +33,30 @@ struct GadgetList* load_config(VOID);
 
 VOID free_config(struct GadgetList* config);
 
-//Object *get_editor(UWORD ix);
+typedef enum {
+    DM_DISPLAYNAME  = 1300,
+    DM_ABOUT        = 1301,
+    DM_WRITECONFIG  = 1302
+} DockPrefsMsg;
+
+struct DockPrefMsgDisplayName {
+    ULONG MethodID;
+    STRPTR displayName;
+};
+
+struct DockPrefMsgAbout {
+    ULONG MethodID;
+    STRPTR name;
+    STRPTR gadgetName;
+    STRPTR description;
+    STRPTR version;
+    STRPTR copyright;
+};
+
+struct DockPrefMsgConfig {
+    ULONG MethodID;
+    struct DockSettings *settings;
+};
+
 
 #endif

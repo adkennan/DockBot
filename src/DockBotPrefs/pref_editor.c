@@ -1,7 +1,6 @@
 
 #include "pref_editor.h"
 
-#include "dock_settings.h"
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
@@ -12,18 +11,42 @@
 
 #include <clib/alib_protos.h>
 
+#include <clib/muimaster_protos.h>
+#include <pragmas/muimaster_pragmas.h>
+
 #include <string.h>
 
 #include <stdio.h>
 
+#include "button_editor.h"
+
+extern struct Library *MUIMasterBase;
+
+struct Values AlignValues[] = {
+    { "left", DA_LEFT },
+    { "center", DA_CENTER },
+    { "right", DA_RIGHT },
+    { NULL, 0 }
+};
+
+struct Values PositionValues[] = {
+    { "left", DP_LEFT },
+    { "right", DP_RIGHT },
+    { "top", DP_TOP },
+    { "bottom", DP_BOTTOM },
+    { NULL, 0 }
+};
+
+
 Object *get_settings_class(struct GadgetList *config, Object *o, STRPTR gadName)
 {
-    STRPTR editorName;
+//    STRPTR editorName;
 
     if( strcmp(gadName, "dockbutton") ) {
-        editorName = "dbEditor";
-    } else {
-        editorName = (STRPTR)DoMethod(o, DM_SETTINGS_CLASS);
+        return MUI_NewObject(BUTTON_EDITOR_CLASS, NULL);
+
+//    } else {
+//        editorName = (STRPTR)DoMethod(o, DM_SETTINGS_CLASS);
     }
 
     return NULL;
@@ -45,11 +68,8 @@ struct DockGadgetInfo *get_gadget_info(struct GadgetList *config, struct DockSet
     UWORD len;
     STRPTR suffix = ".class";
     struct DockGadgetInfo *gi;
-    struct DockMessageGetInfo iMsg;
     
     if( gi = (struct DockGadgetInfo *)DB_AllocMem(sizeof(struct DockGadgetInfo), MEMF_CLEAR) ) {
-
-        gi->gadgetName = gadName;
 
         if( ! (o = NewObjectA(NULL, gadName, TAG_DONE) ) ) {
 
@@ -63,12 +83,6 @@ struct DockGadgetInfo *get_gadget_info(struct GadgetList *config, struct DockSet
         }
 
         if( o ) {
-            iMsg.MethodID = DM_GETINFO;
-            DoMethodA(o, (Msg)&iMsg);
-            gi->name = iMsg.name;
-            gi->version = iMsg.version;
-            gi->description = iMsg.description;
-            gi->copyright = iMsg.copyright;
             gi->editor = get_settings_class(config, o, gadName);
 
             if( gi->editor ) {
@@ -183,7 +197,8 @@ VOID free_config(struct GadgetList *config)
 
         while( ! IsListEmpty((struct List *)&config->gadgets) ) {
             if( gi = (struct DockGadgetInfo *)RemTail((struct List *)&config->gadgets) ) {
-                FREE_STRING(gi->gadgetName);
+
+                DisposeObject(gi->editor);
 
                 DB_FreeMem(gi, sizeof(struct DockGadgetInfo));
             }            

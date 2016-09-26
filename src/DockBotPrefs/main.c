@@ -4,12 +4,15 @@
 #include <libraries/mui.h>
 #include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
+#include <clib/intuition_protos.h>
 #include <clib/muimaster_protos.h>
 #include <pragmas/muimaster_pragmas.h>
 
 #include <stdio.h>
 
 #include "pref_editor.h"
+#include "editor_base.h"
+#include "button_editor.h"
 
 #ifndef MAKE_ID
 #define MAKE_ID(a,b,c,d) ((ULONG) (a)<<24 | (ULONG) (b)<<16 | (ULONG) (c)<<8 | (ULONG) (d))
@@ -23,22 +26,9 @@ static const char *_startTypes[] = { "Workbench", "Shell", NULL };
 struct Library *MUIMasterBase;
 struct Library *DockBotBase;
 
-VOID dump_config(struct GadgetList *config)
-{
-    struct DockGadgetInfo *gi;
-
-    for( gi = (struct DockGadgetInfo *)config->gadgets.mlh_Head;
-                gi->n.mln_Succ;
-                gi = (struct DockGadgetInfo *)gi->n.mln_Succ) {
-        printf("%s : %s : %s : %s : %s : %s\n",
-            gi->gadgetName, gi->name, gi->version,
-            gi->description, gi->copyright);
-    }
-}
-
 LONG __asm __saveds display_gadget(register __a2 char **array, register __a1 struct DockGadgetInfo *dgi)
 {
-    *array = dgi->gadgetName;
+    *array = (STRPTR)DoMethod(dgi->editor, DM_DISPLAYNAME);
 
     return 0;
 }
@@ -52,15 +42,19 @@ int main(int argc, char *argv[])
     struct GadgetList *config;
     struct DockGadgetInfo *dgi;
     APTR gadgetList;
+    Class *editorBase;
+    Class *buttonEditor;
 
     struct Hook dispHook = { { NULL, NULL }, (VOID *)display_gadget, NULL, NULL };
-
-    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
     
-        if( ! (config = load_config() ) ) {
+    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
 
-            return;
-        }
+    if( editorBase = editor_base_init() ) {
+   
+    if( buttonEditor = button_editor_init() ) {
+
+    if( config = load_config() ) {
+
 
     if( MUIMasterBase = OpenLibrary(MUIMASTER_NAME, MUIMASTER_VMIN) ) {
 
@@ -162,9 +156,24 @@ int main(int argc, char *argv[])
         }
         CloseLibrary(MUIMasterBase);
     }
-        if( config ) {
-            free_config(config);
-        }
-        CloseLibrary(DockBotBase);
+         
+    free_config(config);
+    } else {
+        printf("Couldn't load config.\n");
+    }
+
+    button_editor_free(buttonEditor);
+    } else {
+        printf("Couldn't create button editor.\n");
+    }
+
+    editor_base_free(editorBase);
+    } else {
+        printf("Couldn't create editor base.\n");
+    }
+    
+    CloseLibrary(DockBotBase);
+    } else {
+        printf("Couldn't open DockBotBase.\n");
     }
 }
