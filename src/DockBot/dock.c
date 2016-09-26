@@ -138,6 +138,7 @@ BOOL show_dock_window(struct DockWindow *dock)
 	struct Screen *screen;
     APTR* vi;
     BOOL result = FALSE;
+    struct DrawInfo *di;
 
 	struct TagItem tags[] = {
 		{ WA_Left, 0 },
@@ -153,28 +154,33 @@ BOOL show_dock_window(struct DockWindow *dock)
 
 	if( screen = LockPubScreen(NULL) ) {
 
-  		if( dock->win = OpenWindowTagList(NULL, tags) ) {
+        if( di = GetScreenDrawInfo(screen, di) ) {
+
+      		if( dock->win = OpenWindowTagList(NULL, tags) ) {
 	
-            if( vi = GetVisualInfo(dock->win->WScreen, TAG_END) ) {
+                if( vi = GetVisualInfo(dock->win->WScreen, TAG_END) ) {
         
-                if( dock->menu = CreateMenus(mainMenu, TAG_END) ) {           
+                    if( dock->menu = CreateMenus(mainMenu, GTMN_FrontPen, di->dri_Pens[TEXTPEN], TAG_END) ) {           
 
-                    if( LayoutMenus(dock->menu, vi, TAG_END) ) {
+                        if( LayoutMenus(dock->menu, vi, TAG_END) ) {
 
-                        if( SetMenuStrip(dock->win, dock->menu) ) {
+                            if( SetMenuStrip(dock->win, dock->menu) ) {
 
-                            if( dock->awPort = CreateMsgPort() ) {
+                                if( dock->awPort = CreateMsgPort() ) {
 
-                                if( dock->appWin = AddAppWindow(1, 0, dock->win, dock->awPort, NULL) ) {
+                                    if( dock->appWin = AddAppWindow(1, 0, dock->win, dock->awPort, NULL) ) {
                     
-                                    result = TRUE;
+                                        result = TRUE;
+                                    
+                                    }
                                 }
                             }
                         }
                     }
+                    FreeVisualInfo(vi);  
                 }
-                FreeVisualInfo(vi);  
-            }   
+            }
+            FreeScreenDrawInfo(screen, di);   
         }
         UnlockPubScreen(NULL, screen);
     }

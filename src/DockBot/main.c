@@ -14,6 +14,7 @@
 
 const char __ver[40] = "$VER:DockBot 1.0 (10.04.2016)";
 
+struct Library *DosBase;
 struct Library *LayersBase;
 struct Library *GfxBase;
 struct Library *IntuitionBase;
@@ -44,6 +45,7 @@ int main(int argc, char** argv)
         return 0;
     }
    
+    if( DosBase = OpenLibrary("dos.library", 37) ) {
     if( GfxBase = OpenLibrary("graphics.library", 37) ) {
 
         if( LayersBase = OpenLibrary("layers.library", 37) ) {
@@ -80,4 +82,7 @@ int main(int argc, char** argv)
         }
         CloseLibrary(GfxBase);
     }
+    CloseLibrary(DosBase);
+    }  
+    
 }

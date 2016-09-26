@@ -93,6 +93,10 @@ ELSE
   SET DEFDEBUGMEM "define=NO_DEBUG_MEM"
 ENDIF
 
+IF NOT EXISTS /bin
+  MAKEDIR /bin
+ENDIF
+
 IF <NOLIB$LIB> EQ LIB
   echo Compiling dockbot.library
   cd LibDockBot
@@ -108,6 +112,15 @@ IF <NOEXE$EXE> EQ EXE
 ENDIF
 
 IF <NOCLASSES$CLASSES> EQ CLASSES
+
+  IF NOT EXISTS /bin/Gadgets
+    MAKEDIR /bin/Gadgets
+  ENDIF
+
+  IF NOT EXISTS /bin/Prefs
+    MAKEDIR /bin/Prefs
+  ENDIF
+
   echo Compiling Classes/Clock
   cd Classes/Clock
   smake <CLEAN> CPU=<CPU>

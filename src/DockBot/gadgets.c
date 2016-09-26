@@ -21,6 +21,8 @@
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
+#include <stdio.h>
+
 BOOL create_dock_handle(struct DockWindow *dock)
 {
     Object *gad;
@@ -108,8 +110,6 @@ VOID draw_gadgets(struct DockWindow *dock)
         win = dock->win;
         rp = win->RPort;
 
-        LockLayer(NULL, win->WLayer);
-    
         SetAPen(rp, 0);
         RectFill(rp, 0, 0, win->Width, win->Height);
 
@@ -119,8 +119,6 @@ VOID draw_gadgets(struct DockWindow *dock)
 
             dock_gadget_draw(curr->dg, rp);
         }
-
-        UnlockLayer(win->WLayer);
     }
 }
 
@@ -138,14 +136,10 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 
         DB_GetDockGadgetBounds(gadget, &gb);
 
-        LockLayer(NULL, win->WLayer);
-
         SetAPen(rp, 0);
         RectFill(rp, gb.x, gb.y, gb.w, gb.h);
     
         dock_gadget_draw(gadget, rp);
-    
-        UnlockLayer(win->WLayer);
     }
 }
 
@@ -219,15 +213,11 @@ Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
     Object *o;
     char libName[50];
     struct Library *lib;
-    UWORD len;
     struct LibNode *ln = NULL;
-    STRPTR suffix = ".class";
 
     if( ! (o = NewObjectA(NULL, name, TAG_DONE) ) ) {
 
-        len = strlen(name);
-        CopyMem(name, &libName, len);
-        CopyMem(suffix, &libName[len], strlen(suffix) + 1);
+        sprintf(libName, "Gadgets/%s.class", name);
 
         if( lib = OpenLibrary(libName, 1) ) {
 

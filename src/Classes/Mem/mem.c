@@ -123,7 +123,7 @@ ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
 
             DB_DrawInsetFrame(d->rp, &barFrame);
 
-            w = (UWORD)(((freeChip * 100) / totalChip) * (barFrame.w - 2)) / 100;
+            w = (UWORD)((((totalChip - freeChip) * 100) / totalChip) * (barFrame.w - 2)) / 100;
             SetAPen(d->rp, drawInfo->dri_Pens[FILLPEN]);
             RectFill(d->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
             
@@ -136,7 +136,7 @@ ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
 
                 DB_DrawInsetFrame(d->rp, &barFrame);
 
-                w = (UWORD)(((freeFast * 100) / totalFast) * (barFrame.w - 2)) / 100;
+                w = (UWORD)((((totalFast - freeFast) * 100) / totalFast) * (barFrame.w - 2)) / 100;
                 SetAPen(d->rp, drawInfo->dri_Pens[FILLPEN]);
                 RectFill(d->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
             }

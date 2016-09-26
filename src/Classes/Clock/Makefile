@@ -6,7 +6,7 @@ REVISION=	0
 INC=		INCLUDEDIRECTORY=///include INCLUDEDIRECTORY=/
 
 LIBFILE=	$(LIBNAME).class
-LIBDIR=		///bin/
+LIBDIR=		///bin/Gadgets/
 
 FD_CONV=	SC:c/fd2pragma
 FD_FILE=	/template.fd

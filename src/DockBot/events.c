@@ -178,18 +178,25 @@ VOID handle_window_event(struct DockWindow *dock)
     struct IntuiMessage *msg;
     Object *gadget;
     MenuIndex menuItem;
-    UWORD menuNum;
+    UWORD mouseX, mouseY, msgClass, msgCode, menuNum;
     struct MenuItem *item;
 
     while( msg = (struct IntuiMessage *)GetMsg(dock->win->UserPort) ) {
     
-        switch( msg->Class )
+        msgClass = msg->Class;
+        msgCode = msg->Code;
+        mouseX = msg->MouseX;
+        mouseY = msg->MouseY;
+
+        ReplyMsg((struct Message *)msg);
+        
+        switch( msgClass )
         {
             case IDCMP_MOUSEBUTTONS: 
-                if( msg->Code == SELECTUP ) {
-                    if( gadget = get_gadget_at(dock, msg->MouseX, msg->MouseY) ) {
+                if( msgCode == SELECTUP ) {
+                    if( gadget = get_gadget_at(dock, mouseX, mouseY) ) {
       
-                        dock_gadget_click(gadget, msg->MouseX, msg->MouseY);
+                        dock_gadget_click(gadget, mouseX, mouseY);
                     }
                 }
                 break;
@@ -202,7 +209,7 @@ VOID handle_window_event(struct DockWindow *dock)
                 break;
         
             case IDCMP_MENUPICK:
-                menuNum = msg->Code;
+                menuNum = msgCode;
                 while( menuNum != MENUNULL ) {
                     item = ItemAddress(dock->menu, menuNum);
                     menuItem = (MenuIndex)GTMENUITEM_USERDATA(item);
@@ -227,7 +234,6 @@ VOID handle_window_event(struct DockWindow *dock)
                 break;
         }
         
-        ReplyMsg((struct Message *)msg);
     }
 }
 
@@ -369,16 +375,17 @@ VOID run_event_loop(struct DockWindow *dock)
 
             case RS_RUNNING:
             case RS_QUITTING:
+
+                winsig = WIN_SIG(dock);
+                docksig = DOCK_SIG(dock);
+                iconsig = ICON_SIG(dock);
+                notifysig = NOTIFY_SIG(dock);
+                timersig = TIMER_SIG(dock);
+                gadgetsig = GADGET_SIG(dock);
+
+                totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | SIGBREAKF_CTRL_C;
+
                 while( dock->runState == RS_RUNNING || dock->runState == RS_QUITTING ) {
-
-                    winsig = WIN_SIG(dock);
-                    docksig = DOCK_SIG(dock);
-                    iconsig = ICON_SIG(dock);
-                    notifysig = NOTIFY_SIG(dock);
-                    timersig = TIMER_SIG(dock);
-                    gadgetsig = GADGET_SIG(dock);
-
-                    totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | SIGBREAKF_CTRL_C;
 
                     signals = Wait( totsig );
 
@@ -388,32 +395,26 @@ VOID run_event_loop(struct DockWindow *dock)
                     }
 
                     if( signals & timersig ) {
-            
                         handle_timer_message(dock);
                     }
 
                     if( signals & winsig ) {
-            
                         handle_window_event(dock);          
                     }
 
                     if( signals & docksig ) {
-
                         handle_drop_event(dock);
                     }
 
                     if( signals & iconsig ) {
-                            
                         handle_icon_event(dock);
                     }
 
                     if( signals & notifysig ) {
-
                         handle_notify_message(dock);
                     }
 
                     if( signals & gadgetsig ) {
-
                         handle_gadget_message(dock);
                     }
 
