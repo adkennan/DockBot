@@ -17,6 +17,7 @@
 #include <clib/intuition_protos.h>
 #include <clib/wb_protos.h>
 #include <clib/gadtools_protos.h>
+#include <clib/commodities_protos.h>
 #include <devices/timer.h>
 
 #include <stdio.h>
@@ -133,6 +134,103 @@ VOID delete_port(struct MsgPort *port) {
     }
 }
 
+
+BOOL create_cx_broker(struct DockWindow *dock)
+{
+    struct NewBroker nb = {
+        NB_VERSION,
+        APP_NAME,
+        APP_NAME,
+        APP_DESCRIPTION,
+        NBU_UNIQUE, COF_SHOW_HIDE, 0, 0, 0
+    };
+
+    if( dock->cxPort = CreateMsgPort() ) {
+
+        nb.nb_Port = dock->cxPort;
+
+        if( dock->cxBroker = CxBroker(&nb, NULL) ) {
+
+            return TRUE;   
+        }
+
+    }
+
+    return FALSE;
+}
+
+VOID free_cx_broker(struct DockWindow *dock) 
+{
+    if( dock->cxBroker ) {
+
+        DeleteCxObjAll(dock->cxBroker);
+        dock->cxBroker = NULL;
+    }
+
+    if( dock->cxPort ) {
+        delete_port(dock->cxPort);
+        dock->cxPort = NULL;
+    }
+}
+
+BOOL init_cx_broker(struct DockWindow *dock)
+{
+    struct DgNode *curr;
+    STRPTR hotKey;
+    CxObj *filter, *sender, *translate;
+    UWORD msgId;
+    
+    if( dock->cxBroker ) {
+        free_cx_broker(dock);
+    } 
+    
+    if( create_cx_broker(dock) ) {
+
+        msgId = 0;
+
+        for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
+                    curr->n.mln_Succ; 
+                    curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+            dock_gadget_get_hotkey(curr->dg, &hotKey);
+            if( hotKey ) {
+                if( filter = CxFilter(hotKey) ) {
+                                    
+                    AttachCxObj(dock->cxBroker, filter);
+
+                    if( sender = CxSender(dock->cxPort, msgId) ) {
+
+                        AttachCxObj(filter, sender);
+
+                        if( translate = CxTranslate(NULL) ) {
+
+                            AttachCxObj(filter, translate);
+    
+                            if( CxObjError(filter) ) {
+                                return FALSE;
+                            }
+                        } else {
+                            return FALSE;
+                        }
+                    } else {
+                        return FALSE;
+                    }
+
+                } else {
+                    return FALSE;
+                }
+            }
+            msgId++;
+        }
+
+        ActivateCxObj(dock->cxBroker, 1L);
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 BOOL show_dock_window(struct DockWindow *dock)
 {
 	struct Screen *screen;
@@ -154,7 +252,7 @@ BOOL show_dock_window(struct DockWindow *dock)
 
 	if( screen = LockPubScreen(NULL) ) {
 
-        if( di = GetScreenDrawInfo(screen, di) ) {
+        if( di = GetScreenDrawInfo(screen) ) {
 
       		if( dock->win = OpenWindowTagList(NULL, tags) ) {
 	
@@ -224,6 +322,7 @@ struct DockWindow* create_dock(VOID)
         dock->pos = DP_RIGHT;
 
         if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
+
             if( init_gadget_classes(dock) ) {
                         
                 if( init_gadgets(dock) ) {    
@@ -248,6 +347,8 @@ struct DockWindow* create_dock(VOID)
 
 VOID free_dock(struct DockWindow* dock)
 {
+    free_cx_broker(dock);
+
     hide_dock_window(dock);
 
     remove_dock_gadgets(dock);

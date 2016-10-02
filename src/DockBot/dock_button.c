@@ -17,6 +17,7 @@
 #include <clib/graphics_protos.h>
 #include <clib/dos_protos.h>
 
+
 /****
 ** Icon Library v44+
 */
@@ -42,27 +43,24 @@ extern struct Library *IconBase;
 
 #define CLASS_NAME "dockbutton"
 
-#define S_NAME "name"
-#define S_PATH "path"
-#define S_ICON "icon"
-#define S_START "start"
-#define S_ARGS "args"
-#define S_CON "console"
+#define S_NAME      "name"
+#define S_PATH      "path"
+#define S_START     "start"
+#define S_ARGS      "args"
+#define S_CON       "console"
+#define S_HOTKEY    "key"
 
 #define ST_WB 0
 #define ST_SH 1
 
-#define DEFAULT_CONSOLE "NIL:"
-
-#define WBSTART "C:WBRun"
 
 struct DockButtonData
 {
     STRPTR name;
     STRPTR path;
-    STRPTR icon;
     STRPTR args;
     STRPTR con;
+    STRPTR hotKey;
     UWORD imageW;
     UWORD imageH;
     struct DiskObject *diskObj;
@@ -76,6 +74,64 @@ struct Values StartValues[] = {
     { "sh", ST_SH },
     { NULL, 0 }
 };
+
+
+#define DEFAULT_CONSOLE "NIL:"
+
+#define WBSTART "C:WBRun"
+
+
+VOID read_button_settings(struct DockButtonData *dbd, struct DockMessageReadSettings *m)
+{
+    struct DockSettingValue v;
+    struct Values *vals;
+    struct Screen *screen;
+    UWORD len;
+
+    while( DB_ReadSetting(m->settings, &v) ) {
+        
+        if( IS_KEY(S_NAME, v) ) {
+            GET_STRING(v, dbd->name)     
+        }
+        else if( IS_KEY(S_PATH, v) ) {
+            GET_STRING(v, dbd->path)
+        }
+        else if( IS_KEY(S_START, v) ) {
+            GET_VALUE(v, StartValues, vals, len, dbd->startType)
+        }
+        else if( IS_KEY(S_ARGS, v) ) {
+            GET_STRING(v, dbd->args)
+        }
+        else if( IS_KEY(S_CON, v) ) {
+            GET_STRING(v, dbd->con)
+        }
+        else if( IS_KEY(S_HOTKEY, v) ) {
+            GET_STRING(v, dbd->hotKey)
+        }
+    }    
+
+    if( dbd->diskObj = GetDiskObjectNew(dbd->path) ) {
+        if( screen = LockPubScreen(NULL) ) {
+
+            LayoutIconA(dbd->diskObj, screen, NULL);
+
+            UnlockPubScreen(NULL, screen);
+        }
+    }
+}
+
+VOID dispose_button_data(struct DockButtonData *dbd) 
+{
+    FREE_STRING(dbd->name);
+    FREE_STRING(dbd->path);
+    FREE_STRING(dbd->args);
+    FREE_STRING(dbd->con);    
+    FREE_STRING(dbd->hotKey);
+
+    if( dbd->diskObj ) {
+        FreeDiskObject(dbd->diskObj);
+    }
+}
 
 VOID dock_button_draw(Object *o, struct DockButtonData *dbd, struct DockMessageDraw *dmd)
 {
@@ -107,72 +163,15 @@ VOID dock_button_get_size(struct DockButtonData *dbd, struct DockMessageGetSize 
 
     if( dbd->diskObj ) {
         if( GetIconRectangleA(NULL, dbd->diskObj, NULL, &r, NULL) ) {
-            gsm->w = r.MaxX - r.MinX + 1;
+            gsm->w = dbd->imageW = r.MaxX - r.MinX + 1;
             if( gsm->w < DEFAULT_SIZE ) {
                 gsm->w = DEFAULT_SIZE;
             }
-            gsm->h = r.MaxY - r.MinY + 1;
+            gsm->h = dbd->imageH = r.MaxY - r.MinY + 1;
             if( gsm->h < DEFAULT_SIZE ) {
                 gsm->h = DEFAULT_SIZE;
             }
         }
-    }
-
-    dbd->imageW = gsm->w;
-    dbd->imageH = gsm->h;
-}
-
-VOID read_button_settings(struct DockButtonData *dbd, struct DockMessageReadSettings *m)
-{
-    struct DockSettingValue v;
-    struct Values *vals;
-    struct Screen *screen;
-    UWORD len;
-
-    while( DB_ReadSetting(m->settings, &v) ) {
-        
-        if( IS_KEY(S_NAME, v) ) {
-            GET_STRING(v, dbd->name)     
-        }
-        else if( IS_KEY(S_PATH, v) ) {
-            GET_STRING(v, dbd->path)
-        }
-        else if( IS_KEY(S_ICON, v) ) {
-            GET_STRING(v, dbd->icon)
-        }
-        else if( IS_KEY(S_START, v) ) {
-            GET_VALUE(v, StartValues, vals, len, dbd->startType)
-        }
-        else if( IS_KEY(S_ARGS, v) ) {
-            GET_STRING(v, dbd->args)
-        }
-        else if( IS_KEY(S_CON, v) ) {
-            GET_STRING(v, dbd->con)
-        }
-    }    
-
-    if( ! dbd->icon ) {
-        if( dbd->diskObj = GetDiskObjectNew(dbd->path) ) {
-            if( screen = LockPubScreen(NULL) ) {
-
-                LayoutIconA(dbd->diskObj, screen, NULL);
-
-                UnlockPubScreen(NULL, screen);
-            }
-        }
-    }
-}
-
-VOID dispose_button_data(struct DockButtonData *dbd) 
-{
-    FREE_STRING(dbd->name);
-    FREE_STRING(dbd->path);
-    FREE_STRING(dbd->icon);
-    FREE_STRING(dbd->args);
-    FREE_STRING(dbd->con);    
-
-    if( dbd->diskObj ) {
-        FreeDiskObject(dbd->diskObj);
     }
 }
 
@@ -252,6 +251,11 @@ VOID dock_button_launch(struct DockButtonData *dbd, Msg msg, STRPTR* dropNames, 
     }
 }
 
+VOID dock_button_get_hotkey(struct DockButtonData *dbd, struct DockMessageGetHotKey *m)
+{
+    m->hotKey = dbd->hotKey;
+}
+
 ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
 {
     struct DockButtonData *dbd;
@@ -268,6 +272,7 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             return DoSuperMethodA(c, o, msg);            
 
         case DM_CLICK:
+        case DM_HOTKEY:
             dbd = INST_DATA(c,o);
             dbd->counter = 2;
             dbd->iconState = 1;
@@ -309,6 +314,10 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
 
         case DM_BUILTIN:
             return (ULONG)TRUE;
+
+        case DM_GETHOTKEY:
+            dock_button_get_hotkey(INST_DATA(c, o), (struct DockMessageGetHotKey*)msg);
+            break;
 
         default:
             return DoSuperMethodA(c, o, msg);

@@ -16,6 +16,7 @@
 #include <clib/intuition_protos.h>
 #include <clib/wb_protos.h>
 #include <clib/icon_protos.h>
+#include <clib/commodities_protos.h>
 #include <devices/timer.h>
 
 #include <stdio.h>
@@ -36,6 +37,7 @@
 #define NOTIFY_SIG(dw) (dw->notifyPort ? (1 << dw->notifyPort->mp_SigBit) : 0)
 #define TIMER_SIG(dw) (dw->timerPort ? (1 << dw->timerPort->mp_SigBit) : 0)
 #define GADGET_SIG(dw) (dw->gadgetPort ? (1 << dw->gadgetPort->mp_SigBit) : 0)
+#define CX_SIG(dw) (dw->cxPort ? (1 << dw->cxPort->mp_SigBit) : 0)
 
 BOOL init_timer_notification(struct DockWindow *dock)
 {
@@ -318,9 +320,72 @@ VOID handle_gadget_message(struct DockWindow *dock)
     }
 }
 
+VOID handle_cx_message(struct DockWindow *dock)
+{
+    CxMsg *msg;
+    ULONG msgType, msgId, ix;
+    struct DgNode *curr;
+
+    while( msg = (CxMsg*)GetMsg(dock->cxPort) ) {
+
+        msgType = CxMsgType(msg);
+        msgId = CxMsgID(msg);
+
+        ReplyMsg((struct Message *)msg);
+
+        switch(msgType) {
+            
+            case CXM_COMMAND:
+                switch( msgId ) {
+                    case CXCMD_DISABLE:
+                        if( dock->cxBroker ) {
+                            ActivateCxObj(dock->cxBroker, 0L);
+                        }
+                        break;
+            
+                    case CXCMD_ENABLE:
+                        if( dock->cxBroker ) {
+                            ActivateCxObj(dock->cxBroker, 1L);    
+                        }
+                        break;
+
+                    case CXCMD_KILL:
+                        dock->runState = RS_QUITTING;
+                        break;
+
+                    case CXCMD_APPEAR:
+                        if( ! dock->win ) {
+                            dock->runState = RS_SHOWING;
+                        }
+                        break;
+
+                    case CXCMD_DISAPPEAR:
+                        if( dock->win ) {
+                            dock->runState = RS_HIDING;
+                        }
+                        break;
+                }
+                break;
+
+            case CXM_IEVENT:
+                ix = 0;
+                for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
+                     curr->n.mln_Succ; 
+                     curr = (struct DgNode *)curr->n.mln_Succ ) {
+                    if( ix == msgId ) {
+                        dock_gadget_hotkey(curr->dg);
+                        break;
+                    }
+                    ix++;
+                }
+                break;
+        }
+    }
+}
+
 VOID run_event_loop(struct DockWindow *dock)
 {
-    ULONG signals, winsig, iconsig, docksig, notifysig, timersig, gadgetsig, totsig;
+    ULONG signals, winsig, iconsig, docksig, notifysig, timersig, gadgetsig, cxsig, totsig;
 
     while( dock->runState != RS_STOPPED ) {
 
@@ -328,6 +393,9 @@ VOID run_event_loop(struct DockWindow *dock)
 
             case RS_STARTING:
                 if( ! load_config(dock) ) {
+                    return;
+                }
+                if( ! init_cx_broker(dock) ) {
                     return;
                 }
                 if( ! show_dock_window(dock) ) {
@@ -346,6 +414,9 @@ VOID run_event_loop(struct DockWindow *dock)
                     return;
                 }
                 if( ! load_config(dock) ) {
+                    return;
+                }
+                if( ! init_cx_broker(dock) ) {
                     return;
                 }
                 if( ! show_dock_window(dock) ) {
@@ -382,8 +453,9 @@ VOID run_event_loop(struct DockWindow *dock)
                 notifysig = NOTIFY_SIG(dock);
                 timersig = TIMER_SIG(dock);
                 gadgetsig = GADGET_SIG(dock);
+                cxsig = CX_SIG(dock);
 
-                totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | SIGBREAKF_CTRL_C;
+                totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | cxsig | SIGBREAKF_CTRL_C;
 
                 while( dock->runState == RS_RUNNING || dock->runState == RS_QUITTING ) {
 
@@ -418,6 +490,9 @@ VOID run_event_loop(struct DockWindow *dock)
                         handle_gadget_message(dock);
                     }
 
+                    if( signals & cxsig ) {
+                        handle_cx_message(dock);
+                    }
                 }
                 break;
         }

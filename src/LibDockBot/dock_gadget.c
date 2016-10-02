@@ -174,6 +174,12 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
             send_message_to_dock(c, o, GM_DRAW);
             break;         
 
+        case DM_GETHOTKEY:
+            break;
+
+        case DM_HOTKEY:
+            break;
+
 		default:
 			return DoSuperMethodA(c, o, msg);
 			

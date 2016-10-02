@@ -1,179 +1,465 @@
 
-#include <exec/types.h>
-#include <intuition/classes.h>
-#include <libraries/mui.h>
-#include <clib/exec_protos.h>
+#include "prefs.h"
+
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
-#include <clib/muimaster_protos.h>
-#include <pragmas/muimaster_pragmas.h>
+#include <clib/utility_protos.h>
+
+#include <libraries/triton.h>
+#include <proto/triton.h>
+
+#include "dockbot.h"
+
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
 
 #include <stdio.h>
 
-#include "pref_editor.h"
-#include "editor_base.h"
-#include "button_editor.h"
-
-#ifndef MAKE_ID
-#define MAKE_ID(a,b,c,d) ((ULONG) (a)<<24 | (ULONG) (b)<<16 | (ULONG) (c)<<8 | (ULONG) (d))
-#endif
-
-static const char *_positions[] = { "Left", "Right", "Top", "Bottom", NULL };
-static const char *_hAligns[] = { "Left", "Center", "Right", NULL };
-static const char *_vAligns[] = { "Top", "Middle", "Bottom", NULL };
-static const char *_startTypes[] = { "Workbench", "Shell", NULL };
-
-struct Library *MUIMasterBase;
 struct Library *DockBotBase;
 
-LONG __asm __saveds display_gadget(register __a2 char **array, register __a1 struct DockGadgetInfo *dgi)
-{
-    *array = (STRPTR)DoMethod(dgi->editor, DM_DISPLAYNAME);
+STRPTR positions[] = { "Left", "Right", "Top", "Bottom", NULL };
+STRPTR alignments[] = { "Top/Left", "Center", "Bottom/Right", NULL };
 
-    return 0;
-}
+enum {
+    OBJ_MENU_ABOUT  = 1001,
+    OBJ_MENU_QUIT   = 1002,
 
-int main(int argc, char *argv[])
-{
-    Object *app;
-    Object *win;
-    BOOL running = TRUE;
-    ULONG signal;
-    struct GadgetList *config;
-    struct DockGadgetInfo *dgi;
-    APTR gadgetList;
-    Class *editorBase;
-    Class *buttonEditor;
-
-    struct Hook dispHook = { { NULL, NULL }, (VOID *)display_gadget, NULL, NULL };
+    OBJ_POSITION    = 1003,
+    OBJ_ALIGNMENT   = 1004,
     
-    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+    OBJ_GADGETS     = 1005,
 
-    if( editorBase = editor_base_init() ) {
-   
-    if( buttonEditor = button_editor_init() ) {
+    OBJ_BTN_NEW     = 1006,
+    OBJ_BTN_DELETE  = 1007,
+    OBJ_BTN_EDIT    = 1008,
+    OBJ_BTN_UP      = 1009,
+    OBJ_BTN_DOWN    = 1010,
 
-    if( config = load_config() ) {
+    OBJ_BTN_SAVE    = 1011,
+    OBJ_BTN_USE     = 1012,
+    OBJ_BTN_TEST    = 1013,
+    OBJ_BTN_CANCEL  = 1014,
 
+    OBJ_BTN_GAD_OK  = 1015,
+    OBJ_BTN_GAD_CAN = 1016
+};
 
-    if( MUIMasterBase = OpenLibrary(MUIMASTER_NAME, MUIMASTER_VMIN) ) {
+ProjectDefinition(mainWindowTags)
+{
+    WindowID(1),
+    WindowTitle("DockBot Preferences"),
+    WindowPosition(TRWP_CENTERDISPLAY),
+    WindowFlags(TRWF_HELP),
+    QuickHelpOn(TRUE),
+    BeginMenu("Project"),
+        MenuItem("?_About...", OBJ_MENU_ABOUT),
+        ItemBarlabel,
+        MenuItem("Q_Quit", OBJ_MENU_QUIT),
+    HorizGroupA,
+        Space,
+        VertGroupA,
+            Space,
+            NamedFrameBox("Dock Settings"),           
+                ColumnArray,
+                    Space,
+                    BeginColumn,
+                        Space,
+                        TextN("Position"),
+                        Space,
+                        TextN("Alignment"),
+                        Space,
+                    EndColumn,
+                    Space,
+                    BeginColumn,
+                        Space,
+                        CycleGadget(positions, 0, OBJ_POSITION),
+                        Space,
+                        CycleGadget(alignments, 0, OBJ_ALIGNMENT),
+                        Space,
+                    EndColumn,
+                    Space,
+                EndArray,
+            Space,
+            NamedFrameBox("Gadgets"),
+                HorizGroupA,
+                    Space,
+                    VertGroupA,
+                        Space,
+                        ListSSN(NULL, OBJ_GADGETS, 0, 0),
+                        Space,
+                    EndGroup,
+                    Space,
+                    VertGroupA,
+                        Space,
+                        Button("_New...", OBJ_BTN_NEW),
+                        Space,
+                        Button("_Edit...", OBJ_BTN_EDIT),
+                        Space,
+                        Button("Delete", OBJ_BTN_DELETE),
+                        Space,
+                        Button("_Up", OBJ_BTN_UP),
+                        Space,
+                        Button("_Down", OBJ_BTN_DOWN),
+                        Space,
+                    EndGroup,
+                    Space,
+                EndGroup,
+            Space,
+            HorizGroupA,    
+                Button("_Save", OBJ_BTN_SAVE),
+                Space,
+                Button("_Use", OBJ_BTN_USE),
+                Space,
+                Button("_Test", OBJ_BTN_TEST),
+                Space,
+                ButtonE("Cancel", OBJ_BTN_CANCEL),
+            EndGroup,
+            Space,
+        EndGroup,
+        Space,
+    EndGroup
+    
+};
 
-        gadgetList = ListviewObject,
-                                MUIA_Listview_Input, TRUE,      
-                                MUIA_Listview_List, ListObject,
-                                    InputListFrame,
-                                    MUIA_List_DisplayHook, &dispHook,
-                                End,
-                            End;
+struct TR_Project *mainWindow;
 
-        app = ApplicationObject,
-            MUIA_Application_Title,         "DockBotPrefs",
-            MUIA_Application_Version,       "$VER: DockBotPrefs 1.0 (18.04.16)",
-            MUIA_Application_Copyright,     "©2016, Andrew Kennan",
-            MUIA_Application_Author,        "Andrew Kennan",
-            MUIA_Application_Description,   "Preferences editor for DockBot.",
-            MUIA_Application_Base,          "DOCKBOTPREFS",
-            SubWindow, win = WindowObject,
-                MUIA_Window_ID,             MAKE_ID('M', 'A', 'I', 'N'),
-                MUIA_Window_Title,          "DockBot Preferences",
-                WindowContents, VGroup, 
-                    Child, HGroup, GroupFrameT("Dock Settings"),
-                        Child, HGroup,
-                            Child, VGroup,
-                                Child, Label2("Position"),
-                                Child, Label2("Alignment"),
-                            End,
-                            Child, VGroup,
-                                Child, Cycle(_positions),
-                                Child, Cycle(_hAligns),
-                            End,
-                        End,
-                    End,
-                    Child, HGroup, GroupFrameT("Gadgets"),
-                        Child, HGroup, 
-                            Child, gadgetList,
-                            Child, VGroup,
-                                Child, HGroup,
-                                    Child, Label2("dockbutton"),
-                                End,
-                                Child, HGroup,
-                                    Child, VGroup,
-                                        Child, Label2("Name"),
-                                        Child, Label2("Path"),
-                                        Child, Label2("Icon"),
-                                        Child, Label2("Start"),  
-                                    End,
-                                    Child, VGroup,
-                                        Child, String("", 40),
-                                        Child, String("", 40),
-                                        Child, String("", 40),
-                                        Child, Cycle(_startTypes),
-                                    End,
-                                End,
-                            End,
-                        End,
-                    End,
-                    Child, HGroup, MUIA_Group_SameSize, TRUE,
-                        Child, SimpleButton("_Save" ),
-                        Child, SimpleButton("_Use"),
-                        Child, SimpleButton("_Test"),
-                        Child, SimpleButton("_Cancel"),
-                        End,
-                    End,
-                End,
-            End;
+VOID gadget_selected(struct DockPrefs *prefs, ULONG index)
+{
+    struct DgNode *dg = NULL, *curr;
+    ULONG gadCount = 0;
+    
+    for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
+                curr->n.ln_Succ;
+                curr = (struct DgNode *)curr->n.ln_Succ ) {
 
-        if( ! app ) {
-            printf("Failed to create Application.");
-        } else {
-
-            DoMethod(win, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, app, 
-                2, MUIM_Application_ReturnID, MUIV_Application_ReturnID_Quit);
-
-            set(win, MUIA_Window_Open, TRUE);
-
-            if( config ) {
-                for( dgi = (struct DockGadgetInfo *)config->gadgets.mlh_Head;
-                            dgi->n.mln_Succ;
-                            dgi = (struct DockGadgetInfo *)dgi->n.mln_Succ) {
-                    DoMethod(gadgetList, MUIM_List_InsertSingle, dgi, MUIV_List_Insert_Bottom);
-                }
-            }
-
-            while( running ) {
-                switch( DoMethod(app, MUIM_Application_Input, &signal) ) {
-                    case MUIV_Application_ReturnID_Quit:
-                        running = FALSE;
-                        break;
-                }
-            }
-
-            if( running && signal ) {
-                Wait(signal);
-            }
-
-            MUI_DisposeObject(app);
+        if( gadCount == index ) {
+            dg = curr;
         }
-        CloseLibrary(MUIMasterBase);
+        gadCount++;
     }
          
-    free_config(config);
+    if( gadCount == 0 ) 
+    {
+        TR_SetAttribute(mainWindow, OBJ_BTN_UP, TRAT_Disabled, TRUE);
+        TR_SetAttribute(mainWindow, OBJ_BTN_DOWN, TRAT_Disabled, TRUE);
+        TR_SetAttribute(mainWindow, OBJ_BTN_EDIT, TRAT_Disabled, TRUE);
+        TR_SetAttribute(mainWindow, OBJ_BTN_DELETE, TRAT_Disabled, TRUE);
     } else {
-        printf("Couldn't load config.\n");
-    }
-
-    button_editor_free(buttonEditor);
-    } else {
-        printf("Couldn't create button editor.\n");
-    }
-
-    editor_base_free(editorBase);
-    } else {
-        printf("Couldn't create editor base.\n");
-    }
-    
-    CloseLibrary(DockBotBase);
-    } else {
-        printf("Couldn't open DockBotBase.\n");
+        TR_SetAttribute(mainWindow, OBJ_BTN_UP, TRAT_Disabled, index == 0);
+        TR_SetAttribute(mainWindow, OBJ_BTN_DOWN, TRAT_Disabled, index == gadCount - 1);
+        TR_SetAttribute(mainWindow, OBJ_BTN_EDIT, TRAT_Disabled, !dock_gadget_can_edit(dg->dg));
+        TR_SetAttribute(mainWindow, OBJ_BTN_DELETE, TRAT_Disabled, FALSE);
     }
 }
+
+VOID update_gadget_list(struct DockPrefs *prefs)
+{
+    TR_SetAttribute(mainWindow, OBJ_GADGETS, 0L, (ULONG)&(prefs->gadgets));
+}
+
+struct DgNode *get_selected_gadget(struct DockPrefs *prefs)
+{
+    struct DgNode *curr;
+    ULONG gadCount = 0, index;
+    
+    index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value);
+
+    for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
+                curr->n.ln_Succ;
+                curr = (struct DgNode *)curr->n.ln_Succ ) {
+
+        if( gadCount == index ) {
+            return curr;
+        }
+        gadCount++;
+    }
+
+    return NULL;
+}
+
+struct DgNode *get_gadget_from_window(struct DockPrefs *prefs, struct TR_Project *window)
+{
+    struct DgNode *curr;
+    for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
+                curr->n.ln_Succ;
+                curr = (struct DgNode *)curr->n.ln_Succ ) {
+        
+        if( curr->editor == window ) {
+            return curr;
+        }
+    }
+
+    return NULL;
+}
+
+VOID move_gadget_up(struct DockPrefs *prefs)
+{
+    struct DgNode* dg;
+    struct Node *newPred;
+    ULONG index;
+
+    if( (dg = get_selected_gadget(prefs)) && dg->n.ln_Pred ) {
+
+        newPred = dg->n.ln_Pred->ln_Pred;
+        Remove((struct Node *)dg);
+        Insert(&(prefs->gadgets), (struct Node *)dg, newPred);
+
+        update_gadget_list(prefs);
+
+        index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value) - 1;
+        TR_SetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value, index);
+        gadget_selected(prefs, index);
+    }
+}
+
+VOID move_gadget_down(struct DockPrefs *prefs)
+{
+    struct DgNode* dg;
+    struct Node *newPred;
+    ULONG index;
+
+    if( (dg = get_selected_gadget(prefs)) && dg->n.ln_Succ ) {
+
+        newPred = dg->n.ln_Succ;
+        Remove((struct Node *)dg);
+        Insert(&(prefs->gadgets), (struct Node *)dg, newPred);
+
+        update_gadget_list(prefs);
+
+        index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value) + 1;
+        TR_SetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value, index);
+        gadget_selected(prefs, index);
+
+    }
+}
+
+VOID delete_gadget(struct DockPrefs *prefs)
+{
+    struct DgNode *dg;
+    ULONG index;
+
+    if( dg = get_selected_gadget(prefs) ) {
+
+        if( TR_EasyRequestTags(Application, 
+            "Are you sure you want to remove this gadget?", "_Ok|Cancel", 
+            TREZ_LockProject, mainWindow,
+            TREZ_Title, "Delete Gadget",
+            TREZ_Activate, TRUE,
+            TAG_END) == 1 ) {
+
+            Remove((struct Node *)dg);
+
+            DisposeObject(dg->dg);
+            DB_FreeMem(dg, sizeof(struct DgNode));
+
+            update_gadget_list(prefs);
+
+            index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value);
+            gadget_selected(prefs, index);
+        }
+    }
+}
+
+VOID edit_gadget(struct DockPrefs *prefs)
+{
+    struct DgNode *dg;
+    struct TagItem *gadTags, *endTag;
+
+    if( dg = get_selected_gadget(prefs) ) {
+
+        if( dg->editor ) {
+
+            TR_SendMessage(dg->editor, 0, TROM_ACTIVATE, NULL);
+
+        } else if( gadTags = dock_gadget_get_editor(dg->dg) ) {
+
+            endTag = gadTags;
+            while( endTag->ti_Tag != TAG_END ) {
+                endTag++;
+            }
+
+            //if( endTag = FindTagItem(TAG_END, gadTags) ) {
+
+                endTag->ti_Tag = TAG_MORE;
+                endTag->ti_Data = (ULONG)make_tag_list(
+                                        Space,
+                                        HorizGroupA,
+                                            Space,
+                                            Button("Ok", OBJ_BTN_GAD_OK),
+                                            Space,
+                                            ButtonE("Cancel", OBJ_BTN_GAD_CAN),
+                                        EndGroup,                        
+                                    EndGroup,
+                                EndGroup,
+                                TAG_END);
+
+                if( !(dg->editor = TR_OpenProjectTags(Application,
+                                WindowID(2),
+                                WindowTitle(dock_gadget_get_name(dg->dg)),
+                                WindowPosition(TRWP_CENTERDISPLAY),
+                                WindowFlags(TRWF_HELP),
+                                QuickHelpOn(TRUE),
+                                HorizGroupA,
+                                    Space,
+                                    VertGroupA,
+                                        Space,
+                                        TAG_MORE, gadTags
+                              ) ) ) {
+                    printf("uh oh\n");
+                }
+            //} else {
+            //    printf("No end tag.\n");
+            //}
+
+            FreeTagItems(gadTags);
+        }
+    }
+}
+
+VOID run_event_loop(struct DockPrefs *prefs) 
+{
+    BOOL done = FALSE;
+    struct TR_Message *msg;
+    struct DgNode *dg;
+
+    while( ! done ) {
+        TR_Wait(Application, NULL);
+
+        while( msg = TR_GetMsg(Application) ) {
+            if( msg->trm_Project == mainWindow ) {
+                switch( msg->trm_Class ) {
+                    case TRMS_CLOSEWINDOW:
+                        done = TRUE;
+                        break;
+
+                    case TRMS_ACTION:
+                        switch( msg->trm_ID ) {
+                            case OBJ_MENU_QUIT:
+                            case OBJ_BTN_CANCEL:
+                               done = TRUE;
+                               break;
+
+                            case OBJ_BTN_UP:
+                                move_gadget_up(prefs);
+                                break;
+
+                            case OBJ_BTN_DOWN:
+                                move_gadget_down(prefs);
+                                break;
+
+                            case OBJ_BTN_DELETE:
+                                delete_gadget(prefs);
+                                break;
+
+                            case OBJ_BTN_EDIT:
+                                edit_gadget(prefs);
+                                break;
+                        }
+                        break;
+
+                    case TRMS_NEWVALUE:
+                        switch( msg->trm_ID ) {
+                            case OBJ_GADGETS:
+                                gadget_selected(prefs, msg->trm_Data);
+                                break;
+
+                            case OBJ_POSITION:
+                                prefs->pos = msg->trm_Data;
+                                break;
+
+                            case OBJ_ALIGNMENT:
+                                prefs->align = msg->trm_Data;
+                                break;
+                        }
+                        break;
+                }
+            } else {
+                if( dg = get_gadget_from_window(prefs, msg->trm_Project) ) {
+                
+                    switch( msg->trm_Class ) {
+                        case TRMS_CLOSEWINDOW:
+                            TR_CloseProject(dg->editor);
+                            dock_gadget_reset(dg->dg);
+                            dg->editor = NULL;
+                            break;
+                        
+                        case TRMS_ACTION:
+                            switch( msg->trm_ID ) {
+                                case OBJ_BTN_GAD_OK:
+                                    TR_CloseProject(dg->editor);
+                                    dg->editor = NULL;
+                                    break;
+
+                                case OBJ_BTN_GAD_CAN:
+                                    TR_CloseProject(dg->editor);
+                                    dock_gadget_reset(dg->dg);
+                                    dg->editor = NULL;
+                                    break;
+
+                                default:
+                                    dock_gadget_handle_event(dg->dg, msg);
+                                    break;
+                            }
+                            break;
+
+                        default:
+                            dock_gadget_handle_event(dg->dg, msg);
+                            break;
+      
+                    }
+                }
+            }
+
+            TR_ReplyMsg(msg);
+        }
+    }
+}
+
+int main(char **argv, int argc)
+{
+    struct DockPrefs prefs;
+
+    if( TR_OpenTriton(TRITON11VERSION,
+        TRCA_Name,      "DockBotPrefs",
+        TRCA_LongName,  "DockBot Preferences",
+        TRCA_Info,      "Preferences editor for DockBot",
+        TAG_END) ) {
+
+        if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+
+            NewList(&prefs.gadgets);
+            NewList((struct List *)&prefs.libs);
+
+            if( prefs.baseClass = init_prefs_base_class() ) {
+
+                if( prefs.buttonClass = init_dock_button_class() ) {
+  
+                    if( load_config(&prefs) ) {
+
+                        if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
+
+                            TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
+                            TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
+
+                            update_gadget_list(&prefs);
+
+                            gadget_selected(&prefs, 0);
+
+                            run_event_loop(&prefs);
+    
+                            TR_CloseProject(mainWindow);            
+                        }
+                        remove_dock_gadgets(&prefs);
+                    }
+                    free_dock_button_class(prefs.buttonClass);
+                }
+                free_prefs_base_class(prefs.baseClass);
+            }
+            CloseLibrary(DockBotBase);
+        }
+
+
+        TR_CloseTriton();
+    }
+}
+

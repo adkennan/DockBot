@@ -42,4 +42,9 @@ VOID dock_gadget_get_info(Object *obj
             , STRPTR *name, STRPTR *version
             , STRPTR *description, STRPTR *copyright);
 
+VOID dock_gadget_get_hotkey(Object *obj
+			, STRPTR *hotKey);
+
+VOID dock_gadget_hotkey(Object *obj);
+
 #endif 

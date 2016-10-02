@@ -144,4 +144,21 @@ VOID dock_gadget_get_info(Object *obj
     *copyright = msg.copyright;
 }
 
+VOID dock_gadget_get_hotkey(Object *obj
+			, STRPTR *hotKey)
+{
+    struct DockMessageGetHotKey msg = {
+        DM_GETHOTKEY,
+        NULL
+    };
+
+    DoMethodA(obj, (Msg)&msg);
+
+    *hotKey = msg.hotKey;
+}
+
+VOID dock_gadget_hotkey(Object *obj)
+{
+    DoMethod(obj, DM_HOTKEY);
+}
 

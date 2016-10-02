@@ -46,12 +46,14 @@ typedef enum {
     DM_GETBOUNDS        = 0x1207,
 	DM_READCONFIG	    = 0x1208,
     DM_ADDED            = 0x1209,
-    DM_REMOVED          = 0x1210,
-    DM_REQ_QUIT         = 0x1211,
-    DM_REQ_DRAW         = 0x1212,
-    DM_SETTINGS_CLASS   = 0x1213,
-    DM_BUILTIN          = 0x1214,
-    DM_GETINFO          = 0x1215
+    DM_REMOVED          = 0x120A,
+    DM_REQ_QUIT         = 0x120B,
+    DM_REQ_DRAW         = 0x120C,
+    DM_SETTINGS_CLASS   = 0x120D,
+    DM_BUILTIN          = 0x120E,
+    DM_GETINFO          = 0x120F,
+	DM_GETHOTKEY		= 0x1210,
+	DM_HOTKEY			= 0x1211
 } DockMessage;
 
 struct DockMessageAdded
@@ -128,6 +130,11 @@ struct DockSettingValue
 struct DockMessageReadSettings {
 	ULONG MethodID;
 	struct DockSettings *settings;
+};
+
+struct DockMessageGetHotKey {
+	ULONG MethodID;
+	STRPTR hotKey;
 };
 
 #endif

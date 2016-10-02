@@ -1,8 +1,8 @@
 /************************************
 **
-**  DockBot - A Dock For AmigaOS 3
+**  DockBot - A Dock For AmigaOS
 **
-**  © 2016 Andrew Kennan
+**  © 2016 Andrew Kennan    
 **
 ************************************/
 
@@ -64,7 +64,7 @@ BOOL free_gadget_classes(struct DockWindow *dock)
         }
         dock->handleClass = NULL;
     }
-    
+
     delete_port(dock->gadgetPort);
     dock->gadgetPort = NULL;        
 
@@ -91,7 +91,6 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
     while( ! IsListEmpty((struct List *)&dock->gadgets) ) {
         if( dg = (struct DgNode *)RemTail((struct List *)&dock->gadgets) ) {
-            dock_gadget_removed(dg->dg);
             DisposeObject(dg->dg);
             DB_FreeMem(dg, sizeof(struct DgNode));
         }
@@ -116,7 +115,6 @@ VOID draw_gadgets(struct DockWindow *dock)
         for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
                     curr->n.mln_Succ; 
                     curr = (struct DgNode *)curr->n.mln_Succ ) {
-
             dock_gadget_draw(curr->dg, rp);
         }
     }
@@ -235,9 +233,11 @@ Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
         if( o ) {
             DisposeObject(o);
         }
+
         if( lib ) {
             CloseLibrary(lib);
         }
+
         if( ln ) {
             DB_FreeMem(ln, sizeof(struct LibNode));
         }
@@ -245,4 +245,3 @@ Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
 
     return o;
 }
-

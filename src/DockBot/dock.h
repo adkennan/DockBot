@@ -22,6 +22,7 @@
 #include <intuition/intuition.h>
 #include <intuition/intuitionbase.h>
 #include <intuition/classes.h>
+#include <libraries/commodities.h>
 
 #include "dockbot.h"
 
@@ -86,6 +87,10 @@ struct DockWindow
 
     RunState runState;
     BOOL disableLayout;
+
+	// Commodities
+	struct MsgPort *cxPort;
+	CxObj *cxBroker;
 };
 
 struct DgNode
@@ -187,6 +192,11 @@ VOID disable_layout(struct DockWindow *dock);
 
 VOID enable_layout(struct DockWindow *dock);
 
+// Commodities
+
+BOOL init_cx_broker(struct DockWindow *dock);
+
+VOID free_cx_broker(struct DockWindow *dock);
 
 #endif
 
