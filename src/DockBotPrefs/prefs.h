@@ -28,6 +28,7 @@ struct DockPrefs
 	// Built in classes.
 	Class *baseClass;
 	Class *buttonClass;
+    Class *iconClass;
 };
 
 struct DgNode 
@@ -50,6 +51,10 @@ BOOL free_prefs_base_class(Class *c);
 Class *init_dock_button_class(VOID);
 
 BOOL free_dock_button_class(Class *c);
+
+Class *init_icon_class(VOID);
+
+BOOL free_icon_class(Class *c);
 
 BOOL load_config(struct DockPrefs *prefs);
 

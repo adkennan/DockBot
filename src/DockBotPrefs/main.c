@@ -260,10 +260,51 @@ VOID delete_gadget(struct DockPrefs *prefs)
     }
 }
 
+ULONG count_tags(struct TagItem *list)
+{
+    ULONG c = 0;
+    struct TagItem *tstate, *tag;
+    tstate = list;
+    while( tag = NextTagItem(&tstate) ) {
+        c++;
+    }
+    return c;
+}
+
+struct TagItem *copy_tags(struct TagItem *dest, struct TagItem *src)
+{
+    struct TagItem *tstate, *tag;
+    tstate = src;
+    while( tag = NextTagItem(&tstate) ) {
+        dest->ti_Tag = tag->ti_Tag;
+        dest->ti_Data = tag->ti_Data;
+        dest++;
+    }
+    return dest;
+}
+
+struct TagItem *merge_tag_lists(struct TagItem *head, struct TagItem *middle, struct TagItem *tail)
+{
+    struct TagItem *newTags, *dest;
+    ULONG tagCount = count_tags(head) + count_tags(middle) + count_tags(tail);
+
+    if( newTags = AllocateTagItems(tagCount) ) {
+
+        dest = newTags;
+        dest = copy_tags(dest, head);
+        dest = copy_tags(dest, middle);
+        dest = copy_tags(dest, tail);
+
+        dest->ti_Tag = TAG_END;
+    }
+
+    return newTags;
+}
+
 VOID edit_gadget(struct DockPrefs *prefs)
 {
     struct DgNode *dg;
-    struct TagItem *gadTags, *endTag;
+    struct TagItem *gadTags, *headTags, *windowTags, *tailTags;
 
     if( dg = get_selected_gadget(prefs) ) {
 
@@ -273,43 +314,46 @@ VOID edit_gadget(struct DockPrefs *prefs)
 
         } else if( gadTags = dock_gadget_get_editor(dg->dg) ) {
 
-            endTag = gadTags;
-            while( endTag->ti_Tag != TAG_END ) {
-                endTag++;
-            }
+            if( headTags = make_tag_list(
+                    WindowID(2),
+                    WindowTitle(dock_gadget_get_name(dg->dg)),
+                    WindowPosition(TRWP_CENTERDISPLAY),
+                    WindowFlags(TRWF_HELP),
+                    QuickHelpOn(TRUE),
+                    HorizGroupA,
+                        VertGroupA,
+                            Space,
+                            TAG_END
+                ) ) {
 
-            //if( endTag = FindTagItem(TAG_END, gadTags) ) {
+                if( tailTags = make_tag_list(
+                            Space,
+                            HorizGroupA,
+                                Space,
+                                Button("Ok", OBJ_BTN_GAD_OK),
+                                Space,
+                                ButtonE("Cancel", OBJ_BTN_GAD_CAN),
+                                Space,
+                            EndGroup, 
+                            Space,                       
+                        EndGroup,
+                    EndGroup,
+                    TAG_END
+                ) ) {
 
-                endTag->ti_Tag = TAG_MORE;
-                endTag->ti_Data = (ULONG)make_tag_list(
-                                        Space,
-                                        HorizGroupA,
-                                            Space,
-                                            Button("Ok", OBJ_BTN_GAD_OK),
-                                            Space,
-                                            ButtonE("Cancel", OBJ_BTN_GAD_CAN),
-                                        EndGroup,                        
-                                    EndGroup,
-                                EndGroup,
-                                TAG_END);
+                    if( windowTags = merge_tag_lists(headTags, gadTags, tailTags) ) {
 
-                if( !(dg->editor = TR_OpenProjectTags(Application,
-                                WindowID(2),
-                                WindowTitle(dock_gadget_get_name(dg->dg)),
-                                WindowPosition(TRWP_CENTERDISPLAY),
-                                WindowFlags(TRWF_HELP),
-                                QuickHelpOn(TRUE),
-                                HorizGroupA,
-                                    Space,
-                                    VertGroupA,
-                                        Space,
-                                        TAG_MORE, gadTags
-                              ) ) ) {
-                    printf("uh oh\n");
+                        if( !(dg->editor = TR_OpenProject(Application, windowTags) ) ) {
+    
+                            printf("uh oh\n");
+                        }
+
+                        FreeTagItems(windowTags);
+                    }
+                    FreeTagItems(tailTags);
                 }
-            //} else {
-            //    printf("No end tag.\n");
-            //}
+                FreeTagItems(headTags);
+            }
 
             FreeTagItems(gadTags);
         }
@@ -318,22 +362,30 @@ VOID edit_gadget(struct DockPrefs *prefs)
 
 VOID run_event_loop(struct DockPrefs *prefs) 
 {
-    BOOL done = FALSE;
+    BOOL done = FALSE, closeMsgProj = FALSE;
     struct TR_Message *msg;
     struct DgNode *dg;
+    struct TR_Project *msgProj;
+    ULONG msgClass, msgID, msgData;
 
     while( ! done ) {
         TR_Wait(Application, NULL);
 
         while( msg = TR_GetMsg(Application) ) {
-            if( msg->trm_Project == mainWindow ) {
-                switch( msg->trm_Class ) {
+            msgProj = msg->trm_Project;
+            msgClass = msg->trm_Class;
+            msgID = msg->trm_ID;
+            msgData = msg->trm_Data;
+
+
+            if( msgProj == mainWindow ) {
+                switch( msgClass ) {
                     case TRMS_CLOSEWINDOW:
                         done = TRUE;
                         break;
 
                     case TRMS_ACTION:
-                        switch( msg->trm_ID ) {
+                        switch( msgID ) {
                             case OBJ_MENU_QUIT:
                             case OBJ_BTN_CANCEL:
                                done = TRUE;
@@ -358,40 +410,40 @@ VOID run_event_loop(struct DockPrefs *prefs)
                         break;
 
                     case TRMS_NEWVALUE:
-                        switch( msg->trm_ID ) {
+                        switch( msgID ) {
                             case OBJ_GADGETS:
-                                gadget_selected(prefs, msg->trm_Data);
+                                gadget_selected(prefs, msgData);
                                 break;
 
                             case OBJ_POSITION:
-                                prefs->pos = msg->trm_Data;
+                                prefs->pos = msgData;
                                 break;
 
                             case OBJ_ALIGNMENT:
-                                prefs->align = msg->trm_Data;
+                                prefs->align = msgData;
                                 break;
                         }
                         break;
                 }
             } else {
-                if( dg = get_gadget_from_window(prefs, msg->trm_Project) ) {
+                if( dg = get_gadget_from_window(prefs, msgProj) ) {
                 
-                    switch( msg->trm_Class ) {
+                    switch( msgClass ) {
                         case TRMS_CLOSEWINDOW:
-                            TR_CloseProject(dg->editor);
+                            closeMsgProj = TRUE;
                             dock_gadget_reset(dg->dg);
                             dg->editor = NULL;
                             break;
                         
                         case TRMS_ACTION:
-                            switch( msg->trm_ID ) {
+                            switch( msgID ) {
                                 case OBJ_BTN_GAD_OK:
-                                    TR_CloseProject(dg->editor);
+                                    closeMsgProj = TRUE;
                                     dg->editor = NULL;
                                     break;
 
                                 case OBJ_BTN_GAD_CAN:
-                                    TR_CloseProject(dg->editor);
+                                    closeMsgProj = TRUE;
                                     dock_gadget_reset(dg->dg);
                                     dg->editor = NULL;
                                     break;
@@ -411,6 +463,11 @@ VOID run_event_loop(struct DockPrefs *prefs)
             }
 
             TR_ReplyMsg(msg);
+
+            if( closeMsgProj ) {
+                TR_CloseProject(msgProj);
+                closeMsgProj = FALSE;
+            }
         }
     }
 }
@@ -433,23 +490,27 @@ int main(char **argv, int argc)
             if( prefs.baseClass = init_prefs_base_class() ) {
 
                 if( prefs.buttonClass = init_dock_button_class() ) {
+
+                    if( prefs.iconClass = init_icon_class() ) {
   
-                    if( load_config(&prefs) ) {
+                        if( load_config(&prefs) ) {
 
-                        if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
+                            if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
 
-                            TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
-                            TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
-
-                            update_gadget_list(&prefs);
-
-                            gadget_selected(&prefs, 0);
-
-                            run_event_loop(&prefs);
+                                TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
+                                TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
     
-                            TR_CloseProject(mainWindow);            
+                                update_gadget_list(&prefs);
+
+                                gadget_selected(&prefs, 0);
+
+                                run_event_loop(&prefs);
+    
+                                TR_CloseProject(mainWindow);            
+                            }
+                            remove_dock_gadgets(&prefs);
                         }
-                        remove_dock_gadgets(&prefs);
+                        free_icon_class(prefs.iconClass);
                     }
                     free_dock_button_class(prefs.buttonClass);
                 }

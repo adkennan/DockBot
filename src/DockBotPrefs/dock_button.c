@@ -8,6 +8,8 @@
 
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
+#include <intuition/classusr.h>
+#include <intuition/imageclass.h>
 #include <dos/dos.h>
 #include <dos/dostags.h>
 #include <workbench/workbench.h>
@@ -71,12 +73,24 @@ struct DockButtonData
     STRPTR origCon;
     STRPTR origHotKey;
     UWORD origStartType;
+
+    Object *icon;
 };
 
 struct Values StartValues[] = {
     { "wb", ST_WB },
     { "sh", ST_SH },
     { NULL, 0 }
+};
+
+
+
+#define ICON_CLASS_NAME "IconClass"
+
+#define ICA_DiskObj (TAG_USER + 1001L)
+
+struct IconData {
+    struct DiskObject *diskObj;
 };
 
 
@@ -141,6 +155,10 @@ VOID dispose_button_data(struct DockButtonData *dbd)
     if( dbd->diskObj ) {
         FreeDiskObject(dbd->diskObj);
     }
+
+    if( dbd->icon ) {
+        DisposeObject(dbd->icon);
+    }   
 }
 
 VOID dock_button_store(struct DockButtonData *dbd)
@@ -160,6 +178,39 @@ VOID dock_button_store(struct DockButtonData *dbd)
     dbd->origStartType = dbd->startType;
 }
 
+
+VOID dock_button_reset(Class *c, Object *o)
+{
+    struct DockButtonData *dbd = INST_DATA(c, o);
+
+    if( dbd->name != dbd->origName ) {
+        FREE_STRING(dbd->name);
+        dbd->name = dbd->origName;
+    }
+    dbd->origName = NULL;
+
+    if( dbd->args != dbd->origArgs ) {
+        FREE_STRING(dbd->args);
+        dbd->args = dbd->origArgs;
+    }
+    dbd->origArgs = NULL;
+
+    if( dbd->con != dbd->origCon ) {
+        FREE_STRING(dbd->con);
+        dbd->con = dbd->origCon;
+    }
+    dbd->origCon = NULL;
+    
+    if( dbd->hotKey != dbd->origHotKey ) {
+        FREE_STRING(dbd->hotKey);
+        dbd->hotKey = dbd->origHotKey;
+    }
+    dbd->origHotKey = NULL;
+
+    dbd->startType = dbd->origStartType;
+}
+
+
 STRPTR startTypes[] = { "Workbench", "Shell", NULL };
 
 enum {
@@ -167,7 +218,8 @@ enum {
     OBJ_STR_NAME,
     OBJ_STR_ARGS,
     OBJ_CYC_START,
-    OBJ_STR_CON
+    OBJ_STR_CON,
+    OBJ_STR_HOTKEY
 };
 
 ULONG dock_button_get_editor(Class *c, Object *o)
@@ -175,11 +227,22 @@ ULONG dock_button_get_editor(Class *c, Object *o)
     struct DockButtonData *dbd = INST_DATA(c, o);
 
     dock_button_store(dbd);
- 
+
+    if( ! dbd->icon ) {
+        if( !(dbd->icon = NewObject(NULL, ICON_CLASS_NAME, 
+                    ICA_DiskObj, (ULONG)dbd->diskObj, 
+                    TAG_END) ) ) {
+            return 0;
+        }
+    }
+
+    printf("dbd->icon = %x\n", dbd->icon);
+    
     return (ULONG)make_tag_list(   
         VertGroupA,
-            Space,
             ColumnArray,
+                Space,
+//                BoopsiImage(dbd->icon),
                 Space,
                 BeginColumn,
                     Space,
@@ -188,6 +251,8 @@ ULONG dock_button_get_editor(Class *c, Object *o)
                     TextN("Name"),
                     Space,
                     TextN("Arguments"),
+                    Space,
+                    TextN("Key"),
                     Space,
                     TextN("Start Type"),
                     Space,
@@ -203,6 +268,8 @@ ULONG dock_button_get_editor(Class *c, Object *o)
                     Space,
                     StringGadget(dbd->args, OBJ_STR_ARGS),
                     Space,
+                    StringGadget(dbd->hotKey, OBJ_STR_HOTKEY),
+                    Space,
                     CycleGadget(startTypes, dbd->startType, OBJ_CYC_START),
                     Space,  
                     StringGadget(dbd->con, OBJ_STR_CON),
@@ -210,32 +277,13 @@ ULONG dock_button_get_editor(Class *c, Object *o)
                 EndColumn,
                 Space,
             EndArray,
-            Space,
         EndGroup,
         TAG_END);
 }
 
 VOID dock_button_handle_event(Class *c, Object *o, Msg msg)
 {
-}
 
-VOID dock_button_reset(Class *c, Object *o)
-{
-    struct DockButtonData *dbd = INST_DATA(c, o);
-
-    FREE_STRING(dbd->name);
-    dbd->name = dbd->origName;
-
-    FREE_STRING(dbd->args);
-    dbd->args = dbd->origArgs;
-
-    FREE_STRING(dbd->con);
-    dbd->con = dbd->origCon;
-    
-    FREE_STRING(dbd->hotKey);
-    dbd->hotKey = dbd->origHotKey;
-
-    dbd->startType = dbd->origStartType;
 }
 
 ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
@@ -298,9 +346,136 @@ Class *init_dock_button_class(VOID)
 BOOL free_dock_button_class(Class *c)
 {
     RemoveClass(c);
-    
+   
     return FreeClass(c);
 }
 
 
+ULONG icon_set_attrs(Class *c, Object *o, struct opSet *msg)
+{
+    struct IconData *data = INST_DATA(c, o);
+    struct TagItem *tag, *tstate, *attrList;
+    struct Rectangle r;
+
+    printf("icon_set_attrs\n");
+
+    attrList = msg->ops_AttrList;
+    
+    tstate = attrList;
+    while( tag = NextTagItem(&tstate) ) {
+        printf("  %x - %x\n", tag->ti_Tag, tag->ti_Data);
+        switch( tag->ti_Tag ) {
+            case ICA_DiskObj:
+                if( data->diskObj = (struct DiskObject *)tag->ti_Data ) {
+                    if( GetIconRectangleA(NULL, data->diskObj, NULL, &r, NULL) ) {
+                        ((struct Image *)o)->Width = r.MaxX - r.MinX + 1;
+                        ((struct Image *)o)->Height = r.MaxY - r.MinY + 1;
+                    }
+                }                                
+                break;
+
+        }
+    } 
+
+    return 1L;
+}
+
+ULONG icon_get_attrs(Class *c, Object *o, struct opGet *msg)
+{
+    struct IconData *data = INST_DATA(c, o);
+
+    printf("icon_get_attrs: %x\n", msg->opg_AttrID);
+
+    switch( msg->opg_AttrID ) {
+        case ICA_DiskObj:
+            *msg->opg_Storage = (ULONG)data->diskObj;
+            break;
+
+        default:
+            return DoSuperMethodA(c, o, (Msg)msg);
+    }
+
+    return 1;
+}
+
+ULONG icon_draw(Class *c, Object *o, struct impDraw *msg)
+{
+    printf("icon_draw\n");
+
+/*    struct IconData *data = INST_DATA(c, o);
+
+    if( data->diskObj ) {
+
+        if( msg->MethodID == IM_DRAWFRAME ) {
+            DrawIconStateA(msg->imp_RPort, data->diskObj,
+                    NULL,
+                    msg->imp_Offset.X + (msg->imp_Dimensions.Width - ((struct Image *)o)->Width) / 2,
+                    msg->imp_Offset.Y + (msg->imp_Dimensions.Height - ((struct Image *)o)->Height) / 2,
+                    msg->imp_State, NULL);
+        } else {
+            DrawIconStateA(msg->imp_RPort, data->diskObj,
+                    NULL,
+                    msg->imp_Offset.X,
+                    msg->imp_Offset.Y,
+                    msg->imp_State, NULL);
+        }
+    }
+*/
+    return 1;
+//    return DoSuperMethodA(c, o, (Msg)msg);
+}
+
+ULONG __saveds icon_dispatch(Class *c, Object *o, Msg msg)
+{
+    Object *newObj;
+
+
+    printf("icon_dispatch %x\n", msg->MethodID);
+
+    switch( msg->MethodID ) {
+
+        case OM_NEW:
+            if( newObj = (Object *)DoSuperMethodA(c, o, msg) ) {
+                icon_set_attrs(c, newObj, (struct opSet *)msg);               
+            }
+            return (ULONG)newObj;
+               
+        case OM_GET:
+            return icon_get_attrs(c, o, (struct opGet *)msg);
+
+        case OM_UPDATE:
+        case OM_SET:
+            DoSuperMethodA(c, o, msg);
+            return icon_set_attrs(c, o, (struct opSet *)msg);
+
+        case IM_DRAW:
+        case IM_DRAWFRAME:
+            return icon_draw(c, o, (struct impDraw *)msg);
+
+        default:
+            return DoSuperMethodA(c, o, msg);
+    }
+}
+
+Class *init_icon_class(VOID)
+{
+    ULONG HookEntry();
+    Class *c;
+    if( c = MakeClass(ICON_CLASS_NAME, IMAGECLASS, NULL, sizeof(struct IconData), 0) )
+    {
+        c->cl_Dispatcher.h_Entry = HookEntry;
+        c->cl_Dispatcher.h_SubEntry = icon_dispatch;
+
+        AddClass(c);
+    }
+
+    return c;
+}
+
+BOOL free_icon_class(Class *c)
+{
+    RemoveClass(c);
+
+    return FreeClass(c);
+}
 
