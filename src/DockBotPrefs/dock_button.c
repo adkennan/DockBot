@@ -21,6 +21,7 @@
 #include <clib/utility_protos.h>
 
 #include <libraries/triton.h>
+#include <proto/triton.h>
 
 
 /****
@@ -68,12 +69,6 @@ struct DockButtonData
     struct DiskObject *diskObj;
     UWORD startType;
 
-    STRPTR origName;
-    STRPTR origArgs;
-    STRPTR origCon;
-    STRPTR origHotKey;
-    UWORD origStartType;
-
     Object *icon;
 };
 
@@ -84,14 +79,152 @@ struct Values StartValues[] = {
 };
 
 
+#define TROB_Icon TRTG_PRVCLS(1)
 
-#define ICON_CLASS_NAME "IconClass"
+#define TRAT_Icon_DiskObj TRTG_PRVOAT(1)
 
-#define ICA_DiskObj (TAG_USER + 1001L)
 
-struct IconData {
-    struct DiskObject *diskObj;
+STRPTR startTypes[] = { "Workbench", "Shell", NULL };
+
+enum {
+    OBJ_STR_NAME = 1001,
+    OBJ_STR_ARGS,
+    OBJ_CYC_START,
+    OBJ_STR_CON,
+    OBJ_STR_HOTKEY,
+    OBJ_ICON
 };
+
+
+struct TROD_Icon {
+    struct TROD_DisplayObject DO;
+    struct DiskObject *DiskObj;
+    UWORD IconWidth;
+    UWORD IconHeight;
+};
+
+TR_CONSTRUCTOR(Icon) 
+{
+    struct TROM_SetAttributeData saDat;
+
+    Self.DiskObj = NULL;
+
+    if(! TR_SUPERMETHOD) {
+        return NULL;
+    }
+
+    Self.DO.MinWidth = 16;
+    Self.DO.MinHeight = 16;
+
+    if( data->parseargs ) {
+        if( data->itemdata ) {
+            saDat.attribute = TRAT_Icon_DiskObj;
+            saDat.value = data->itemdata;
+
+            TR_DoMethod((struct TROD_Object *)&Self, TROM_SETATTRIBUTE, (APTR)&saDat);
+
+            if( Self.DiskObj ) {
+                Self.DO.MinWidth = Self.IconWidth;
+                Self.DO.MinHeight = Self.IconHeight;
+            }
+        }
+    }
+    Self.DO.XResize = TRUE;
+    Self.DO.YResize = TRUE;
+
+    return object;
+}
+
+TR_SIMPLEMETHOD(Icon, INSTALL_REFRESH)
+{
+    struct TR_Project *project;
+    ULONG l, t, w, h;
+    struct Rect bounds;
+
+    TR_SUPERMETHOD;
+
+    project = Self.DO.O.Project;
+    l = Self.DO.Left;
+    t = Self.DO.Top;
+    w = Self.DO.Width;
+    h = Self.DO.Height;
+
+    if( Self.DiskObj ) {
+
+        bounds.x = l + (w - Self.IconWidth) / 2,
+        bounds.y = t + (h - Self.IconHeight) / 2,
+        bounds.w = Self.IconWidth;
+        bounds.h = Self.IconHeight;
+
+        DrawIconStateA(project->trp_Window->RPort, Self.DiskObj,
+                    NULL,
+                    bounds.x,
+                    bounds.y,
+                    0, NULL);
+
+        DB_DrawOutsetFrame(project->trp_Window->RPort, &bounds);
+    }
+
+    return 1;
+}
+
+TR_METHOD(Icon, SETATTRIBUTE, SetAttributeData)
+{
+    struct Rectangle r;
+    switch(data->attribute)
+    {
+        case TRAT_Icon_DiskObj:
+            Self.DiskObj = (struct DiskObject *)data->value;
+            if( Self.DiskObj && GetIconRectangleA(NULL, Self.DiskObj, NULL, &r, NULL) ) {
+                Self.IconWidth = (r.MaxX - r.MinX) + 1;
+                Self.IconHeight = (r.MaxY - r.MinY) + 1;
+            }
+            break;
+
+        default:
+            return TR_SUPERMETHOD;
+    }
+
+    if( Self.DO.Installed ) {
+        return TR_DoMethod(&Self.DO.O, TROM_REFRESH, NULL);
+    }
+    return 1;
+}
+
+TR_SIMPLEMETHOD(Icon, GETATTRIBUTE)
+{
+    switch((ULONG)data) 
+    {
+        case TRAT_Icon_DiskObj:
+            return (ULONG)Self.DiskObj;
+
+        default:
+            return TR_SUPERMETHOD;
+    }
+}
+
+TR_METHOD(Icon, EVENT, EventData)
+{
+
+    return TROM_EVENT_CONTINUE;
+}
+
+BOOL init_icon_class(VOID)
+{
+    return TR_AddClassTags(Application, 
+        TROB_Icon, TROB_DisplayObject, 
+        NULL, sizeof(struct TROD_Icon),
+
+        TROM_NEW,           TRDP_Icon_NEW,
+        TROM_INSTALL,       TRDP_Icon_INSTALL_REFRESH,
+        TROM_REFRESH,       TRDP_Icon_INSTALL_REFRESH,
+        TROM_SETATTRIBUTE,  TRDP_Icon_SETATTRIBUTE,
+        TROM_GETATTRIBUTE,  TRDP_Icon_GETATTRIBUTE,
+        TROM_EVENT,         TRDP_Icon_EVENT,
+        TAG_END);   
+}
+
+
 
 
 VOID read_button_settings(Class *c, Object *o, Msg msg)
@@ -147,11 +280,6 @@ VOID dispose_button_data(struct DockButtonData *dbd)
     FREE_STRING(dbd->con);    
     FREE_STRING(dbd->hotKey);
 
-    FREE_STRING(dbd->origName);
-    FREE_STRING(dbd->origArgs);
-    FREE_STRING(dbd->origCon);    
-    FREE_STRING(dbd->origHotKey);
-
     if( dbd->diskObj ) {
         FreeDiskObject(dbd->diskObj);
     }
@@ -161,92 +289,68 @@ VOID dispose_button_data(struct DockButtonData *dbd)
     }   
 }
 
-VOID dock_button_store(struct DockButtonData *dbd)
+VOID dock_button_update(Class *c, Object *o, Msg msg)
 {
-    FREE_STRING(dbd->origName);
-    dbd->origName = dbd->name;
-
-    FREE_STRING(dbd->origArgs);
-    dbd->origArgs = dbd->args;
-
-    FREE_STRING(dbd->origCon);
-    dbd->origCon = dbd->con;
-    
-    FREE_STRING(dbd->origHotKey);
-    dbd->origHotKey = dbd->hotKey;
-
-    dbd->origStartType = dbd->startType;
-}
-
-
-VOID dock_button_reset(Class *c, Object *o)
-{
+    STRPTR str;
+    UWORD len;
     struct DockButtonData *dbd = INST_DATA(c, o);
+    struct TR_Project *proj = ((struct DockMessageUpdate *)msg)->project;
 
-    if( dbd->name != dbd->origName ) {
-        FREE_STRING(dbd->name);
-        dbd->name = dbd->origName;
-    }
-    dbd->origName = NULL;
+    FREE_STRING(dbd->name)
+    FREE_STRING(dbd->args)
+    FREE_STRING(dbd->con)
+    FREE_STRING(dbd->hotKey)
 
-    if( dbd->args != dbd->origArgs ) {
-        FREE_STRING(dbd->args);
-        dbd->args = dbd->origArgs;
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_NAME, 0);
+    if( str && (len = strlen(str)) ) {        
+        dbd->name = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, dbd->name, len + 1);
     }
-    dbd->origArgs = NULL;
 
-    if( dbd->con != dbd->origCon ) {
-        FREE_STRING(dbd->con);
-        dbd->con = dbd->origCon;
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_HOTKEY, 0);
+    if( str && (len = strlen(str)) ) {        
+        dbd->hotKey = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, dbd->hotKey, len + 1);
     }
-    dbd->origCon = NULL;
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_ARGS, 0);
+    if( str && (len = strlen(str)) ) {        
+        dbd->args = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, dbd->args, len + 1);
+    }
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_CON, 0);
+    if( str && (len = strlen(str)) ) {        
+        dbd->con = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, dbd->con, len + 1);
+    }
     
-    if( dbd->hotKey != dbd->origHotKey ) {
-        FREE_STRING(dbd->hotKey);
-        dbd->hotKey = dbd->origHotKey;
-    }
-    dbd->origHotKey = NULL;
-
-    dbd->startType = dbd->origStartType;
+    dbd->startType = (UWORD)TR_GetAttribute(proj, OBJ_CYC_START, TRAT_Value);
 }
 
-
-STRPTR startTypes[] = { "Workbench", "Shell", NULL };
-
-enum {
-    OBJ_STR_PATH,
-    OBJ_STR_NAME,
-    OBJ_STR_ARGS,
-    OBJ_CYC_START,
-    OBJ_STR_CON,
-    OBJ_STR_HOTKEY
-};
 
 ULONG dock_button_get_editor(Class *c, Object *o)
 {
     struct DockButtonData *dbd = INST_DATA(c, o);
 
-    dock_button_store(dbd);
-
-    if( ! dbd->icon ) {
-        if( !(dbd->icon = NewObject(NULL, ICON_CLASS_NAME, 
-                    ICA_DiskObj, (ULONG)dbd->diskObj, 
-                    TAG_END) ) ) {
-            return 0;
-        }
-    }
-
-    printf("dbd->icon = %x\n", dbd->icon);
-    
     return (ULONG)make_tag_list(   
         VertGroupA,
+            Space,
+            HorizGroupC,
+                Space,
+                TROB_Icon, dbd->diskObj, ID(OBJ_ICON),
+                Space,
+            EndGroup,
+            Space,
+            HorizGroupSC,
+                Space,
+                TextT(dbd->path),
+                Space,
+            EndGroup,
+            Space,
             ColumnArray,
                 Space,
-//                BoopsiImage(dbd->icon),
-                Space,
                 BeginColumn,
-                    Space,
-                    TextN("Path"),
                     Space,
                     TextN("Name"),
                     Space,
@@ -262,8 +366,6 @@ ULONG dock_button_get_editor(Class *c, Object *o)
                 Space,
                 BeginColumn,
                     Space,
-                    StringGadget(dbd->path, OBJ_STR_PATH),
-                    Space,
                     StringGadget(dbd->name, OBJ_STR_NAME),
                     Space,
                     StringGadget(dbd->args, OBJ_STR_ARGS),
@@ -273,6 +375,7 @@ ULONG dock_button_get_editor(Class *c, Object *o)
                     CycleGadget(startTypes, dbd->startType, OBJ_CYC_START),
                     Space,  
                     StringGadget(dbd->con, OBJ_STR_CON),
+                        TRAT_Disabled, (dbd->startType == ST_WB),
                     Space,
                 EndColumn,
                 Space,
@@ -283,7 +386,23 @@ ULONG dock_button_get_editor(Class *c, Object *o)
 
 VOID dock_button_handle_event(Class *c, Object *o, Msg msg)
 {
+    struct TR_Message *m = ((struct DockMessageHandleEvent *)msg)->msg;
 
+    switch( m->trm_Class ) {
+        case TRMS_NEWVALUE:
+            switch( m->trm_ID ) {
+                case OBJ_CYC_START:
+                    TR_SetAttribute(m->trm_Project, OBJ_STR_CON, TRAT_Disabled, m->trm_Data == ST_WB);
+                    break;
+
+                default:
+                    break;
+            }
+
+        default:
+            break;
+        
+    }
 }
 
 ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
@@ -315,8 +434,8 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             dock_button_handle_event(c, o, msg);
             break;
 
-        case DM_RESET:
-            dock_button_reset(c, o);
+        case DM_UPDATE:
+            dock_button_update(c, o, msg);
             break;
 
         default:
@@ -347,135 +466,6 @@ BOOL free_dock_button_class(Class *c)
 {
     RemoveClass(c);
    
-    return FreeClass(c);
-}
-
-
-ULONG icon_set_attrs(Class *c, Object *o, struct opSet *msg)
-{
-    struct IconData *data = INST_DATA(c, o);
-    struct TagItem *tag, *tstate, *attrList;
-    struct Rectangle r;
-
-    printf("icon_set_attrs\n");
-
-    attrList = msg->ops_AttrList;
-    
-    tstate = attrList;
-    while( tag = NextTagItem(&tstate) ) {
-        printf("  %x - %x\n", tag->ti_Tag, tag->ti_Data);
-        switch( tag->ti_Tag ) {
-            case ICA_DiskObj:
-                if( data->diskObj = (struct DiskObject *)tag->ti_Data ) {
-                    if( GetIconRectangleA(NULL, data->diskObj, NULL, &r, NULL) ) {
-                        ((struct Image *)o)->Width = r.MaxX - r.MinX + 1;
-                        ((struct Image *)o)->Height = r.MaxY - r.MinY + 1;
-                    }
-                }                                
-                break;
-
-        }
-    } 
-
-    return 1L;
-}
-
-ULONG icon_get_attrs(Class *c, Object *o, struct opGet *msg)
-{
-    struct IconData *data = INST_DATA(c, o);
-
-    printf("icon_get_attrs: %x\n", msg->opg_AttrID);
-
-    switch( msg->opg_AttrID ) {
-        case ICA_DiskObj:
-            *msg->opg_Storage = (ULONG)data->diskObj;
-            break;
-
-        default:
-            return DoSuperMethodA(c, o, (Msg)msg);
-    }
-
-    return 1;
-}
-
-ULONG icon_draw(Class *c, Object *o, struct impDraw *msg)
-{
-    printf("icon_draw\n");
-
-/*    struct IconData *data = INST_DATA(c, o);
-
-    if( data->diskObj ) {
-
-        if( msg->MethodID == IM_DRAWFRAME ) {
-            DrawIconStateA(msg->imp_RPort, data->diskObj,
-                    NULL,
-                    msg->imp_Offset.X + (msg->imp_Dimensions.Width - ((struct Image *)o)->Width) / 2,
-                    msg->imp_Offset.Y + (msg->imp_Dimensions.Height - ((struct Image *)o)->Height) / 2,
-                    msg->imp_State, NULL);
-        } else {
-            DrawIconStateA(msg->imp_RPort, data->diskObj,
-                    NULL,
-                    msg->imp_Offset.X,
-                    msg->imp_Offset.Y,
-                    msg->imp_State, NULL);
-        }
-    }
-*/
-    return 1;
-//    return DoSuperMethodA(c, o, (Msg)msg);
-}
-
-ULONG __saveds icon_dispatch(Class *c, Object *o, Msg msg)
-{
-    Object *newObj;
-
-
-    printf("icon_dispatch %x\n", msg->MethodID);
-
-    switch( msg->MethodID ) {
-
-        case OM_NEW:
-            if( newObj = (Object *)DoSuperMethodA(c, o, msg) ) {
-                icon_set_attrs(c, newObj, (struct opSet *)msg);               
-            }
-            return (ULONG)newObj;
-               
-        case OM_GET:
-            return icon_get_attrs(c, o, (struct opGet *)msg);
-
-        case OM_UPDATE:
-        case OM_SET:
-            DoSuperMethodA(c, o, msg);
-            return icon_set_attrs(c, o, (struct opSet *)msg);
-
-        case IM_DRAW:
-        case IM_DRAWFRAME:
-            return icon_draw(c, o, (struct impDraw *)msg);
-
-        default:
-            return DoSuperMethodA(c, o, msg);
-    }
-}
-
-Class *init_icon_class(VOID)
-{
-    ULONG HookEntry();
-    Class *c;
-    if( c = MakeClass(ICON_CLASS_NAME, IMAGECLASS, NULL, sizeof(struct IconData), 0) )
-    {
-        c->cl_Dispatcher.h_Entry = HookEntry;
-        c->cl_Dispatcher.h_SubEntry = icon_dispatch;
-
-        AddClass(c);
-    }
-
-    return c;
-}
-
-BOOL free_icon_class(Class *c)
-{
-    RemoveClass(c);
-
     return FreeClass(c);
 }
 

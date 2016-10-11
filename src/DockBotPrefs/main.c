@@ -105,7 +105,7 @@ ProjectDefinition(mainWindowTags)
                     Space,
                 EndGroup,
             Space,
-            HorizGroupA,    
+            HorizGroupEC,    
                 Button("_Save", OBJ_BTN_SAVE),
                 Space,
                 Button("_Use", OBJ_BTN_USE),
@@ -250,6 +250,11 @@ VOID delete_gadget(struct DockPrefs *prefs)
             Remove((struct Node *)dg);
 
             DisposeObject(dg->dg);
+            
+            if( dg->editor ) {
+                TR_CloseProject(dg->editor);                
+            }
+
             DB_FreeMem(dg, sizeof(struct DgNode));
 
             update_gadget_list(prefs);
@@ -308,11 +313,7 @@ VOID edit_gadget(struct DockPrefs *prefs)
 
     if( dg = get_selected_gadget(prefs) ) {
 
-        if( dg->editor ) {
-
-            TR_SendMessage(dg->editor, 0, TROM_ACTIVATE, NULL);
-
-        } else if( gadTags = dock_gadget_get_editor(dg->dg) ) {
+        if( gadTags = dock_gadget_get_editor(dg->dg) ) {
 
             if( headTags = make_tag_list(
                     WindowID(2),
@@ -328,9 +329,9 @@ VOID edit_gadget(struct DockPrefs *prefs)
 
                 if( tailTags = make_tag_list(
                             Space,
-                            HorizGroupA,
+                            HorizGroupEC,
                                 Space,
-                                Button("Ok", OBJ_BTN_GAD_OK),
+                                ButtonR("Ok", OBJ_BTN_GAD_OK),
                                 Space,
                                 ButtonE("Cancel", OBJ_BTN_GAD_CAN),
                                 Space,
@@ -342,6 +343,8 @@ VOID edit_gadget(struct DockPrefs *prefs)
                 ) ) {
 
                     if( windowTags = merge_tag_lists(headTags, gadTags, tailTags) ) {
+
+                        TR_LockProject(mainWindow);
 
                         if( !(dg->editor = TR_OpenProject(Application, windowTags) ) ) {
     
@@ -367,8 +370,9 @@ VOID run_event_loop(struct DockPrefs *prefs)
     struct DgNode *dg;
     struct TR_Project *msgProj;
     ULONG msgClass, msgID, msgData;
+    UWORD openWindowCount = 0;
 
-    while( ! done ) {
+    while( ! done || openWindowCount > 0 ) {
         TR_Wait(Application, NULL);
 
         while( msg = TR_GetMsg(Application) ) {
@@ -376,7 +380,6 @@ VOID run_event_loop(struct DockPrefs *prefs)
             msgClass = msg->trm_Class;
             msgID = msg->trm_ID;
             msgData = msg->trm_Data;
-
 
             if( msgProj == mainWindow ) {
                 switch( msgClass ) {
@@ -431,20 +434,19 @@ VOID run_event_loop(struct DockPrefs *prefs)
                     switch( msgClass ) {
                         case TRMS_CLOSEWINDOW:
                             closeMsgProj = TRUE;
-                            dock_gadget_reset(dg->dg);
                             dg->editor = NULL;
                             break;
                         
                         case TRMS_ACTION:
                             switch( msgID ) {
                                 case OBJ_BTN_GAD_OK:
+                                    dock_gadget_update(dg->dg, msgProj);
                                     closeMsgProj = TRUE;
                                     dg->editor = NULL;
                                     break;
 
                                 case OBJ_BTN_GAD_CAN:
                                     closeMsgProj = TRUE;
-                                    dock_gadget_reset(dg->dg);
                                     dg->editor = NULL;
                                     break;
 
@@ -467,6 +469,7 @@ VOID run_event_loop(struct DockPrefs *prefs)
             if( closeMsgProj ) {
                 TR_CloseProject(msgProj);
                 closeMsgProj = FALSE;
+                TR_UnlockProject(mainWindow);
             }
         }
     }
@@ -491,11 +494,11 @@ int main(char **argv, int argc)
 
                 if( prefs.buttonClass = init_dock_button_class() ) {
 
-                    if( prefs.iconClass = init_icon_class() ) {
+                    if( init_icon_class() ) {
   
-                        if( load_config(&prefs) ) {
+                        if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
 
-                            if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
+                            if( load_config(&prefs) ) {
 
                                 TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
                                 TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
@@ -505,12 +508,11 @@ int main(char **argv, int argc)
                                 gadget_selected(&prefs, 0);
 
                                 run_event_loop(&prefs);
-    
-                                TR_CloseProject(mainWindow);            
+                               
+                                remove_dock_gadgets(&prefs);
                             }
-                            remove_dock_gadgets(&prefs);
+                            TR_CloseProject(mainWindow);            
                         }
-                        free_icon_class(prefs.iconClass);
                     }
                     free_dock_button_class(prefs.buttonClass);
                 }

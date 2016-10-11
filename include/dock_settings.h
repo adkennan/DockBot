@@ -40,9 +40,10 @@ struct Values
     }
 
 #define FREE_STRING(str) \
-    if( str ) \
-        DB_FreeMem(str, strlen(str) + 1)
-
+    if( str ) { \
+        DB_FreeMem(str, strlen(str) + 1); \
+        str = NULL; \
+    }
 
 
 #define CONFIG_FILE "ENV:DockBot.prefs"

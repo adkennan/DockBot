@@ -12,6 +12,7 @@
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
+#include <proto/triton.h>
 
 struct Values AlignValues[] = {
     { "left", DA_LEFT },
@@ -171,6 +172,7 @@ VOID remove_dock_gadgets(struct DockPrefs *prefs)
     while( ! IsListEmpty((struct List *)&prefs->gadgets) ) {
         if( dg = (struct DgNode *)RemTail((struct List *)&prefs->gadgets) ) {
             DisposeObject(dg->dg);
+            
             DB_FreeMem(dg, sizeof(struct DgNode));
         }
     }    

@@ -78,8 +78,13 @@ VOID dock_gadget_write_settings(Object *obj, struct DockSettings *settings)
     DoMethodA(obj, (Msg)&msg);
 }
 
-VOID dock_gadget_reset(Object *obj)
+VOID dock_gadget_update(Object *obj, struct TR_Project *project)
 {
-    DoMethod(obj, DM_RESET);
+    struct DockMessageUpdate msg = {
+        DM_UPDATE
+    };  
+    msg.project = project;
+
+    DoMethodA(obj, (Msg)&msg);
 }
 

@@ -79,7 +79,7 @@ ULONG __saveds prefs_base_dispatch(Class *c, Object *o, Msg msg)
         case DM_WRITE_CONFIG:
             break;
 
-        case DM_RESET:
+        case DM_UPDATE:
             break;
 
         default:

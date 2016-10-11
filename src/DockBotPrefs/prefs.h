@@ -28,7 +28,6 @@ struct DockPrefs
 	// Built in classes.
 	Class *baseClass;
 	Class *buttonClass;
-    Class *iconClass;
 };
 
 struct DgNode 
@@ -52,9 +51,7 @@ Class *init_dock_button_class(VOID);
 
 BOOL free_dock_button_class(Class *c);
 
-Class *init_icon_class(VOID);
-
-BOOL free_icon_class(Class *c);
+BOOL init_icon_class(VOID);
 
 BOOL load_config(struct DockPrefs *prefs);
 
@@ -76,7 +73,7 @@ typedef enum {
     DM_HANDLE_EVENT,
     DM_READ_CONFIG,
     DM_WRITE_CONFIG,
-    DM_RESET
+    DM_UPDATE
 
 } DockPrefsMessage;
 
@@ -98,7 +95,7 @@ VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings);
 
 VOID dock_gadget_write_settings(Object *obj, struct DockSettings *settings);
 
-VOID dock_gadget_reset(Object *obj);
+VOID dock_gadget_update(Object *obj, struct TR_Project *project);
 
 struct DockMessageSetName {
     ULONG MethodID;
@@ -115,6 +112,12 @@ struct DockMessageSettings {
 	ULONG MethodID;
 	struct DockSettings *settings;
 };
+
+struct DockMessageUpdate {
+    ULONG MethodID;
+    struct TR_Project *project;
+};
+
 
 struct TagItem *make_tag_list(ULONG data, ...);
 
