@@ -4,6 +4,7 @@
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/utility_protos.h>
+#include <clib/dos_protos.h>
 
 #include <libraries/triton.h>
 #include <proto/triton.h>
@@ -49,7 +50,7 @@ ProjectDefinition(mainWindowTags)
     WindowID(1),
     WindowTitle("DockBot Preferences"),
     WindowPosition(TRWP_CENTERDISPLAY),
-    WindowFlags(TRWF_HELP),
+    WindowFlags(TRWF_HELP|TRWF_APPWINDOW),
     QuickHelpOn(TRUE),
     BeginMenu("Project"),
         MenuItem("?_About...", OBJ_MENU_ABOUT),
@@ -306,12 +307,11 @@ struct TagItem *merge_tag_lists(struct TagItem *head, struct TagItem *middle, st
     return newTags;
 }
 
-VOID edit_gadget(struct DockPrefs *prefs)
-{
-    struct DgNode *dg;
+VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
+{    
     struct TagItem *gadTags, *headTags, *windowTags, *tailTags;
 
-    if( dg = get_selected_gadget(prefs) ) {
+    if( dg ) {
 
         if( gadTags = dock_gadget_get_editor(dg->dg) ) {
 
@@ -363,6 +363,79 @@ VOID edit_gadget(struct DockPrefs *prefs)
     }
 }
 
+VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
+{
+    STRPTR path;
+    STRPTR gadName;
+    BPTR lock;
+    struct FileInfoBlock *fib;
+    Object *btn;
+    struct DockMessageButtonInit dbmi;
+    UWORD len;
+    struct DgNode *dg;
+
+    if( path = (STRPTR)DB_AllocMem(MAX_PATH_LENGTH, MEMF_ANY) ) {
+
+        path[0] = 0;
+        NameFromLock(msg->am_ArgList->wa_Lock, path, MAX_PATH_LENGTH);
+        AddPart(path, msg->am_ArgList->wa_Name, MAX_PATH_LENGTH);
+        
+        if( lock = Lock(path, ACCESS_READ) ) {
+            
+            if( fib = AllocDosObjectTags(DOS_FIB, TAG_DONE) ) {
+
+                if( Examine(lock, fib) ) {
+    
+                   if( fib->fib_DirEntryType < 0 ) {
+    
+                        // A file was dropped. Create a new DockButton.
+
+                        len = strlen(DB_BUTTON_CLASS) + 1;
+
+                        if( btn = NewObjectA(NULL, DB_BUTTON_CLASS, TAG_DONE) ) {                 
+                                dbmi.MethodID = DM_INIT_BUTTON;
+                                dbmi.name = msg->am_ArgList->wa_Name;
+                                dbmi.path = path;
+                                DoMethodA(btn, (Msg)&dbmi);
+
+                            if( gadName = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) {                
+
+                                CopyMem(DB_BUTTON_GADGET, gadName, len);
+
+                                if( dg = add_dock_gadget(prefs, btn, gadName) ) {
+
+                                    update_gadget_list(prefs);
+
+                                    edit_gadget(prefs, dg);
+
+                                } else {
+                                    DB_FreeMem(gadName, len);
+                                    DisposeObject(btn);
+                                }                
+                            } else {
+                                DisposeObject(btn);
+                            }
+                        }
+                        
+                    } else {
+                        TR_EasyRequestTags(Application,
+                            "Sorry, directories cannot be added to the dock.", "_Ok",
+                            TREZ_LockProject, mainWindow,
+                            TREZ_Title, "Add Gadget",
+                            TREZ_Activate, TRUE, TAG_END);
+                    }
+                }
+
+                FreeDosObject(DOS_FIB, fib);
+            }
+            UnLock(lock);
+        }
+
+        DB_FreeMem(path, MAX_PATH_LENGTH);
+    }
+}
+
+
 VOID run_event_loop(struct DockPrefs *prefs) 
 {
     BOOL done = FALSE, closeMsgProj = FALSE;
@@ -387,6 +460,10 @@ VOID run_event_loop(struct DockPrefs *prefs)
                         done = TRUE;
                         break;
 
+                    case TRMS_ICONDROPPED:
+                        add_dropped_icon(prefs, (struct AppMessage *)msg->trm_Data);
+                        break;
+
                     case TRMS_ACTION:
                         switch( msgID ) {
                             case OBJ_MENU_QUIT:
@@ -407,7 +484,22 @@ VOID run_event_loop(struct DockPrefs *prefs)
                                 break;
 
                             case OBJ_BTN_EDIT:
-                                edit_gadget(prefs);
+                                edit_gadget(prefs, get_selected_gadget(prefs));
+                                break;
+
+                            case OBJ_BTN_TEST:
+                                save_config(prefs, FALSE);
+                                break;
+
+                            case OBJ_BTN_USE:
+                                save_config(prefs, FALSE);
+                                done = TRUE;
+                                break;
+
+                            case OBJ_BTN_SAVE:
+                                save_config(prefs, TRUE);
+                                save_config(prefs, FALSE);
+                                done = TRUE;
                                 break;
                         }
                         break;

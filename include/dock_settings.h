@@ -47,6 +47,7 @@ struct Values
 
 
 #define CONFIG_FILE "ENV:DockBot.prefs"
+#define CONFIG_FILE_PERM "ENVARC:DockBot.prefs"
 
 #define S_ALIGN "align"
 #define S_POSITION "position"

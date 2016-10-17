@@ -35,6 +35,8 @@ struct Rect
 
 #define DEFAULT_SIZE 48
 
+#define MAX_PATH_LENGTH 2048
+
 typedef enum {
 	DM_TICK 		    = 0x1200,
 	DM_CLICK 		    = 0x1201,

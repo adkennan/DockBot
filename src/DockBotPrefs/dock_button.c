@@ -46,8 +46,6 @@ extern struct Library *IconBase;
 #include "prefs.h"
 #include "dock_settings.h"
 
-#define CLASS_NAME "dockbuttonPrefs"
-
 #define S_NAME      "name"
 #define S_PATH      "path"
 #define S_START     "start"
@@ -225,6 +223,19 @@ BOOL init_icon_class(VOID)
 }
 
 
+VOID load_icon(struct DockButtonData *dbd)
+{
+    struct Screen *screen;
+    
+    if( dbd->diskObj = GetDiskObjectNew(dbd->path) ) {
+        if( screen = LockPubScreen(NULL) ) {
+
+            LayoutIconA(dbd->diskObj, screen, NULL);
+
+            UnlockPubScreen(NULL, screen);
+        }
+    }
+}
 
 
 VOID read_button_settings(Class *c, Object *o, Msg msg)
@@ -233,7 +244,6 @@ VOID read_button_settings(Class *c, Object *o, Msg msg)
     struct DockMessageReadSettings *m = (struct DockMessageReadSettings *)msg;
     struct DockSettingValue v;
     struct Values *vals;
-    struct Screen *screen;
     UWORD len;
 
     while( DB_ReadSetting(m->settings, &v) ) {
@@ -256,20 +266,45 @@ VOID read_button_settings(Class *c, Object *o, Msg msg)
         else if( IS_KEY(S_HOTKEY, v) ) {
             GET_STRING(v, dbd->hotKey)
         }
-    }    
-
-    if( dbd->diskObj = GetDiskObjectNew(dbd->path) ) {
-        if( screen = LockPubScreen(NULL) ) {
-
-            LayoutIconA(dbd->diskObj, screen, NULL);
-
-            UnlockPubScreen(NULL, screen);
-        }
     }
+
+    load_icon(dbd);    
 }
+
+STRPTR get_start_type(struct Values *values, UWORD val) {
+
+    while( values->Name ) {
+        if( values->Value == val ) {
+            return values->Name;
+        }
+        values++;
+    }
+    return NULL;
+}
+
 
 VOID write_button_settings(Class *c, Object *o, Msg msg)
 {
+    struct DockMessageReadSettings *m = (struct DockMessageReadSettings *)msg;
+    struct DockButtonData *dbd = INST_DATA(c, o);
+
+    struct DockSettings *s = m->settings;
+    if( dbd->name ) {
+        DB_WriteSetting(s, S_NAME, dbd->name);
+    }
+    if( dbd->path ) {
+        DB_WriteSetting(s, S_PATH, dbd->path);
+    }
+    if( dbd->args ) {
+        DB_WriteSetting(s, S_ARGS, dbd->args);
+    }
+    if( dbd->hotKey ) {
+        DB_WriteSetting(s, S_HOTKEY, dbd->hotKey);
+    }
+    DB_WriteSetting(s, S_START, get_start_type(StartValues, dbd->startType));
+    if( dbd->con ) {
+        DB_WriteSetting(s, S_CON, dbd->con);
+    }
 }
 
 VOID dispose_button_data(struct DockButtonData *dbd) 
@@ -405,6 +440,29 @@ VOID dock_button_handle_event(Class *c, Object *o, Msg msg)
     }
 }
 
+VOID dock_button_init_new(Class *c, Object *o, Msg msg)
+{
+    struct DockMessageButtonInit *m = (struct DockMessageButtonInit *)msg;
+    struct DockButtonData *dbd = INST_DATA(c, o);
+    UWORD len;
+
+    len = strlen(m->name) + 1;
+    if( len && (dbd->name = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) ) {
+        CopyMem(m->name, dbd->name, len);
+    }
+
+    len = strlen(m->path) + 1;
+    if( len && (dbd->path = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) ) {
+        CopyMem(m->path, dbd->path, len);
+    }
+
+    dbd->args = NULL;
+    dbd->hotKey = NULL;
+    dbd->con = NULL;
+    
+    load_icon(dbd);
+}
+
 ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
 {
     switch( msg->MethodID ) 
@@ -438,6 +496,10 @@ ULONG __saveds dock_button_dispatch(Class *c, Object *o, Msg msg)
             dock_button_update(c, o, msg);
             break;
 
+        case DM_INIT_BUTTON:
+            dock_button_init_new(c, o, msg);
+            break;
+
         default:
             return DoSuperMethodA(c, o, msg);
     
@@ -451,7 +513,7 @@ Class *init_dock_button_class(VOID)
 {
     ULONG HookEntry();
     Class *c;
-    if( c = MakeClass(CLASS_NAME, DB_ROOT_PREFS_CLASS, NULL, sizeof(struct DockButtonData), 0) )
+    if( c = MakeClass(DB_BUTTON_CLASS, DB_ROOT_PREFS_CLASS, NULL, sizeof(struct DockButtonData), 0) )
     {
         c->cl_Dispatcher.h_Entry = HookEntry;
         c->cl_Dispatcher.h_SubEntry = dock_button_dispatch;

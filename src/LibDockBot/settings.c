@@ -90,7 +90,9 @@ struct DockSettings * __asm __saveds DB_OpenSettingsWrite(
     s = NULL;
     if( fh = Open(filename, MODE_READWRITE) ) {
     
-        if( s = (struct DockSettings *)AllocMemInternal(sizeof(struct DockSettings *), MEMF_CLEAR) ) {
+        SetFileSize(fh, 0, OFFSET_BEGINNING);
+
+        if( s = (struct DockSettings *)AllocMemInternal(sizeof(struct DockSettings), MEMF_CLEAR) ) {
             s->size = 0;
             s->buffer = NULL;
             s->pos = 0;
@@ -277,6 +279,8 @@ BOOL __asm __saveds DB_WriteEndBlock(
 {
     LONG len;
 
+    settings->depth--;
+
     if( ! WriteIndent(settings) ) {
         return FALSE;
     }
@@ -286,7 +290,6 @@ BOOL __asm __saveds DB_WriteEndBlock(
         return FALSE;
     }
 
-    settings->depth--;
     return TRUE;
 }
 

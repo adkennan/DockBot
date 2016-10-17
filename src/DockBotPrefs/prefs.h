@@ -13,7 +13,8 @@
 #include "dock_settings.h"
 
 #define DB_ROOT_PREFS_CLASS "DockGadgetPrefsBase"
-
+#define DB_BUTTON_CLASS "dockbuttonPrefs"
+#define DB_BUTTON_GADGET "dockbutton"
 struct DockPrefs 
 {
 	// Dock Settings
@@ -33,6 +34,7 @@ struct DockPrefs
 struct DgNode 
 {
 	struct Node n;
+    STRPTR gadgetName;
 	Object *dg;
     struct TR_Project *editor;
 };
@@ -57,7 +59,7 @@ BOOL load_config(struct DockPrefs *prefs);
 
 VOID remove_dock_gadgets(struct DockPrefs *prefs);
 
-//BOOL save_config(struct DockPrefs *prefs);
+BOOL save_config(struct DockPrefs *prefs, BOOL writeToEnvarc);
 
 //BOOL use_config(struct DockPrefs *prefs);
 
@@ -73,7 +75,8 @@ typedef enum {
     DM_HANDLE_EVENT,
     DM_READ_CONFIG,
     DM_WRITE_CONFIG,
-    DM_UPDATE
+    DM_UPDATE,
+    DM_INIT_BUTTON
 
 } DockPrefsMessage;
 
@@ -97,6 +100,10 @@ VOID dock_gadget_write_settings(Object *obj, struct DockSettings *settings);
 
 VOID dock_gadget_update(Object *obj, struct TR_Project *project);
 
+VOID dock_button_init(Object *obj, STRPTR name, STRPTR path);
+
+struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR gadName);
+
 struct DockMessageSetName {
     ULONG MethodID;
     STRPTR name;
@@ -118,6 +125,11 @@ struct DockMessageUpdate {
     struct TR_Project *project;
 };
 
+struct DockMessageButtonInit {
+    ULONG MethodID;
+    STRPTR name;
+    STRPTR path;
+};
 
 struct TagItem *make_tag_list(ULONG data, ...);
 

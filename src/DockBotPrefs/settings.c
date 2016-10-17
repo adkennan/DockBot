@@ -29,19 +29,25 @@ struct Values PositionValues[] = {
     { NULL, 0 }
 };
 
-VOID add_dock_gadget(struct DockPrefs *prefs, Object *dg, STRPTR name)
+struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *dg, STRPTR name)
 {
     struct DgNode *n;
 
     if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
+
+        n->gadgetName = name;
+
         n->n.ln_Name = dock_gadget_get_name(dg);
         if( ! n->n.ln_Name ) {
             dock_gadget_set_name(dg, name);
             n->n.ln_Name = dock_gadget_get_name(dg);
         }
         n->dg = dg;
+
         AddTail((struct List *)&(prefs->gadgets), (struct Node *)n);
     }
+
+    return n;
 }
 
 Object *create_dock_gadget(struct DockPrefs *prefs, STRPTR name)
@@ -103,10 +109,9 @@ BOOL read_dock_gadget(struct DockPrefs *prefs, struct DockSettings *settings)
             GET_STRING(v, gadName);
             
             if( gad = create_dock_gadget(prefs, gadName) ) {
+
                 dock_gadget_read_settings(gad, settings);
                 add_dock_gadget(prefs, gad, gadName);
-
-                FREE_STRING(gadName);
 
                 return TRUE;                
             } else {
@@ -118,6 +123,16 @@ BOOL read_dock_gadget(struct DockPrefs *prefs, struct DockSettings *settings)
         }
     }
     return FALSE;
+}
+
+STRPTR get_name(struct Values *values, UWORD val) {
+    while( values->Name ) {
+        if( values->Value == val ) {
+            return values->Name;
+        }
+        values++;
+    }
+    return NULL;
 }
 
 
@@ -165,12 +180,75 @@ BOOL load_config(struct DockPrefs *prefs)
     return r;    
 }
 
+BOOL save_config(struct DockPrefs *prefs, BOOL writeToEnvarc)
+{
+    struct DockSettings *s = NULL;
+    struct DgNode *curr;
+    BOOL result = TRUE;
+
+    if( s = DB_OpenSettingsWrite(
+        writeToEnvarc ? CONFIG_FILE_PERM : CONFIG_FILE
+    ) ) {
+        
+        if( DB_WriteBeginBlock(s) ) {
+
+            if( ! DB_WriteSetting(s, S_ALIGN, get_name(AlignValues, prefs->align) ) ) {
+                goto error;
+            }
+
+            if( ! DB_WriteSetting(s, S_POSITION, get_name(PositionValues, prefs->pos) ) ) {
+                goto error;
+            }
+
+            for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
+                curr->n.ln_Succ;
+                curr = (struct DgNode *)curr->n.ln_Succ ) {
+
+                if( ! DB_WriteBeginBlock(s) ) {
+                    goto error;
+                }
+
+                if( ! DB_WriteSetting(s, S_GADGET, curr->gadgetName) ) {
+                    goto error;
+                }
+
+                dock_gadget_write_settings(curr->dg, s);
+
+                if( ! DB_WriteEndBlock(s) ) {
+                    goto error;
+                }
+            }
+
+            if( ! DB_WriteEndBlock(s) ) {
+                goto error;
+            }
+            
+        } else {
+            goto error;
+        }
+
+        goto exit;
+    }
+
+error:
+    result = FALSE;
+
+exit:
+    if( s ) {
+        DB_CloseSettings(s);
+    }
+    return result;
+}
+
 VOID remove_dock_gadgets(struct DockPrefs *prefs)
 {
     struct DgNode *dg;
 
     while( ! IsListEmpty((struct List *)&prefs->gadgets) ) {
         if( dg = (struct DgNode *)RemTail((struct List *)&prefs->gadgets) ) {
+
+            FREE_STRING(dg->gadgetName);
+
             DisposeObject(dg->dg);
             
             DB_FreeMem(dg, sizeof(struct DgNode));
