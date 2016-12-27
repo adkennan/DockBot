@@ -64,14 +64,13 @@ ULONG __saveds mem_lib_expunge(struct MemLibData *mld)
     return 1;
 }
 
-ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
-{   
+DB_METHOD_M(DRAW,DockMessageDraw)
+
     struct Screen *screen;
     struct DrawInfo *drawInfo;
     struct Rect b, barFrame;
     struct IntuiText l1, l2;
     struct TextAttr ta1, ta2;
-    struct DockMessageDraw *d = (struct DockMessageDraw *)m;
     UWORD w;
     ULONG totalChip, freeChip, totalFast, freeFast;
     
@@ -83,7 +82,7 @@ ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
 
     DB_GetDockGadgetBounds(o, &b);
 
-    DB_DrawOutsetFrame(d->rp, &b);
+    DB_DrawOutsetFrame(msg->rp, &b);
 
     l1.ITextFont = &ta1;
     set_text_font(&l1);
@@ -107,7 +106,7 @@ ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
 
     w = IntuiTextLength(&l1);
 
-    PrintIText(d->rp, &l1, 0, 0);
+    PrintIText(msg->rp, &l1, 0, 0);
 
     barFrame.x = b.x + w + 2;
     barFrame.w = b.w - w - 5;
@@ -118,27 +117,27 @@ ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
 
-            SetAPen(d->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
-            RectFill(d->rp, barFrame.x, barFrame.y, barFrame.w + barFrame.x, barFrame.h + barFrame.y);
+            SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
+            RectFill(msg->rp, barFrame.x, barFrame.y, barFrame.w + barFrame.x, barFrame.h + barFrame.y);
 
-            DB_DrawInsetFrame(d->rp, &barFrame);
+            DB_DrawInsetFrame(msg->rp, &barFrame);
 
             w = (UWORD)((((totalChip - freeChip) * 100) / totalChip) * (barFrame.w - 2)) / 100;
-            SetAPen(d->rp, drawInfo->dri_Pens[FILLPEN]);
-            RectFill(d->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
+            SetAPen(msg->rp, drawInfo->dri_Pens[FILLPEN]);
+            RectFill(msg->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
             
             if( totalFast > 0 ) {
 
                 barFrame.y = l2.TopEdge;
 
-                SetAPen(d->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
-                RectFill(d->rp, barFrame.x, barFrame.y, barFrame.w + barFrame.x, barFrame.h + barFrame.y);
+                SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
+                RectFill(msg->rp, barFrame.x, barFrame.y, barFrame.w + barFrame.x, barFrame.h + barFrame.y);
 
-                DB_DrawInsetFrame(d->rp, &barFrame);
+                DB_DrawInsetFrame(msg->rp, &barFrame);
 
                 w = (UWORD)((((totalFast - freeFast) * 100) / totalFast) * (barFrame.w - 2)) / 100;
-                SetAPen(d->rp, drawInfo->dri_Pens[FILLPEN]);
-                RectFill(d->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
+                SetAPen(msg->rp, drawInfo->dri_Pens[FILLPEN]);
+                RectFill(msg->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
             }
 
             FreeScreenDrawInfo(screen, drawInfo);
@@ -149,27 +148,24 @@ ULONG __saveds mem_draw(Class *c, Object *o, Msg m)
     return 1;    
 }
 
-ULONG __saveds mem_tick(Class *c, Object *o, Msg m)
-{
-    struct MemGadgetData *cd = INST_DATA(c, o);
+DB_METHOD_D(TICK)
 
-    if( cd->counter > 0 ) {
-        cd->counter--;
+    if( data->counter > 0 ) {
+        data->counter--;
         return 1;
     }
 
-    cd->counter = 50;
+    data->counter = 50;
 
     DB_RequestDockGadgetDraw(o);
 
     return 1;
 }
 
-ULONG __saveds mem_get_size(Class *c, Object *o, Msg m)
-{
+DB_METHOD_M(GETSIZE,DockMessageGetSize)
+
     struct IntuiText text;
     struct TextAttr ta;
-    struct DockMessageGetSize *s = (struct DockMessageGetSize *)m;
     UWORD rows;    
 
     text.ITextFont = &ta;
@@ -178,8 +174,8 @@ ULONG __saveds mem_get_size(Class *c, Object *o, Msg m)
     rows = (AvailMem(MEMF_CHIP|MEMF_TOTAL) > 0 ? 1 : 0)
             + (AvailMem(MEMF_FAST|MEMF_TOTAL) > 0 ? 1 : 0);
 
-    s->w = DEFAULT_SIZE;
-    s->h = rows * (2 + text.ITextFont->ta_YSize) + 4;
+    msg->w = DEFAULT_SIZE;
+    msg->h = rows * (2 + text.ITextFont->ta_YSize) + 4;
  
     return 1;
 }

@@ -14,9 +14,9 @@ DEF_DEBUG_MEM=
 
 C_OPTS=		opt noicons cpu=$(CPU) INCLUDEDIRECTORY=$(INC) $(DEF_DEBUG_MEM)
 
-C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c dock_button.c events.c gadgets.c layout.c settings.c debug.c
+C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c events.c gadgets.c layout.c settings.c debug.c
 
-OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o dock_button.o events.o gadgets.o layout.o settings.o debug.o
+OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o events.o gadgets.o layout.o settings.o debug.o
 
 $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<

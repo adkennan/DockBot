@@ -38,25 +38,44 @@ struct Rect
 #define MAX_PATH_LENGTH 2048
 
 typedef enum {
-	DM_TICK 		    = 0x1200,
-	DM_CLICK 		    = 0x1201,
-	DM_DROP 		    = 0x1202,
-	DM_SETBOUNDS 	    = 0x1203,
-	DM_GETSIZE 		    = 0x1204,
-	DM_DRAW			    = 0x1205,
-	DM_HITTEST		    = 0x1206,
-    DM_GETBOUNDS        = 0x1207,
-	DM_READCONFIG	    = 0x1208,
-    DM_ADDED            = 0x1209,
-    DM_REMOVED          = 0x120A,
-    DM_REQ_QUIT         = 0x120B,
-    DM_REQ_DRAW         = 0x120C,
-    DM_SETTINGS_CLASS   = 0x120D,
-    DM_BUILTIN          = 0x120E,
-    DM_GETINFO          = 0x120F,
-	DM_GETHOTKEY		= 0x1210,
-	DM_HOTKEY			= 0x1211
+
+    // Internal - Don't override.
+    DM_ADDED            = 1201,
+    DM_REMOVED          = 1202,
+    DM_REQ_QUIT         = 1203,
+    DM_REQ_DRAW         = 1204,
+    DM_BUILTIN          = 1205,
+	DM_SETBOUNDS 	    = 1206,
+    DM_GETBOUNDS        = 1207,
+	DM_HITTEST		    = 1208,
+
+    // Event Handlers.
+	DM_TICK 		    = 1302,
+	DM_CLICK 		    = 1303,
+	DM_DROP 		    = 1304,
+	DM_HOTKEY			= 1305,
+
+    // Rendering.
+	DM_GETSIZE 		    = 1400,
+	DM_DRAW			    = 1401,
+
+    // Configuration.
+	DM_READCONFIG	    = 1500,
+	DM_WRITECONFIG		= 1501,
+    DM_GETSETTINGS      = 1502,
+
+    // Getters.
+    DM_GETINFO          = 1601,
+	DM_GETHOTKEY		= 1602,
+	DM_GETLABEL			= 1603
+
 } DockMessage;
+
+struct DockSettings;
+struct DockWindow;
+
+extern struct Library *DockBotBase;
+
 
 struct DockMessageAdded
 {
@@ -115,21 +134,7 @@ struct DockMessageGetInfo {
     STRPTR copyright;
 };
 
-struct DockWindow;
-
-extern struct Library *DockBotBase;
-
-struct DockSettings;
-
-struct DockSettingValue
-{
-	STRPTR Key;
-	STRPTR Value;
-	UWORD KeyLength;
-	UWORD ValueLength;
-};
-
-struct DockMessageReadSettings {
+struct DockMessageConfig {
 	ULONG MethodID;
 	struct DockSettings *settings;
 };
@@ -137,6 +142,19 @@ struct DockMessageReadSettings {
 struct DockMessageGetHotKey {
 	ULONG MethodID;
 	STRPTR hotKey;
+};
+
+struct DockMessageGetLabel {
+	ULONG MethodID;
+	STRPTR label;
+};
+
+struct DockSettingValue
+{
+	STRPTR Key;
+	STRPTR Value;
+	UWORD KeyLength;
+	UWORD ValueLength;
 };
 
 #endif

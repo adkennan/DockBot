@@ -51,6 +51,7 @@ struct DockWindow
     // Dock Settings
 	DockPosition pos;
 	DockAlign align;
+    BOOL showGadgetLabels;
 
     // Window
 	struct Window *win;
@@ -64,7 +65,6 @@ struct DockWindow
 
     // Built in classes
     Class *handleClass;
-    Class *buttonClass;
 
     // Prefs file change notification
     struct MsgPort* notifyPort;
@@ -91,6 +91,11 @@ struct DockWindow
 	// Commodities
 	struct MsgPort *cxPort;
 	CxObj *cxBroker;
+
+    // Gadget name tooltips
+    Object *hoverGad;
+    struct Window *hoverWin;
+    UWORD hoverCount;
 };
 
 struct DgNode
@@ -106,6 +111,8 @@ struct LibNode
 };
 
 #define TIMER_INTERVAL 250L
+
+#define HOVER_COUNT 8
 
 #define MIN_ICON "PROGDIR:" APP_NAME "Min"
 
@@ -178,6 +185,8 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y);
 Object *create_dock_gadget(struct DockWindow *dock, STRPTR name);
 
 VOID close_class_libs(struct DockWindow *dock);
+
+VOID update_hover_gadget(struct DockWindow *dock);
 
 // Layout
 

@@ -5,6 +5,8 @@
 #include <clib/dos_protos.h>
 #include <clib/intuition_protos.h>
 
+#include <dos/exall.h>
+
 #include <stdio.h>
 
 #include "dock_settings.h"
@@ -13,6 +15,11 @@
 #include "dockbot_pragmas.h"
 
 #include <proto/triton.h>
+
+#define GADGET_PATH "PROGDIR:Gadgets/"
+#define PREFS_PATH "PROGDIR:Prefs/"
+
+#define DIR_BUF_SIZE 512
 
 struct Values AlignValues[] = {
     { "left", DA_LEFT },
@@ -62,7 +69,7 @@ Object *create_dock_gadget(struct DockPrefs *prefs, STRPTR name)
 
     if( ! (o = NewObjectA(NULL, prefsClassName, TAG_DONE) ) ) {
 
-        sprintf(libName, "Gadgets/%s.class", prefsClassName);
+        sprintf(libName, PREFS_PATH "%s.class", prefsClassName);
 
         if( lib = OpenLibrary(libName, 1) ) {
 
@@ -254,5 +261,86 @@ VOID remove_dock_gadgets(struct DockPrefs *prefs)
             DB_FreeMem(dg, sizeof(struct DgNode));
         }
     }    
+}
+
+
+
+BOOL find_plugins(struct DockPrefs *prefs)
+{
+    BPTR lock;
+    struct ExAllData *buf, *ead;    
+    struct ExAllControl *eac;
+    BOOL more;
+    struct Node *node;
+    UWORD len;
+    STRPTR name;
+    BOOL result = FALSE;
+
+    NewList(&prefs->plugins);
+
+    if( lock = Lock(GADGET_PATH, ACCESS_READ) ) {
+    
+        if( buf = (struct ExAllData *)DB_AllocMem(DIR_BUF_SIZE, MEMF_ANY) ) {
+            
+            if( eac = AllocDosObject(DOS_EXALLCONTROL, NULL)) {
+                
+                eac->eac_LastKey = 0;
+
+                do {
+
+                    result = TRUE;
+
+                    more = ExAll(lock, buf, DIR_BUF_SIZE, ED_NAME, eac);
+
+                    if( !more && IoErr() != ERROR_NO_MORE_ENTRIES ) {
+                         continue;
+                    } 
+
+                    ead = buf;
+                    do {
+                                 
+                        len = strlen(ead->ed_Name) + 1;
+          
+                        if( node = DB_AllocMem(sizeof(struct Node) + len, MEMF_ANY) ) {
+                            
+                            name = (STRPTR)((UBYTE *)node + sizeof(struct Node));
+
+                            CopyMem(ead->ed_Name, name, len);
+
+                            node->ln_Name = name;
+
+                            AddTail(&prefs->plugins, node);
+                        }
+    
+                        ead = ead->ed_Next;
+
+                    } while(ead);
+                    
+                } while( more );
+
+                FreeDosObject(DOS_EXALLCONTROL, eac);
+            }
+            DB_FreeMem(buf, DIR_BUF_SIZE);
+        }
+
+        UnLock(lock);
+    }
+    
+    return result;
+}
+
+VOID free_plugins(struct DockPrefs *prefs)
+{
+    struct Node *node;
+    UWORD len;
+
+    while( ! IsListEmpty(&prefs->plugins) ) {
+        if( node = RemTail(&prefs->plugins) ) {
+
+            len = sizeof(struct Node) + strlen(node->ln_Name) + 1;
+
+            DB_FreeMem(node, len);
+        }
+    }
 }
 

@@ -20,7 +20,6 @@ struct Library *GfxBase;
 struct Library *IntuitionBase;
 struct Library *WorkbenchBase;
 struct Library *DockBotBase;
-struct Library *IconBase;
 struct Library *GadToolsBase;
 struct Library *CxBase;
 
@@ -55,29 +54,25 @@ int main(int argc, char** argv)
     
                     if( GadToolsBase = OpenLibrary("gadtools.library", 37) ) {
         
-                        if( IconBase = OpenLibrary("icon.library", 46) ) {
+                        if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
 
-                            if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
-
-                                if( CxBase = OpenLibrary("commodities.library", 37) ) {
+                            if( CxBase = OpenLibrary("commodities.library", 37) ) {
     
-                                    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+                                if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
     
-                                        if( dock = create_dock() ) {
-                    
-                                            run_event_loop(dock);                     
+                                    if( dock = create_dock() ) {
+                
+                                        run_event_loop(dock);                     
         
-                                            free_dock(dock);   
-                    
-                                            LOG_MEMORY
-                                        }
-                                        CloseLibrary(DockBotBase);
+                                        free_dock(dock);   
+                  
+                                        LOG_MEMORY
                                     }
-                                    CloseLibrary(CxBase);
+                                    CloseLibrary(DockBotBase);
                                 }
-                                CloseLibrary(WorkbenchBase);
+                                CloseLibrary(CxBase);
                             }
-                            CloseLibrary(IconBase);
+                            CloseLibrary(WorkbenchBase);
                         }
                         CloseLibrary(GadToolsBase);
                     }        

@@ -298,6 +298,27 @@ Class* __saveds __asm _GetEngine(
     ULONG __saveds METHOD_READCONFIG (Class *c, Object *o, Msg msg);
 #endif
 
+#ifdef METHOD_WRITECONFIG
+    ULONG __saveds METHOD_WRITECONFIG (Class *c, Object *o, Msg msg);
+#endif
+
+#ifdef METHOD_GETSETTINGS
+    ULONG __saveds METHOD_GETSETTINGS (Class *c, Object *o, Msg msg);
+#endif
+
+#ifdef METHOD_GETHOTKEY
+    ULONG __saveds METHOD_GETHOTKEY (Class *c, Object *o, Msg msg);
+#endif
+
+#ifdef METHOD_HOTKEY
+    ULONG __saveds METHOD_HOTKEY (Class *c, Object *o, Msg msg);
+#endif
+
+#ifdef METHOD_GETLABEL
+    ULONG __saveds METHOD_GETLABEL (Class *c, Object *o, Msg msg);
+#endif
+
+
 ULONG __saveds GetGadgetInfo(Class *c, Object *o, Msg msg)
 {
     struct DockMessageGetInfo *i = (struct DockMessageGetInfo *)msg;
@@ -337,6 +358,16 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
             break;
 #endif
 
+#ifdef METHOD_ADDED
+        case DM_ADDED:
+            return METHOD_ADDED (c, o, msg);
+#endif
+
+#ifdef METHOD_REMOVED
+        case DM_REMOVED:
+            return METHOD_REMOVED (c, o, msg);
+#endif
+
 #ifdef METHOD_DRAW
         case DM_DRAW:
             return METHOD_DRAW (c, o, msg);
@@ -367,8 +398,30 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
             return METHOD_READCONFIG (c, o, msg);
 #endif
 
-        case DM_SETTINGS_CLASS:
-            return (ULONG)SETTINGS_CLASS;
+#ifdef METHOD_WRITECONFIG
+        case DM_WRITECONFIG:
+            return METHOD_WRITECONFIG (c, o, msg);
+#endif
+
+#ifdef METHOD_GETSETTINGS
+        case DM_GETSETTINGS:
+            return METHOD_GETSETTINGS (c, o, msg);
+#endif
+
+#ifdef METHOD_GETHOTKEY
+        case DM_GETHOTKEY:
+            return METHOD_GETHOTKEY (c, o, msg);
+#endif
+
+#ifdef METHOD_HOTKEY
+        case DM_HOTKEY:
+            return METHOD_HOTKEY (c, o, msg);
+#endif
+
+#ifdef METHOD_GETLABEL
+        case DM_GETLABEL:
+            return METHOD_GETLABEL (c, o, msg);
+#endif
 
         case DM_GETINFO:
             return GetGadgetInfo(c, o, msg);

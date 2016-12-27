@@ -36,6 +36,12 @@ struct Values PositionValues[] = {
     { NULL, 0 }
 };
 
+struct Values BooleanValues[] = {
+    { "true", TRUE },
+    { "false", FALSE },
+    { NULL, 0 }
+};
+
 BOOL read_dock_gadget(struct DockWindow *dock, struct DockSettings *settings)
 {
     struct DockSettingValue v;
@@ -101,6 +107,10 @@ BOOL load_config(struct DockWindow *dock)
 
                     else if( IS_KEY(S_POSITION, v) ) {
                         GET_VALUE(v, PositionValues, vals, l, dock->pos)
+                    }
+
+                    else if( IS_KEY(S_LABELS, v) ) {
+                        GET_VALUE(v, BooleanValues, vals, l, dock->showGadgetLabels)
                     }
                 }
             }

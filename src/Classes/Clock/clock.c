@@ -55,25 +55,21 @@ ULONG __saveds clock_lib_expunge(struct ClockLibData *cld)
     return 1;
 }
 
-ULONG __saveds clock_new(Class *c, Object *o, Msg m)
-{
-    struct ClockGadgetData *cd = INST_DATA(c, o);
+DB_METHOD_D(NEW)
 
-    if( cd->locale = OpenLocale(NULL) ) {
+    if( data->locale = OpenLocale(NULL) ) {
         return 1;
     }
     return 0;
 }
 
-ULONG __saveds clock_dispose(Class *c, Object *o, Msg m)
-{
-    struct ClockGadgetData *cd = INST_DATA(c, o);
+DB_METHOD_D(DISPOSE)
 
-    if( cd->locale ) {
-        CloseLocale(cd->locale);
+    if( data->locale ) {
+        CloseLocale(data->locale);
     }
     
-    FREE_STRING(cd->format);
+    FREE_STRING(data->format);
 
     return 1;
 }
@@ -102,24 +98,22 @@ VOID __saveds set_text_font(struct IntuiText *text)
     }     
 }
 
-ULONG __saveds clock_draw(Class *c, Object *o, Msg m)
-{   
+DB_METHOD_DM(DRAW,DockMessageDraw)
+
     struct Rect b;
     struct IntuiText text;
     struct TextAttr ta;
-    struct ClockGadgetData *g = INST_DATA(c, o);
-    struct DockMessageDraw *d = (struct DockMessageDraw *)m;
     UWORD w;
 
     DB_GetDockGadgetBounds(o, &b);
 
-    DB_DrawOutsetFrame(d->rp, &b);
+    DB_DrawOutsetFrame(msg->rp, &b);
 
     text.ITextFont = &ta;
     set_text_font(&text);
 
     text.ITextFont = &ta;
-    text.IText = g->time;
+    text.IText = data->time;
     text.NextText = NULL;
             
     w = IntuiTextLength(&text);
@@ -127,7 +121,7 @@ ULONG __saveds clock_draw(Class *c, Object *o, Msg m)
     text.LeftEdge = b.x + (b.w - w) / 2;
     text.TopEdge = b.y + (b.h - text.ITextFont->ta_YSize) / 2;
 
-    PrintIText(d->rp, &text, 0, 0);
+    PrintIText(msg->rp, &text, 0, 0);
 
     return 1;    
 }
@@ -158,25 +152,24 @@ VOID __saveds format_time(struct ClockGadgetData *cd, struct DateStamp *ds)
     FormatDate(cd->locale, cd->format, ds, &hook);
 }
 
-ULONG __saveds clock_tick(Class *c, Object *o, Msg m)
-{
-    struct DateStamp ds;
-    struct ClockGadgetData *cd = INST_DATA(c, o);
+DB_METHOD_D(TICK)
 
-    if( cd->counter > 0 ) {
-        cd->counter--;
+    struct DateStamp ds;
+
+    if( data->counter > 0 ) {
+        data->counter--;
         return 1;
     }
 
-    cd->counter = 20;
+    data->counter = 20;
 
     DateStamp(&ds);
     
-    if( ds.ds_Minute != cd->minutes ) {
+    if( ds.ds_Minute != data->minutes ) {
     
-        cd->minutes = ds.ds_Minute;
+        data->minutes = ds.ds_Minute;
 
-        format_time(cd, &ds);
+        format_time(data, &ds);
     
         DB_RequestDockGadgetDraw(o);
     }
@@ -184,18 +177,17 @@ ULONG __saveds clock_tick(Class *c, Object *o, Msg m)
     return 1;
 }
 
-ULONG __saveds clock_get_size(Class *c, Object *o, Msg m)
-{
+DB_METHOD_M(GETSIZE,DockMessageGetSize)
+
     struct Screen *screen;
     struct DrawInfo *drawInfo;
-    struct DockMessageGetSize *s = (struct DockMessageGetSize *)m;
 
     if( screen = LockPubScreen(NULL) ) {
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
 
-            s->h = drawInfo->dri_Font->tf_YSize + 4;
-            s->w = DEFAULT_SIZE;
+            msg->h = drawInfo->dri_Font->tf_YSize + 4;
+            msg->w = DEFAULT_SIZE;
 
             FreeScreenDrawInfo(screen, drawInfo);
         }
@@ -206,22 +198,19 @@ ULONG __saveds clock_get_size(Class *c, Object *o, Msg m)
     return 1;
 }
 
+DB_METHOD_DM(READCONFIG,DockMessageConfig)
 
-ULONG __saveds clock_read_config(Class *c, Object *o, Msg m)
-{
-    struct DockMessageReadSettings *r = (struct DockMessageReadSettings*)m;
-    struct ClockGadgetData *cd = INST_DATA(c, o);
     struct DockSettingValue v;
 
-    while( DB_ReadSetting(r->settings, &v) ) {
+    while( DB_ReadSetting(msg->settings, &v) ) {
         if( IS_KEY(S_FORMAT, v) ) {
-            GET_STRING(v, cd->format)
+            GET_STRING(v, data->format)
         }
     }
 
-    if( ! cd->format ) {
-        if( cd->format = (STRPTR)DB_AllocMem(strlen(DEFAULT_FORMAT) + 1, MEMF_CLEAR) ) {
-            CopyMem(DEFAULT_FORMAT, cd->format, strlen(DEFAULT_FORMAT) + 1);
+    if( ! data->format ) {
+        if( data->format = (STRPTR)DB_AllocMem(strlen(DEFAULT_FORMAT) + 1, MEMF_CLEAR) ) {
+            CopyMem(DEFAULT_FORMAT, data->format, strlen(DEFAULT_FORMAT) + 1);
         }
     }
 

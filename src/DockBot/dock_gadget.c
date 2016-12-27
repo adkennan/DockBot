@@ -114,7 +114,7 @@ VOID dock_gadget_draw(Object *obj, struct RastPort *rp)
 
 VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings)
 {
-    struct DockMessageReadSettings msg = {
+    struct DockMessageConfig msg = {
         DM_READCONFIG
     };
     msg.settings = settings;
@@ -160,5 +160,18 @@ VOID dock_gadget_get_hotkey(Object *obj
 VOID dock_gadget_hotkey(Object *obj)
 {
     DoMethod(obj, DM_HOTKEY);
+}
+
+VOID dock_gadget_get_label(Object *obj
+            , STRPTR *label)
+{
+    struct DockMessageGetLabel msg = {
+        DM_GETLABEL,
+        NULL
+    };
+
+    DoMethodA(obj, (Msg)&msg);
+
+    *label = msg.label;
 }
 

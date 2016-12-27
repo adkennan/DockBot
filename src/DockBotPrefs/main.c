@@ -18,6 +18,8 @@
 
 struct Library *DockBotBase;
 
+struct TR_Project *addNewGadDialog;
+
 STRPTR positions[] = { "Left", "Right", "Top", "Bottom", NULL };
 STRPTR alignments[] = { "Top/Left", "Center", "Bottom/Right", NULL };
 
@@ -42,7 +44,45 @@ enum {
     OBJ_BTN_CANCEL  = 1014,
 
     OBJ_BTN_GAD_OK  = 1015,
-    OBJ_BTN_GAD_CAN = 1016
+    OBJ_BTN_GAD_CAN = 1016,
+
+    OBJ_NEW_GADGET  = 1017,
+    OBJ_BTN_NEW_OK  = 1018,
+    OBJ_BTN_NEW_CAN = 1019
+};
+
+ProjectDefinition(newGadgetWindowTags)
+{
+    WindowID(2),
+    WindowTitle("New Dock Gadget"),
+    WindowPosition(TRWP_CENTERDISPLAY),
+    WindowFlags(TRWF_HELP),
+    QuickHelpOn(TRUE),
+    HorizGroupA,
+        Space,
+        VertGroupA,
+            ColumnArray,
+                Space,
+                BeginColumn,
+                    Space,
+                    TextN("Choose Gadget"),
+                    Space,
+                EndColumn,
+                Space,
+                BeginColumn,
+                    Space,
+                    CycleGadget(NULL, 0, OBJ_NEW_GADGET),
+                    Space,
+                EndColumn,
+            EndArray,
+            HorizGroupEC,
+                Button("_Ok", OBJ_BTN_NEW_OK),
+                Space,
+                ButtonE("Cancel", OBJ_BTN_NEW_CAN),
+            EndGroup,
+        EndGroup,
+        Space,
+    EndGroup
 };
 
 ProjectDefinition(mainWindowTags)
@@ -435,6 +475,17 @@ VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
     }
 }
 
+VOID open_new_gadget_dialog(struct DockPrefs *prefs)
+{
+    if( ! (addNewGadDialog = TR_OpenProject(Application, newGadgetWindowTags) ) ) {
+    
+        return;
+    }
+
+    TR_LockProject(mainWindow);
+
+    TR_SetAttribute(addNewGadDialog, OBJ_NEW_GADGET, TRAT_Value, (ULONG)&prefs->plugins);    
+}
 
 VOID run_event_loop(struct DockPrefs *prefs) 
 {
@@ -483,6 +534,11 @@ VOID run_event_loop(struct DockPrefs *prefs)
                                 delete_gadget(prefs);
                                 break;
 
+                            case OBJ_BTN_NEW:
+                                open_new_gadget_dialog(prefs);
+                                break;
+
+
                             case OBJ_BTN_EDIT:
                                 edit_gadget(prefs, get_selected_gadget(prefs));
                                 break;
@@ -520,39 +576,63 @@ VOID run_event_loop(struct DockPrefs *prefs)
                         }
                         break;
                 }
-            } else {
-                if( dg = get_gadget_from_window(prefs, msgProj) ) {
+            } else if( msgProj == addNewGadDialog ) {
+
+                switch( msgClass ) {
+
+                    case TRMS_CLOSEWINDOW:
+                        closeMsgProj = TRUE;
+                        addNewGadDialog = NULL;
+                        break;
+
+                    case TRMS_ACTION:
+                        switch( msgID ) {
+
+                            case OBJ_BTN_NEW_OK:
+                                closeMsgProj = TRUE;
+                                addNewGadDialog = NULL;
+                                break;
+
+                            case OBJ_BTN_NEW_CAN:
+                                closeMsgProj = TRUE;
+                                addNewGadDialog = NULL;
+                                break;
+
+                        }
+                        break;
+                }
+            
+            } else if( dg = get_gadget_from_window(prefs, msgProj) ) {
                 
-                    switch( msgClass ) {
-                        case TRMS_CLOSEWINDOW:
-                            closeMsgProj = TRUE;
-                            dg->editor = NULL;
-                            break;
+                switch( msgClass ) {
+                    case TRMS_CLOSEWINDOW:
+                        closeMsgProj = TRUE;
+                        dg->editor = NULL;
+                        break;
                         
-                        case TRMS_ACTION:
-                            switch( msgID ) {
-                                case OBJ_BTN_GAD_OK:
-                                    dock_gadget_update(dg->dg, msgProj);
-                                    closeMsgProj = TRUE;
-                                    dg->editor = NULL;
-                                    break;
+                    case TRMS_ACTION:
+                        switch( msgID ) {
+                           case OBJ_BTN_GAD_OK:
+                               dock_gadget_update(dg->dg, msgProj);
+                               closeMsgProj = TRUE;
+                               dg->editor = NULL;
+                               break;
 
-                                case OBJ_BTN_GAD_CAN:
-                                    closeMsgProj = TRUE;
-                                    dg->editor = NULL;
-                                    break;
+                           case OBJ_BTN_GAD_CAN:
+                               closeMsgProj = TRUE;
+                               dg->editor = NULL;
+                               break;
 
-                                default:
-                                    dock_gadget_handle_event(dg->dg, msg);
+                           default:
+                              dock_gadget_handle_event(dg->dg, msg);
                                     break;
-                            }
-                            break;
+                        }
+                        break;
 
-                        default:
-                            dock_gadget_handle_event(dg->dg, msg);
-                            break;
-      
-                    }
+                    default:
+                        dock_gadget_handle_event(dg->dg, msg);
+                        break;
+    
                 }
             }
 
@@ -581,6 +661,7 @@ int main(char **argv, int argc)
 
             NewList(&prefs.gadgets);
             NewList((struct List *)&prefs.libs);
+            NewList(&prefs.plugins);
 
             if( prefs.baseClass = init_prefs_base_class() ) {
 
@@ -588,22 +669,26 @@ int main(char **argv, int argc)
 
                     if( init_icon_class() ) {
   
-                        if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
+                        if( find_plugins(&prefs) ) {
 
-                            if( load_config(&prefs) ) {
+                            if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
 
-                                TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
-                                TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
-    
-                                update_gadget_list(&prefs);
+                                if( load_config(&prefs) ) {
 
-                                gadget_selected(&prefs, 0);
+                                    TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
+                                    TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
+        
+                                    update_gadget_list(&prefs);
 
-                                run_event_loop(&prefs);
+                                    gadget_selected(&prefs, 0);
+
+                                    run_event_loop(&prefs);
                                
-                                remove_dock_gadgets(&prefs);
+                                    remove_dock_gadgets(&prefs);
+                                }
+                                TR_CloseProject(mainWindow);            
                             }
-                            TR_CloseProject(mainWindow);            
+                            free_plugins(&prefs);
                         }
                     }
                     free_dock_button_class(prefs.buttonClass);

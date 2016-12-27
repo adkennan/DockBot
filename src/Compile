@@ -28,27 +28,6 @@ IF WARN
 ENDIF
 ECHO OK
 
-IF <NOPREFS$PREFS> EQ PREFS
-  ECHO NOLINE "  MUI: "
-  IF NOT EXISTS Libs:muimaster.library
-    ECHO Not Found
-    QUIT
-  ENDIF
-  VERSION Libs:muimaster.library 3 8 >NIL:
-  IF WARN
-    ECHO Need version 3.8
-    QUIT
-  ENDIF
-  ECHO OK
-ENDIF
-
-ECHO NOLINE "  MUI Includes: "
-IF NOT EXISTS MUI:Developer/C/Include
-  ECHO Not Found
-  QUIT
-ENDIF
-ECHO OK
-
 ECHO NOLINE "  icon.library 46: "
 VERSION icon.library 46 >NIL:
 IF WARN
@@ -120,6 +99,11 @@ IF <NOCLASSES$CLASSES> EQ CLASSES
   IF NOT EXISTS /bin/Prefs
     MAKEDIR /bin/Prefs
   ENDIF
+
+  echo Compiling Classes/Button
+  cd Classes/Button
+  smake <CLEAN> CPU=<CPU>
+  cd //
 
   echo Compiling Classes/Clock
   cd Classes/Clock

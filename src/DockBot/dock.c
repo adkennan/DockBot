@@ -33,7 +33,7 @@
 
 struct NewMenu mainMenu[] = {
     { NM_TITLE, "Project",     0, 0, 0, 0 },
-    {  NM_ITEM, "Settings...", 0, 0, 0, (APTR)MI_SETTINGS },
+    {  NM_ITEM, "Settings...","S",0, 0, (APTR)MI_SETTINGS },
     {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
     {  NM_ITEM, "About...",   "?",0, 0, (APTR)MI_ABOUT },
     {  NM_ITEM, "Help",        0, 0, 0, (APTR)MI_HELP },
@@ -56,6 +56,7 @@ VOID show_about(struct DockWindow *dock)
     STRPTR copy;
     ULONG msgLen, l;
     struct DgNode *curr;
+    ClassID lastClass = 0, currClass;
     struct EasyStruct es = {
             sizeof(struct EasyStruct),
             0,
@@ -73,6 +74,12 @@ VOID show_about(struct DockWindow *dock)
 
         if( ! dock_gadget_builtin(curr->dg) ) {
 
+            currClass = OCLASS(curr->dg)->cl_ID;
+            if( currClass == lastClass ) {
+                continue;
+            }
+            lastClass = currClass;
+
             dock_gadget_get_info(curr->dg, &name, &version, &desc, &copy);
 
             msgLen += strlen(name) + strlen(version) + strlen(desc) + strlen(copy) + 8;
@@ -82,11 +89,19 @@ VOID show_about(struct DockWindow *dock)
     if( msg = (STRPTR)DB_AllocMem(msgLen, MEMF_CLEAR) ) {
 
         p = msg;
+        lastClass = 0;
         for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
              curr->n.mln_Succ;
              curr = (struct DgNode *)curr->n.mln_Succ ) {
 
             if( ! dock_gadget_builtin(curr->dg) ) {
+
+                currClass = OCLASS(curr->dg)->cl_ID;
+                if( currClass == lastClass ) {
+                    continue;
+                }
+                lastClass = currClass;
+
 
                 dock_gadget_get_info(curr->dg, &name, &version, &desc, &copy);
 
@@ -250,6 +265,7 @@ BOOL show_dock_window(struct DockWindow *dock)
 		{ TAG_DONE, NULL }
 	};
 
+
 	if( screen = LockPubScreen(NULL) ) {
 
         if( di = GetScreenDrawInfo(screen) ) {
@@ -295,6 +311,11 @@ VOID hide_dock_window(struct DockWindow *dock)
 
     delete_port(dock->awPort);
     dock->awPort = NULL;
+
+    if( dock->hoverWin ) {
+        CloseWindow(dock->hoverWin);
+        dock->hoverWin = NULL;
+    }
     
     if( dock->win ) {
 
@@ -320,6 +341,7 @@ struct DockWindow* create_dock(VOID)
         dock->disableLayout = TRUE;
         dock->align = DA_CENTER;
         dock->pos = DP_RIGHT;
+        dock->showGadgetLabels = TRUE;
 
         if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 

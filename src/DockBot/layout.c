@@ -19,9 +19,25 @@
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
+
+UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
+{
+    switch( pos ) {
+        case DP_LEFT:
+        case DP_RIGHT:
+            return (UWORD)(screen->Height - screen->BarHeight - screen->BarVBorder);
+
+        case DP_TOP:
+        case DP_BOTTOM:
+            return (UWORD)screen->Width;        
+    }
+    return 0;
+}
+
+
 VOID layout_gadgets(struct DockWindow *dock)
 {
-    UWORD w, h, x, y, i, max;
+    UWORD w, h, x, y, i, max, size = 0, maxSize;
     struct DgNode *curr;
     struct Screen *screen;   
     struct Rect b;
@@ -37,6 +53,8 @@ VOID layout_gadgets(struct DockWindow *dock)
         y = 0;
         x = 0;
               
+        maxSize = get_max_window_size(screen, dock->pos);
+
         for( curr = (struct DgNode *)dock->gadgets.mlh_Head, gadgetCount = 0; 
                     curr->n.mln_Succ; 
                     curr = (struct DgNode *)curr->n.mln_Succ ) {
@@ -48,15 +66,19 @@ VOID layout_gadgets(struct DockWindow *dock)
             max = 0;
 
             if( dock->pos == DP_TOP || dock->pos == DP_BOTTOM ) {
-    
+
                 for( curr = (struct DgNode *)dock->gadgets.mlh_Head, i = 0; 
                             curr->n.mln_Succ; 
                             curr = (struct DgNode *)curr->n.mln_Succ, i++ ) {
 
                     dock_gadget_get_size(curr->dg, dock->pos, dock->align, &w, &h);
+
+                    if( size + w > maxSize ) {
+                        break;
+                    }
                                        
                     max = max < h ? h : max;
-
+                    size += w;
                     sizes[i] = w;
                 }
              
@@ -69,7 +91,7 @@ VOID layout_gadgets(struct DockWindow *dock)
                     b.w = sizes[i];
                     b.h = max;
                     dock_gadget_set_bounds(curr->dg, &b);
-
+                    
                     x += sizes[i];
                 }                
 
@@ -85,9 +107,13 @@ VOID layout_gadgets(struct DockWindow *dock)
                             curr = (struct DgNode *)curr->n.mln_Succ, i++ ) {
 
                     dock_gadget_get_size(curr->dg, dock->pos, dock->align, &w, &h);
-                                       
-                    max = max < w ? w : max;
 
+                    if( size + h > maxSize ) {
+                        break;
+                    }                                       
+
+                    max = max < w ? w : max;
+                    size += h;
                     sizes[i] = h;
                 }
              
@@ -140,7 +166,6 @@ VOID enable_layout(struct DockWindow *dock)
 
     layout_gadgets(dock);
 }
-
 
 ULONG get_window_top(struct Screen* screen, DockPosition pos, DockAlign align, UWORD height)
 {

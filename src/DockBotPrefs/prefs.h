@@ -26,6 +26,8 @@ struct DockPrefs
 	// Libraries containing prefs classes
 	struct MinList libs;
 
+    struct List plugins;
+
 	// Built in classes.
 	Class *baseClass;
 	Class *buttonClass;
@@ -61,7 +63,9 @@ VOID remove_dock_gadgets(struct DockPrefs *prefs);
 
 BOOL save_config(struct DockPrefs *prefs, BOOL writeToEnvarc);
 
-//BOOL use_config(struct DockPrefs *prefs);
+BOOL find_plugins(struct DockPrefs *prefs);
+
+VOID free_plugins(struct DockPrefs *prefs);
 
 // Gadget Messages
 

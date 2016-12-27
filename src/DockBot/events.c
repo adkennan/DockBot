@@ -9,6 +9,7 @@
 #include <exec/io.h>
 #include <workbench/startup.h>
 #include <workbench/workbench.h>
+#include <dos/dostags.h>
 #include <libraries/gadtools.h>
 #include <clib/exec_protos.h>
 #include <clib/dos_protos.h>
@@ -175,6 +176,30 @@ VOID handle_icon_event(struct DockWindow* dock)
     }
 }
 
+VOID open_settings(VOID)
+{
+    BPTR fhOut;
+    BPTR fhIn;
+
+    if( fhOut = Open("NIL:", MODE_OLDFILE) ) {
+        if( fhIn = Open("NIL:", MODE_OLDFILE) ) {
+        
+            if( SystemTags("DockBotPrefs", 
+                    SYS_Input, fhIn,
+                    SYS_Output, fhOut,
+                    SYS_Asynch, TRUE,
+                    TAG_END) == -1 ) {
+
+                Close(fhOut);
+                Close(fhIn);
+            }
+
+        } else { 
+            Close(fhOut);
+        }
+    }
+}
+
 VOID handle_window_event(struct DockWindow *dock)
 {
     struct IntuiMessage *msg;
@@ -228,6 +253,10 @@ VOID handle_window_event(struct DockWindow *dock)
                             dock->runState = RS_HIDING;
                             break;
 
+                       case MI_SETTINGS:
+                            open_settings();
+                            break;
+
                        default:
                             break;
                     }
@@ -274,6 +303,8 @@ VOID handle_timer_message(struct DockWindow *dock)
             break;
 
         case RS_RUNNING:
+            update_hover_gadget(dock);
+
             set_timer(dock, TIMER_INTERVAL);
             break;
         

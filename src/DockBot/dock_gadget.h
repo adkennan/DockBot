@@ -47,4 +47,6 @@ VOID dock_gadget_get_hotkey(Object *obj
 
 VOID dock_gadget_hotkey(Object *obj);
 
+VOID dock_gadget_get_label(Object *obj, STRPTR *label);
+
 #endif 

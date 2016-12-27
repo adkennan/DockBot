@@ -41,9 +41,7 @@ BOOL init_gadget_classes(struct DockWindow *dock)
 {
     if( dock->gadgetPort = CreateMsgPort() ) {
         if( dock->handleClass = init_dock_handle_class() ) {
-            if( dock->buttonClass = init_dock_button_class() ) {
-                return TRUE;
-            }
+            return TRUE;
         }   
     }
     return FALSE;
@@ -51,13 +49,6 @@ BOOL init_gadget_classes(struct DockWindow *dock)
 
 BOOL free_gadget_classes(struct DockWindow *dock)
 {
-    if( dock->buttonClass ) {
-        if( ! free_dock_button_class(dock->buttonClass) ) {
-            return FALSE;
-        }
-        dock->buttonClass = NULL;
-    }
-
     if( dock->handleClass ) {
         if( ! free_dock_handle_class(dock->handleClass) ) {
             return FALSE;
@@ -245,3 +236,142 @@ Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
 
     return o;
 }
+
+
+VOID hide_gadget_label(struct DockWindow *dock)
+{
+    dock->hoverGad = NULL;
+    
+    if( dock->hoverWin ) {
+        CloseWindow(dock->hoverWin);
+        dock->hoverWin = NULL;
+    }
+}
+
+VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
+{
+    struct IntuiText text;
+    struct TextAttr ta;
+    struct Screen *screen;
+    struct DrawInfo *drawInfo;
+    struct Rect b;
+    UWORD w;
+
+	struct TagItem tags[] = {
+		{ WA_Left, 0 },
+		{ WA_Top, 0 },
+		{ WA_Width, 0 },
+		{ WA_Height, 0 },
+		{ WA_Borderless, TRUE },
+        { WA_SmartRefresh, TRUE },
+		{ TAG_DONE, NULL }
+	};
+
+    hide_gadget_label(dock);
+
+    dock->hoverGad = gadget;
+
+    text.ITextFont = &ta;
+   
+    if( screen = LockPubScreen(NULL) ) {
+    
+        if( drawInfo = GetScreenDrawInfo(screen) ) {
+
+            text.ITextFont->ta_Name = drawInfo->dri_Font->tf_Message.mn_Node.ln_Name;
+            text.ITextFont->ta_YSize = drawInfo->dri_Font->tf_YSize;
+            text.ITextFont->ta_Style = drawInfo->dri_Font->tf_Style;
+            text.ITextFont->ta_Flags = drawInfo->dri_Font->tf_Flags;
+            text.FrontPen = drawInfo->dri_Pens[TEXTPEN];
+            text.BackPen = drawInfo->dri_Pens[BACKGROUNDPEN];
+            text.DrawMode = JAM2;
+
+            FreeScreenDrawInfo(screen, drawInfo);
+
+            text.ITextFont = &ta;
+            text.IText = label;
+            text.LeftEdge= 2;
+            text.TopEdge = 2;
+            text.NextText = NULL;
+                        
+            w = IntuiTextLength(&text);
+            tags[2].ti_Data = w + 4;
+            tags[3].ti_Data = text.ITextFont->ta_YSize + 4;
+
+            DB_GetDockGadgetBounds(gadget, &b);
+
+            switch( dock->pos ) {
+                case DP_LEFT:
+                    tags[0].ti_Data = dock->win->LeftEdge + dock->win->Width + 8;
+                    tags[1].ti_Data = dock->win->TopEdge + b.y + (b.h - text.ITextFont->ta_YSize - 4) / 2;
+                    break;
+
+                case DP_RIGHT:
+                    tags[0].ti_Data = dock->win->LeftEdge - w - 8;
+                    tags[1].ti_Data = dock->win->TopEdge + b.y + (b.h - text.ITextFont->ta_YSize - 4) / 2;
+                    break;
+
+                case DP_TOP:
+                    tags[0].ti_Data = dock->win->LeftEdge + b.x + (b.w - w - 4) / 2;
+                    tags[1].ti_Data = dock->win->TopEdge + dock->win->Height + 8;
+                    break;
+
+                case DP_BOTTOM: 
+                    tags[0].ti_Data = dock->win->LeftEdge + b.x + (b.w - w - 4) / 2;
+                    tags[1].ti_Data = dock->win->TopEdge - text.ITextFont->ta_YSize - 12;
+                    break;
+            }
+
+            if( (dock->hoverWin = OpenWindowTagList(NULL, tags) ) ) {
+    
+                PrintIText(dock->hoverWin->RPort, &text, 0, 0);
+                b.x = 0;
+                b.y = 0;
+                b.w = tags[2].ti_Data;
+                b.h = tags[3].ti_Data;
+                DB_DrawOutsetFrame(dock->hoverWin->RPort, &b);
+            }
+        }
+
+        UnlockPubScreen(NULL, screen);
+    }         
+}
+
+VOID update_hover_gadget(struct DockWindow *dock)
+{
+    WORD mx = dock->win->MouseX;
+    WORD my = dock->win->MouseY;
+    Object *gadget;
+    STRPTR label;
+
+    if( !dock->showGadgetLabels ) {
+        return;
+    }
+
+    if( mx < 0 || my < 0
+     || mx > dock->win->LeftEdge + dock->win->Width
+     || my > dock->win->TopEdge + dock->win->Height ) {
+
+        hide_gadget_label(dock);     
+
+        dock->hoverCount = HOVER_COUNT;
+
+    } else if( (gadget = get_gadget_at(dock, mx, my) ) ) {
+
+        if( gadget == dock->hoverGad ) {
+            return;
+        }
+
+        if( dock->hoverCount <= 0 ) {
+            dock_gadget_get_label(gadget, &label);
+        
+            if( label && strlen(label) > 0 ) {
+
+                show_gadget_label(dock, gadget, label);
+            }                
+        } else {
+            dock->hoverCount--;
+        }
+    }
+}
+
+

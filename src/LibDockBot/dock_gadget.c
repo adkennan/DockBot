@@ -41,10 +41,8 @@ VOID draw_default_image(Class *c, Object *o, struct RastPort *rp, struct DockGad
 
 VOID read_settings(Msg msg)
 {
-    struct DockMessageReadSettings *m;
+    struct DockMessageConfig *m = (struct DockMessageConfig *)msg;
     struct DockSettingValue v;
-
-    m = (struct DockMessageReadSettings *)msg;
 
     while( DB_ReadSetting(m->settings, &v) ) {
         // Do nothing
@@ -103,21 +101,9 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 			draw_default_image(c, o, dm->rp, INST_DATA(c, o));
 			break;
 
-		case DM_TICK:
-            break;
-
-		case DM_CLICK:
-            break;
-
-		case DM_DROP:
-			break;
-
         case DM_BUILTIN:
             return (ULONG)FALSE;
     
-        case DM_GETINFO:
-            break;
-
 		case DM_SETBOUNDS:
 			sb = (struct DockMessageSetBounds *)msg;			
 			dgd = INST_DATA(c, o);
@@ -174,10 +160,16 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
             send_message_to_dock(c, o, GM_DRAW);
             break;         
 
-        case DM_GETHOTKEY:
-            break;
-
+        case DM_TICK:
+        case DM_CLICK:
+        case DM_DROP:
         case DM_HOTKEY:
+        
+        case DM_WRITECONFIG:
+        case DM_GETSETTINGS:
+
+        case DM_GETHOTKEY:
+        case DM_GETLABEL:
             break;
 
 		default:

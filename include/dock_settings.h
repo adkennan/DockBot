@@ -51,6 +51,7 @@ struct Values
 
 #define S_ALIGN "align"
 #define S_POSITION "position"
+#define S_LABELS "labels"
 #define S_GADGET "gadget"
 
 
