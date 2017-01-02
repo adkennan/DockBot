@@ -25,8 +25,12 @@ DB_ReadSetting(settings,value)(a0/a1)
 DB_WriteBeginBlock(settings)(a0)
 DB_WriteEndBlock(settings)(a0)
 DB_WriteSetting(settings,key,value)(a0/a1/a2)
+DB_ReadConfig(cfg,settings)(a0/a1)
+DB_WriteConfig(cfg,settings)(a0/a1)
 * Memory Management
 DB_AllocMem(byteSize,attributes)(d0/d1)
 DB_FreeMem(memoryBlock,byteSize)(a0,d0)
 DB_GetMemInfo()
+* Class Management
+DB_CreateDockGadget(name)(a0)
 ##end

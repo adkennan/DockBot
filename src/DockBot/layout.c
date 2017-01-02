@@ -53,11 +53,11 @@ VOID layout_gadgets(struct DockWindow *dock)
         y = 0;
         x = 0;
               
-        maxSize = get_max_window_size(screen, dock->pos);
+        maxSize = get_max_window_size(screen, dock->cfg.pos);
 
-        for( curr = (struct DgNode *)dock->gadgets.mlh_Head, gadgetCount = 0; 
-                    curr->n.mln_Succ; 
-                    curr = (struct DgNode *)curr->n.mln_Succ ) {
+        gadgetCount = 0;    
+        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+
             gadgetCount++;
         }
 
@@ -65,13 +65,12 @@ VOID layout_gadgets(struct DockWindow *dock)
 
             max = 0;
 
-            if( dock->pos == DP_TOP || dock->pos == DP_BOTTOM ) {
+            if( dock->cfg.pos == DP_TOP || dock->cfg.pos == DP_BOTTOM ) {
 
-                for( curr = (struct DgNode *)dock->gadgets.mlh_Head, i = 0; 
-                            curr->n.mln_Succ; 
-                            curr = (struct DgNode *)curr->n.mln_Succ, i++ ) {
+                i = 0;
+                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
-                    dock_gadget_get_size(curr->dg, dock->pos, dock->align, &w, &h);
+                    dock_gadget_get_size(curr->dg, dock->cfg.pos, dock->cfg.align, &w, &h);
 
                     if( size + w > maxSize ) {
                         break;
@@ -80,11 +79,11 @@ VOID layout_gadgets(struct DockWindow *dock)
                     max = max < h ? h : max;
                     size += w;
                     sizes[i] = w;
+                    i++;
                 }
              
-                for( curr = (struct DgNode *)dock->gadgets.mlh_Head, i = 0; 
-                            curr->n.mln_Succ; 
-                            curr = (struct DgNode *)curr->n.mln_Succ, i++ ) {
+                i = 0;
+                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
                 
                     b.x = x;
                     b.y = y;
@@ -93,20 +92,20 @@ VOID layout_gadgets(struct DockWindow *dock)
                     dock_gadget_set_bounds(curr->dg, &b);
                     
                     x += sizes[i];
+                    i++;
                 }                
 
                 ChangeWindowBox(dock->win, 
-                    get_window_left(screen, dock->pos, dock->align, x),
-                    get_window_top(screen, dock->pos, dock->align, max),
+                    get_window_left(screen, dock->cfg.pos, dock->cfg.align, x),
+                    get_window_top(screen, dock->cfg.pos, dock->cfg.align, max),
                     x, max);
             
             } else {
     
-                for( curr = (struct DgNode *)dock->gadgets.mlh_Head, i = 0; 
-                            curr->n.mln_Succ; 
-                            curr = (struct DgNode *)curr->n.mln_Succ, i++ ) {
+                i = 0;
+                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
-                    dock_gadget_get_size(curr->dg, dock->pos, dock->align, &w, &h);
+                    dock_gadget_get_size(curr->dg, dock->cfg.pos, dock->cfg.align, &w, &h);
 
                     if( size + h > maxSize ) {
                         break;
@@ -115,12 +114,12 @@ VOID layout_gadgets(struct DockWindow *dock)
                     max = max < w ? w : max;
                     size += h;
                     sizes[i] = h;
+                    i++;
                 }
-             
-                for( curr = (struct DgNode *)dock->gadgets.mlh_Head, i = 0; 
-                            curr->n.mln_Succ; 
-                            curr = (struct DgNode *)curr->n.mln_Succ, i++ ) {
                 
+                i = 0;             
+                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+
                     b.x = x;
                     b.y = y;
                     b.w = max;
@@ -128,11 +127,12 @@ VOID layout_gadgets(struct DockWindow *dock)
                     dock_gadget_set_bounds(curr->dg, &b);
 
                     y += sizes[i];
+                    i++;
                 }                
 
                 ChangeWindowBox(dock->win, 
-                    get_window_left(screen, dock->pos, dock->align, max),
-                    get_window_top(screen, dock->pos, dock->align, y),
+                    get_window_left(screen, dock->cfg.pos, dock->cfg.align, max),
+                    get_window_top(screen, dock->cfg.pos, dock->cfg.align, y),
                     max, y);
      
             }
@@ -144,14 +144,6 @@ VOID layout_gadgets(struct DockWindow *dock)
     }
 
     dock->runState = RS_RUNNING;
-/*
-    for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-         curr->n.mln_Succ; 
-         curr = (struct DgNode *)curr->n.mln_Succ ) {
-
-        RequestDockGadgetDraw(curr->dg);
-    }
-*/
 }
 
 

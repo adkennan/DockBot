@@ -302,8 +302,16 @@ Class* __saveds __asm _GetEngine(
     ULONG __saveds METHOD_WRITECONFIG (Class *c, Object *o, Msg msg);
 #endif
 
-#ifdef METHOD_GETSETTINGS
-    ULONG __saveds METHOD_GETSETTINGS (Class *c, Object *o, Msg msg);
+#ifdef METHOD_GETEDITOR
+    ULONG __saveds METHOD_GETEDITOR (Class *c, Object *o, Msg msg);
+#endif
+
+#ifdef METHOD_EDITOREVENT
+    ULONG __saveds METHOD_EDITOREVENT (Class *c, Object *o, Msg msg);
+#endif
+
+#ifdef METHOD_EDITORUPDATE
+    ULONG __saveds METHOD_EDITORUPDATE (Class *c, Object *o, Msg msg);
 #endif
 
 #ifdef METHOD_GETHOTKEY
@@ -316,6 +324,16 @@ Class* __saveds __asm _GetEngine(
 
 #ifdef METHOD_GETLABEL
     ULONG __saveds METHOD_GETLABEL (Class *c, Object *o, Msg msg);
+#else
+
+ULONG __saveds GetGadgetLabel (Class *c, Object *o, Msg msg)
+{
+    struct DockMessageGetLabel *dmgl = (struct DockMessageGetLabel *)msg;
+    dmgl->label = CLASS_NAME;
+
+    return TRUE;
+}
+    
 #endif
 
 
@@ -403,9 +421,19 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
             return METHOD_WRITECONFIG (c, o, msg);
 #endif
 
-#ifdef METHOD_GETSETTINGS
-        case DM_GETSETTINGS:
-            return METHOD_GETSETTINGS (c, o, msg);
+#ifdef METHOD_GETEDITOR
+        case DM_GETEDITOR:
+            return METHOD_GETEDITOR (c, o, msg);
+#endif
+
+#ifdef METHOD_EDITOREVENT
+        case DM_EDITOREVENT:
+            return METHOD_EDITOREVENT (c, o, msg);
+#endif
+
+#ifdef METHOD_EDITORUPDATE
+        case DM_EDITORUPDATE:
+            return METHOD_EDITORUPDATE (c, o, msg);
 #endif
 
 #ifdef METHOD_GETHOTKEY
@@ -418,9 +446,11 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
             return METHOD_HOTKEY (c, o, msg);
 #endif
 
-#ifdef METHOD_GETLABEL
         case DM_GETLABEL:
+#ifdef METHOD_GETLABEL
             return METHOD_GETLABEL (c, o, msg);
+#else
+            return GetGadgetLabel(c, o, msg);
 #endif
 
         case DM_GETINFO:

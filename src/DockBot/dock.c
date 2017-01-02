@@ -29,7 +29,6 @@
 
 #include "dock_gadget.h"
 #include "dock_handle.h"
-#include "dock_button.h"
 
 struct NewMenu mainMenu[] = {
     { NM_TITLE, "Project",     0, 0, 0, 0 },
@@ -68,9 +67,7 @@ VOID show_about(struct DockWindow *dock)
 
  
     msgLen = 0;
-    for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
-         curr->n.mln_Succ;
-         curr = (struct DgNode *)curr->n.mln_Succ ) {
+    FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
         if( ! dock_gadget_builtin(curr->dg) ) {
 
@@ -90,9 +87,8 @@ VOID show_about(struct DockWindow *dock)
 
         p = msg;
         lastClass = 0;
-        for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
-             curr->n.mln_Succ;
-             curr = (struct DgNode *)curr->n.mln_Succ ) {
+    
+        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
             if( ! dock_gadget_builtin(curr->dg) ) {
 
@@ -203,9 +199,7 @@ BOOL init_cx_broker(struct DockWindow *dock)
 
         msgId = 0;
 
-        for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                    curr->n.mln_Succ; 
-                    curr = (struct DgNode *)curr->n.mln_Succ ) {
+        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
             dock_gadget_get_hotkey(curr->dg, &hotKey);
             if( hotKey ) {
@@ -339,9 +333,9 @@ struct DockWindow* create_dock(VOID)
 
         dock->runState = RS_STARTING;
         dock->disableLayout = TRUE;
-        dock->align = DA_CENTER;
-        dock->pos = DP_RIGHT;
-        dock->showGadgetLabels = TRUE;
+        dock->cfg.align = DA_CENTER;
+        dock->cfg.pos = DP_RIGHT;
+        dock->cfg.showGadgetLabels = TRUE;
 
         if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 
@@ -374,8 +368,6 @@ VOID free_dock(struct DockWindow* dock)
     hide_dock_window(dock);
 
     remove_dock_gadgets(dock);
-
-    close_class_libs(dock);
 
     if( dock->notifyPort ) {
 

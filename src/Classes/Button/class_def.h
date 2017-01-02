@@ -28,8 +28,6 @@
 #undef METHOD_NEW          
 #define METHOD_DISPOSE      button_dispose
 
-#undef METHOD_ADDED
-#undef METHOD_REMOVED
 #define METHOD_TICK         button_tick
 #define METHOD_CLICK        button_click
 #define METHOD_DROP         button_drop
@@ -39,16 +37,20 @@
 #define METHOD_DRAW         button_draw
 
 #define METHOD_READCONFIG   button_read_config
-#undef METHOD_WRITECONFIG
-#undef METHOD_GETSETTINGS
+#define METHOD_WRITECONFIG  button_write_config
+#define METHOD_GETEDITOR	button_get_editor
+#define METHOD_EDITOREVENT	button_editor_event
+//#define METHOD_EDITORUPDATE button_editor_update
   
 #define METHOD_GETHOTKEY    button_get_hotkey
 #define METHOD_GETLABEL     button_get_label
 
 struct ButtonLibData
 {
-  struct Library *iconBase;
-  struct Library *dosBase;
+	struct Library *iconBase;
+	struct Library *dosBase;
+  
+	BOOL tritonOpen;
 };
 
 struct ButtonGadgetData

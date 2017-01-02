@@ -26,8 +26,6 @@
 
 #include "dockbot.h"
 
-#include "dock_settings.h"
-
 typedef enum {
     RS_STARTING = 1,
     RS_RUNNING = 2,
@@ -48,20 +46,13 @@ typedef enum {
 
 struct DockWindow 
 {
-    // Dock Settings
-	DockPosition pos;
-	DockAlign align;
-    BOOL showGadgetLabels;
+	struct DockConfig cfg;
 
     // Window
 	struct Window *win;
     struct AppWindow *appWin;
     struct MsgPort *awPort;
     struct Menu* menu;
-
-    // Gadgets
-	struct MinList gadgets;
-	struct MinList libs;
 
     // Built in classes
     Class *handleClass;
@@ -96,18 +87,6 @@ struct DockWindow
     Object *hoverGad;
     struct Window *hoverWin;
     UWORD hoverCount;
-};
-
-struct DgNode
-{
-    struct MinNode n;
-    Object *dg;
-};
-
-struct LibNode
-{
-	struct MinNode n;
-	struct Library *lib;	
 };
 
 #define TIMER_INTERVAL 250L
@@ -174,17 +153,9 @@ VOID draw_gadgets(struct DockWindow *dock);
 
 VOID draw_gadget(struct DockWindow *dock, Object *gadget);
 
-VOID add_dock_gadget(struct DockWindow *dock, Object *dg);
-
-VOID remove_dock_gadget(struct DockWindow *dock, Object *dg);
-
 VOID remove_dock_gadgets(struct DockWindow *dock);
 
 Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y);
-
-Object *create_dock_gadget(struct DockWindow *dock, STRPTR name);
-
-VOID close_class_libs(struct DockWindow *dock);
 
 VOID update_hover_gadget(struct DockWindow *dock);
 

@@ -6,65 +6,69 @@
 **
 ************************************/
 
-#include <exec/memory.h>
 #include <clib/exec_protos.h>
 #include <pragmas/exec_pragmas.h>
 #include <string.h>
 
-struct MemoryControl
-{
-    APTR fastPool;
-    APTR chipPool;
-    ULONG fastAllocated;
-    ULONG chipAllocated;
-    ULONG fastAllocCount;
-    ULONG chipAllocCount;
-};
+#include "lib.h"
 
-struct MemoryControl *mc = NULL;
+extern struct DockBotLibrary *DockBotBase;
 
-VOID InitMem(VOID) 
+BOOL InitMem(struct DockBotLibrary *lib) 
 {
-    if( mc = (struct MemoryControl *)AllocMem(sizeof(struct MemoryControl), MEMF_CLEAR) ) {
+    struct MemoryControl *mc = &lib->l_MemControl;
+
+    if( mc->chipPool = CreatePool(MEMF_CHIP, 4096, 2048) ) {
 
         if( AvailMem(MEMF_FAST) > 0 ) {
-            mc->fastPool = CreatePool(MEMF_FAST, 4096, 2048);
+            if( ! (mc->fastPool = CreatePool(MEMF_FAST, 4096, 2048))) {
+                return FALSE;
+            }
         }
-        mc->chipPool = CreatePool(MEMF_CHIP, 4096, 2048);
-    }
+        return TRUE;
+    }   
+    return FALSE;
 }
 
-VOID CleanUpMem(VOID)
+VOID CleanUpMem(struct DockBotLibrary *lib)
 {
-    if( mc ) {
-        if( mc->fastPool ) {
-            DeletePool(mc->fastPool);
-        }
-        if( mc->chipPool ) {
-            DeletePool(mc->chipPool);
-        }
+    struct MemoryControl *mc = &lib->l_MemControl;
 
-        FreeMem(mc, sizeof(struct MemoryControl));
+    if( mc->fastPool ) {
+        DeletePool(mc->fastPool);
+    }
+
+    if( mc->chipPool ) {
+        DeletePool(mc->chipPool);
     }
 }
 
 
-VOID* AllocMemInternal(ULONG byteSize, ULONG attributes)
+VOID* AllocMemInternal(struct DockBotLibrary *lib, ULONG byteSize, ULONG attributes)
 {
     VOID *result;
     ULONG i;
+    struct MemoryControl *mc = &lib->l_MemControl;
   
     if( (attributes & MEMF_CHIP) || ! mc->fastPool ) {
        
         if( result = AllocPooled(mc->chipPool, byteSize) ) {
             mc->chipAllocated += byteSize;
             mc->chipAllocCount++;
+
+            if( mc->chipAllocated > mc->chipAllocMax ) {
+                mc->chipAllocMax = mc->chipAllocated;
+            }
         }   
         
     } else {
         if( result = AllocPooled(mc->fastPool, byteSize) ) {
             mc->fastAllocated += byteSize;
             mc->fastAllocCount++;
+            
+            if( mc->fastAllocated > mc->fastAllocMax ) {
+                mc->fastAllocMax = mc->fastAllocated;
+            }
         }
     }
 
@@ -78,8 +82,10 @@ VOID* AllocMemInternal(ULONG byteSize, ULONG attributes)
     return result;    
 }
 
-VOID FreeMemInternal(VOID *memoryBlock, ULONG byteSize)
+VOID FreeMemInternal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSize)
 {
+    struct MemoryControl *mc = &lib->l_MemControl;
+
     if( TypeOfMem(memoryBlock) & MEMF_CHIP ) {
 
         FreePooled(mc->chipPool, memoryBlock, byteSize);
@@ -94,20 +100,20 @@ VOID FreeMemInternal(VOID *memoryBlock, ULONG byteSize)
 
 VOID* __asm __saveds DB_GetMemInfo(VOID)
 {
-    return mc;
+    return (VOID*)&DockBotBase->l_MemControl;
 }
 
 VOID* __asm __saveds DB_AllocMem(
     register __d0 ULONG byteSize,
     register __d1 ULONG attributes)
 {
-    return AllocMemInternal(byteSize, attributes);
+    return AllocMemInternal(DockBotBase, byteSize, attributes);
 }
 
 VOID __asm __saveds DB_FreeMem(
     register __a0 VOID *memoryBlock,
     register __d0 ULONG byteSize)
 {
-    FreeMemInternal(memoryBlock, byteSize);
+    FreeMemInternal(DockBotBase, memoryBlock, byteSize);
 }
 

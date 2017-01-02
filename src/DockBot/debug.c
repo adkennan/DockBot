@@ -24,6 +24,8 @@ struct MemoryControl
     ULONG chipAllocated;
     ULONG fastAllocCount;
     ULONG chipAllocCount;
+    ULONG fastAllocMax;
+    ULONG chipAllocMax;
 };
 
 WORD memLogCounter = 0;
@@ -34,9 +36,9 @@ VOID log_memory(VOID)
     if( ! mc ) {
         printf("No memory info available\n");
     }
-    printf("C: %ld, %ld   F: %ld, %ld\n", 
-        mc->chipAllocated, mc->chipAllocCount,
-        mc->fastAllocated, mc->fastAllocCount);
+    printf("C: a: %ld, c: %ld, m: %ld   F: a: %ld, c: %ld, m: %ld\n", 
+        mc->chipAllocated, mc->chipAllocCount, mc->chipAllocMax,
+        mc->fastAllocated, mc->fastAllocCount, mc->fastAllocMax);
 }
 
 VOID log_memory_timed(VOID)

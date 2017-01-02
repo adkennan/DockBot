@@ -1,0 +1,34 @@
+
+#ifndef __BUTTON_H__
+#define __BUTTON_H__
+
+
+#include <dos/dos.h>
+
+#include "dockbot.h"
+
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
+
+#include <libraries/triton.h>
+#include <proto/triton.h>
+
+/****
+** Icon Library v44+
+*/
+extern struct Library *IconBase;
+
+#define CONST
+
+#include "iconlib/icon.h"
+#include "iconlib/icon_protos.h"
+#include "iconlib/icon_pragmas.h"
+
+/**
+****/
+
+#define TROB_Icon TRTG_PRVCLS(1)
+
+extern struct Library *DockBotBase;
+
+#endif

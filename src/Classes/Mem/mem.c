@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "dockbot.h"
-#include "dock_settings.h"
 
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"

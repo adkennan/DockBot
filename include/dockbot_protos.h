@@ -11,6 +11,7 @@
 
 #include <exec/types.h>
 #include <intuition/intuition.h>
+#include <intuition/classes.h>
 
 #include "dockbot.h"
 
@@ -459,6 +460,16 @@ BOOL __asm __saveds DB_WriteSetting(
     register __a2 STRPTR value);
 
 
+BOOL __asm __saveds DB_ReadConfig(
+    register __a0 struct DockConfig *cfg,
+    register __a1 struct DockSettings *settings);
+
+
+BOOL __asm __saveds DB_WriteConfig(
+    register __a0 struct DockConfig *cfg,
+    register __a1 struct DockSettings *settings);
+
+
 /****** dockbot.library/DB_RequestDockQuit *********************************
 *
 *   NAME
@@ -596,5 +607,8 @@ VOID __asm __saveds DB_FreeMem(
 
 
 VOID* __asm __saveds DB_GetMemInfo(VOID);
+
+Object * __asm __saveds DB_CreateDockGadget(
+    register __a0 STRPTR name);
 
 #endif

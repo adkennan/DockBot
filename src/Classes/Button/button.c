@@ -12,34 +12,17 @@
 #include <dos/dostags.h>
 #include <workbench/workbench.h>
 
+#include <clib/utility_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/graphics_protos.h>
 #include <clib/dos_protos.h>
 
-
-/****
-** Icon Library v44+
-*/
-extern struct Library *IconBase;
-#define CONST
-
-#include "iconlib/icon.h"
-#include "iconlib/icon_protos.h"
-#include "iconlib/icon_pragmas.h"
-
-/**
-****/
-
 #include <stdio.h>
 
-#include "dockbot.h"
-#include "dock_settings.h"
-
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
 #include "class_def.h"
+
+#include "button.h"
 
 #define S_NAME      "name"
 #define S_PATH      "path"
@@ -58,6 +41,7 @@ struct Values StartValues[] = {
     { NULL, 0 }
 };
 
+STRPTR startTypes[] = { "Workbench", "Shell", NULL };
 
 #define DEFAULT_CONSOLE "NIL:"
 
@@ -72,8 +56,28 @@ struct Values StartValues[] = {
     dst++; 
 
 
+enum {
+    OBJ_STR_NAME = 1001,
+    OBJ_STR_ARGS,
+    OBJ_CYC_START,
+    OBJ_STR_CON,
+    OBJ_STR_HOTKEY,
+    OBJ_ICON
+};
+
+
 struct Library *DOSBase;
 struct Library *IconBase;
+
+struct ButtonLibData *libData;
+
+
+struct TagItem *make_tag_list(ULONG data, ...)
+{
+    struct TagItem *tags = (struct TagItem *)&data;
+
+    return CloneTagItems(tags);
+}
 
 VOID dock_button_launch(struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
 {
@@ -167,6 +171,10 @@ ULONG __saveds button_lib_expunge(struct ButtonLibData *cld)
 
     if( cld->dosBase ) {
         CloseLibrary(cld->dosBase);
+    }
+
+    if( cld->tritonOpen ) {
+        TR_CloseTriton();
     }
 
     return 1;
@@ -266,11 +274,35 @@ DB_METHOD_DM(GETSIZE,DockMessageGetSize)
     return 1;
 }
 
+VOID load_icon(struct ButtonGadgetData *data)
+{
+    struct Screen *screen;
+    
+    if( data->diskObj = GetDiskObjectNew(data->path) ) {
+        if( screen = LockPubScreen(NULL) ) {
+
+            LayoutIconA(data->diskObj, screen, NULL);
+
+            UnlockPubScreen(NULL, screen);
+        }
+    }
+}
+
+STRPTR get_start_type(struct Values *values, UWORD val) {
+
+    while( values->Name ) {
+        if( values->Value == val ) {
+            return values->Name;
+        }
+        values++;
+    }
+    return NULL;
+}
+
 DB_METHOD_DM(READCONFIG,DockMessageConfig)
     
     struct DockSettingValue v;
     struct Values *vals;
-    struct Screen *screen;
     UWORD len;
 
     while( DB_ReadSetting(msg->settings, &v) ) {
@@ -295,14 +327,160 @@ DB_METHOD_DM(READCONFIG,DockMessageConfig)
         }
     }    
 
-    if( data->diskObj = GetDiskObjectNew(data->path) ) {
-        if( screen = LockPubScreen(NULL) ) {
+    load_icon(data);
 
-            LayoutIconA(data->diskObj, screen, NULL);
+    return 1;
+}
 
-            UnlockPubScreen(NULL, screen);
+DB_METHOD_DM(WRITECONFIG,DockMessageConfig)
+
+    struct DockSettings *s = msg->settings;
+    if( data->name ) {
+        DB_WriteSetting(s, S_NAME, data->name);
+    }
+    if( data->path ) {
+        DB_WriteSetting(s, S_PATH, data->path);
+    }
+    if( data->args ) {
+        DB_WriteSetting(s, S_ARGS, data->args);
+    }
+    if( data->hotKey ) {
+        DB_WriteSetting(s, S_HOTKEY, data->hotKey);
+    }
+
+    DB_WriteSetting(s, S_START, get_start_type(StartValues, data->startType));
+
+    if( data->con ) {
+        DB_WriteSetting(s, S_CON, data->con);
+    }
+
+    return 1;
+}
+
+DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
+
+    if( ! libData->tritonOpen ) {
+
+        if( ! TR_OpenTriton(TRITON11VERSION,
+            TRCA_Name,      CLASS_NAME,
+            TRCA_LongName,  CLASS_NAME,
+            TRCA_Info,      CLASS_DESC,
+            TAG_END) ) {
+
+            return 0;
         }
     }
+
+    msg->uiTags = make_tag_list(   
+        VertGroupA,
+            Space,
+            HorizGroupC,
+                Space,
+                TROB_Icon, data->diskObj, ID(OBJ_ICON),
+                Space,
+            EndGroup,
+            Space,
+            HorizGroupSC,
+                Space,
+                TextT(data->path),
+                Space,
+            EndGroup,
+            Space,
+            ColumnArray,
+                Space,
+                BeginColumn,
+                    Space,
+                    TextN("Name"),
+                    Space,
+                    TextN("Arguments"),
+                    Space,
+                    TextN("Key"),
+                    Space,
+                    TextN("Start Type"),
+                    Space,
+                    TextN("Console"),
+                    Space,
+                EndColumn,
+                Space,
+                BeginColumn,
+                    Space,
+                    StringGadget(data->name, OBJ_STR_NAME),
+                    Space,
+                    StringGadget(data->args, OBJ_STR_ARGS),
+                    Space,
+                    StringGadget(data->hotKey, OBJ_STR_HOTKEY),
+                    Space,
+                    CycleGadget(startTypes, data->startType, OBJ_CYC_START),
+                    Space,  
+                    StringGadget(data->con, OBJ_STR_CON),
+                        TRAT_Disabled, (data->startType == ST_WB),
+                    Space,
+                EndColumn,
+                Space,
+            EndArray,
+        EndGroup,
+        TAG_END);
+
+    return 1;
+}
+
+DB_METHOD_M(EDITOREVENT,DockMessageEditorEvent)
+
+    switch( msg->msg->trm_Class ) {
+        case TRMS_NEWVALUE:
+            switch( msg->msg->trm_ID ) {
+                case OBJ_CYC_START:
+                    TR_SetAttribute(msg->msg->trm_Project, OBJ_STR_CON, TRAT_Disabled, msg->msg->trm_Data == ST_WB);
+                    break;
+
+                default:
+                    break;
+            }
+
+        default:
+            break;
+        
+    }
+
+    return 1;
+}
+
+DB_METHOD_DM(EDITORUPDATE,DockMessageEditorUpdate)
+
+    STRPTR str;
+    UWORD len;
+    struct TR_Project *proj = msg->project;
+
+    FREE_STRING(data->name)
+    FREE_STRING(data->args)
+    FREE_STRING(data->con)
+    FREE_STRING(data->hotKey)
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_NAME, 0);
+    if( str && (len = strlen(str)) ) {        
+        data->name = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, data->name, len + 1);
+    }
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_HOTKEY, 0);
+    if( str && (len = strlen(str)) ) {        
+        data->hotKey = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, data->hotKey, len + 1);
+    }
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_ARGS, 0);
+    if( str && (len = strlen(str)) ) {        
+        data->args = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, data->args, len + 1);
+    }
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_CON, 0);
+    if( str && (len = strlen(str)) ) {        
+        data->con = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, data->con, len + 1);
+    }
+    
+    data->startType = (UWORD)TR_GetAttribute(proj, OBJ_CYC_START, TRAT_Value);
 
     return 1;
 }
@@ -320,4 +498,6 @@ DB_METHOD_DM(GETLABEL,DockMessageGetLabel)
 
     return 1;
 }
+
+
 

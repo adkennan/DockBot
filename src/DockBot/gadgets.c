@@ -16,12 +16,25 @@
 
 #include "dock_gadget.h"
 #include "dock_handle.h"
-#include "dock_button.h"
 
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
 #include <stdio.h>
+
+BOOL add_dock_gadget(struct DockWindow *dock, Object *dg)
+{
+    struct DgNode *n;
+
+    if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
+        n->dg = dg;
+        AddTail(&dock->cfg.gadgets, (struct Node *)n);
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 BOOL create_dock_handle(struct DockWindow *dock)
 {
@@ -29,9 +42,11 @@ BOOL create_dock_handle(struct DockWindow *dock)
     
     if( gad = NewObjectA(dock->handleClass, NULL, TAG_DONE) ) {
 
-        add_dock_gadget(dock, gad);
+        if( add_dock_gadget(dock, gad) ) {
 
-        return TRUE;
+            return TRUE;
+
+        }
     }
 
     return FALSE;
@@ -64,8 +79,7 @@ BOOL free_gadget_classes(struct DockWindow *dock)
 
 BOOL init_gadgets(struct DockWindow *dock)
 {
-    NewList((struct List *)&(dock->gadgets));
-    NewList((struct List *)&(dock->libs));
+    NewList(&dock->cfg.gadgets);
 
     if( create_dock_handle(dock) ) {
         return TRUE;
@@ -80,9 +94,12 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
     disable_layout(dock);
 
-    while( ! IsListEmpty((struct List *)&dock->gadgets) ) {
-        if( dg = (struct DgNode *)RemTail((struct List *)&dock->gadgets) ) {
+    while( ! IsListEmpty(&dock->cfg.gadgets) ) {
+        if( dg = (struct DgNode *)RemTail(&dock->cfg.gadgets) ) {
             DisposeObject(dg->dg);
+            if( dg->n.ln_Name ) {
+                FREE_STRING(dg->n.ln_Name);
+            }
             DB_FreeMem(dg, sizeof(struct DgNode));
         }
     }
@@ -103,9 +120,8 @@ VOID draw_gadgets(struct DockWindow *dock)
         SetAPen(rp, 0);
         RectFill(rp, 0, 0, win->Width, win->Height);
 
-        for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                    curr->n.mln_Succ; 
-                    curr = (struct DgNode *)curr->n.mln_Succ ) {
+        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+
             dock_gadget_draw(curr->dg, rp);
         }
     }
@@ -132,47 +148,11 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
     }
 }
 
-
-VOID add_dock_gadget(struct DockWindow *dock, Object *dg)
-{
-    struct DgNode *n;
-
-    if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
-        n->dg = dg;
-        AddTail((struct List *)&(dock->gadgets), (struct Node *)n);
-
-        dock_gadget_added(dg, dock->gadgetPort);
-    }
-
-    layout_gadgets(dock);
-}
-
-VOID remove_dock_gadget(struct DockWindow *dock, Object *dg)
-{
-    struct DgNode *curr;
-    for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                curr->n.mln_Succ; 
-                curr = (struct DgNode *)curr->n.mln_Succ ) {
-        if( curr->dg == dg ) {
-            dock_gadget_removed(curr->dg);
-            DisposeObject(curr->dg);
-            
-            Remove((struct Node *)curr);
-            DB_FreeMem(curr, sizeof(struct DgNode));
-            break;
-        }     
-    } 
-
-    layout_gadgets(dock);
-}
-
 Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
 {
     struct DgNode *curr;
 
-    for( curr = (struct DgNode *)dock->gadgets.mlh_Head;
-         curr->n.mln_Succ;
-         curr = (struct DgNode *)curr->n.mln_Succ ) {
+    FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
                         
         if( dock_gadget_hit_test(curr->dg, x, y) ) {
 
@@ -181,62 +161,6 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
     }
     return NULL;    
 }
-
-VOID close_class_libs(struct DockWindow *dock)
-{
-    struct LibNode *ln;
-
-    while( ! IsListEmpty((struct List *)&dock->libs) ) {
-        if( ln = (struct LibNode *)RemTail((struct List *)&dock->libs) ) {
-            CloseLibrary(ln->lib);
-            Forbid();
-            RemLibrary(ln->lib);
-            Permit();
-            DB_FreeMem(ln, sizeof(struct LibNode));
-        }
-    }
-}
-
-Object *create_dock_gadget(struct DockWindow *dock, STRPTR name)
-{
-    Object *o;
-    char libName[50];
-    struct Library *lib;
-    struct LibNode *ln = NULL;
-
-    if( ! (o = NewObjectA(NULL, name, TAG_DONE) ) ) {
-
-        sprintf(libName, "Gadgets/%s.class", name);
-
-        if( lib = OpenLibrary(libName, 1) ) {
-
-            if( ln = (struct LibNode *)DB_AllocMem(sizeof(struct LibNode), MEMF_CLEAR) ) {
-
-                if( o = NewObjectA(NULL, name, TAG_DONE) ) {
-
-                    ln->lib = lib;
-                    AddTail((struct List*)&(dock->libs), (struct Node *)ln);
-
-                    return o;
-                }           
-            }
-        }
-        if( o ) {
-            DisposeObject(o);
-        }
-
-        if( lib ) {
-            CloseLibrary(lib);
-        }
-
-        if( ln ) {
-            DB_FreeMem(ln, sizeof(struct LibNode));
-        }
-    }
-
-    return o;
-}
-
 
 VOID hide_gadget_label(struct DockWindow *dock)
 {
@@ -299,7 +223,7 @@ VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
 
             DB_GetDockGadgetBounds(gadget, &b);
 
-            switch( dock->pos ) {
+            switch( dock->cfg.pos ) {
                 case DP_LEFT:
                     tags[0].ti_Data = dock->win->LeftEdge + dock->win->Width + 8;
                     tags[1].ti_Data = dock->win->TopEdge + b.y + (b.h - text.ITextFont->ta_YSize - 4) / 2;
@@ -343,7 +267,7 @@ VOID update_hover_gadget(struct DockWindow *dock)
     Object *gadget;
     STRPTR label;
 
-    if( !dock->showGadgetLabels ) {
+    if( !dock->cfg.showGadgetLabels ) {
         return;
     }
 

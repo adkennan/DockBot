@@ -9,19 +9,28 @@
 #ifndef __GADGET_CLASS_H__
 #define __GADGET_CLASS_H__
 
+// Class Information
+
 //#define CLASS_NAME      
 //#define CLASS_VERSION  
 //#define CLASS_REVISION
 //#define CLASS_VER_STR   
 //#define CLASS_DESC		
 //#define CLASS_COPYRIGHT 
-//#define PRIVATE_DATA    
+
 #define PARENT_CLASS    DB_ROOT_CLASS
 
+// Instance Data
+//#define PRIVATE_DATA    
+
+// Class Data
 //#define GADGET_LIB_DATA     
 
+// Class Set Up / Tear Down
 //#define GADGET_LIB_INIT     
 //#define GADGET_LIB_EXPUNGE  
+
+// Instance Methods
 
 //#define METHOD_NEW          
 //#define METHOD_DISPOSE      

@@ -8,6 +8,8 @@
 
 #include "dockbot.h"
 
+#include "dockbot_protos.h"
+
 #include <string.h>
 
 #include <exec/types.h>
@@ -20,14 +22,42 @@
 #include <clib/dos_protos.h>
 #include <pragmas/dos_pragmas.h>
 
+#include <intuition/classes.h>
+
+#include <clib/alib_protos.h>
+
+#include "lib.h"
+
 #define INDENT "  "
 #define SEPARATOR "="
 #define ENDLINE "\n"
 #define BEGIN "begin\n"
 #define END "end\n"
 
+struct Values AlignValues[] = {
+    { "left", DA_LEFT },
+    { "center", DA_CENTER },
+    { "right", DA_RIGHT },
+    { NULL, 0 }
+};
+
+struct Values PositionValues[] = {
+    { "left", DP_LEFT },
+    { "right", DP_RIGHT },
+    { "top", DP_TOP },
+    { "bottom", DP_BOTTOM },
+    { NULL, 0 }
+};
+
+struct Values BooleanValues[] = {
+    { "true", TRUE },
+    { "false", FALSE },
+    { NULL, 0 }
+};
+
 extern struct Library *DOSBase;
 extern struct Library *SysBase;
+extern struct DockBotLibrary *DockBotBase;
 
 struct DockSettings
 {    
@@ -37,10 +67,6 @@ struct DockSettings
     UWORD depth;
     BPTR fh;
 };
-
-VOID* AllocMemInternal(ULONG byteSize, ULONG attributes);
-
-VOID FreeMemInternal(VOID *memoryBlock, ULONG byteSize);
 
 
 struct DockSettings * __asm __saveds DB_OpenSettingsRead(
@@ -58,17 +84,17 @@ struct DockSettings * __asm __saveds DB_OpenSettingsRead(
 
             if( ExamineFH(fh, fib) ) {
     
-                if( s = (struct DockSettings *)AllocMemInternal(sizeof(struct DockSettings), MEMF_CLEAR) ) {
+                if( s = (struct DockSettings *)AllocMemInternal(DockBotBase, sizeof(struct DockSettings), MEMF_CLEAR) ) {
                     
                     s->size = fib->fib_Size;
-                    s->buffer = (STRPTR)AllocMemInternal(s->size, MEMF_CLEAR);
+                    s->buffer = (STRPTR)AllocMemInternal(DockBotBase, s->size, MEMF_CLEAR);
                     s->pos = 0;
                     s->depth = 0;
                     s->fh = 0;
                     if( ! Read(fh, s->buffer, s->size) ) {
         
-                        FreeMemInternal(s->buffer, s->size);
-                        FreeMemInternal(s, sizeof(struct DockSettings));
+                        FreeMemInternal(DockBotBase, s->buffer, s->size);
+                        FreeMemInternal(DockBotBase, s, sizeof(struct DockSettings));
                         s = NULL;
                     }
                 }
@@ -92,7 +118,7 @@ struct DockSettings * __asm __saveds DB_OpenSettingsWrite(
     
         SetFileSize(fh, 0, OFFSET_BEGINNING);
 
-        if( s = (struct DockSettings *)AllocMemInternal(sizeof(struct DockSettings), MEMF_CLEAR) ) {
+        if( s = (struct DockSettings *)AllocMemInternal(DockBotBase, sizeof(struct DockSettings), MEMF_CLEAR) ) {
             s->size = 0;
             s->buffer = NULL;
             s->pos = 0;
@@ -114,9 +140,9 @@ VOID __asm __saveds DB_CloseSettings(
     }
 
     if( settings->buffer ) {
-        FreeMemInternal(settings->buffer, settings->size);
+        FreeMemInternal(DockBotBase, settings->buffer, settings->size);
     }
-    FreeMemInternal(settings, sizeof(struct DockSettings));
+    FreeMemInternal(DockBotBase, settings, sizeof(struct DockSettings));
 }
 
 static BOOL WriteIndent(struct DockSettings *settings)
@@ -330,4 +356,184 @@ BOOL __asm __saveds DB_WriteSetting(
     settings->pos += len;
 
     return TRUE;
+}
+
+
+VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings)
+{
+    struct DockMessageConfig msg = {
+        DM_READCONFIG
+    };
+    msg.settings = settings;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID dock_gadget_write_settings(Object *obj, struct DockSettings *settings)
+{
+    struct DockMessageConfig msg = {
+        DM_WRITECONFIG
+    };
+    msg.settings = settings;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+BOOL add_dock_gadget(struct DockConfig *cfg, Object *dg, STRPTR name)
+{
+    struct DgNode *n;
+
+    if( n = AllocMemInternal(DockBotBase, sizeof(struct DgNode), MEMF_CLEAR) ) {
+        n->n.ln_Name = name;
+        n->dg = dg;
+        AddTail(&cfg->gadgets, (struct Node *)n);
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL read_dock_gadget(
+    struct DockConfig *cfg,
+    struct DockSettings *settings)
+{
+    struct DockSettingValue v;
+    Object *gad;
+    STRPTR gadName;
+    BOOL r = FALSE;
+
+    while( DB_ReadSetting(settings, &v) ) {
+        if( IS_KEY(S_GADGET, v) ) {
+
+            GET_STRING(v, gadName);
+                        
+            if( gad = DB_CreateDockGadget(gadName) ) {
+                dock_gadget_read_settings(gad, settings);
+                if( add_dock_gadget(cfg, gad, gadName) ) {
+
+                    r = TRUE;                
+                }
+            }
+
+            if( ! r ) {
+                FREE_STRING(gadName);
+            }
+            break;
+        }
+    }
+    return r;
+}
+
+
+STRPTR get_name(struct Values *values, UWORD val) {
+    while( values->Name ) {
+        if( values->Value == val ) {
+            return values->Name;
+        }
+        values++;
+    }
+    return NULL;
+}
+
+
+BOOL __asm __saveds DB_ReadConfig(
+    register __a0 struct DockConfig *cfg,
+    register __a1 struct DockSettings *settings)
+{
+    struct DockSettingValue v;
+    struct Values* vals;
+    UWORD l;
+    BOOL r;
+
+    r = TRUE;
+    if( DB_ReadBeginBlock(settings) ) {
+
+        while( TRUE ) {
+
+            if( DB_ReadBeginBlock(settings) ) {
+                if( ! read_dock_gadget(cfg, settings) ) {
+                    r = FALSE;
+                    break;
+                }
+                if( !DB_ReadEndBlock(settings) ) {
+                    r = FALSE;
+                    break;
+                }
+            }
+            if( DB_ReadEndBlock(settings) ) {
+                break;
+            }
+            if( DB_ReadSetting(settings, &v) ) {
+                if( IS_KEY(S_ALIGN, v) ) {
+                    GET_VALUE(v, AlignValues, vals, l, cfg->align)
+                }
+
+                else if( IS_KEY(S_POSITION, v) ) {
+                    GET_VALUE(v, PositionValues, vals, l, cfg->pos)
+                }
+
+                else if( IS_KEY(S_LABELS, v) ) {
+                    GET_VALUE(v, BooleanValues, vals, l, cfg->showGadgetLabels)
+                }
+            }
+        }
+    }
+
+    return r;
+}
+
+BOOL __asm __saveds DB_WriteConfig(
+    register __a0 struct DockConfig *cfg,
+    register __a1 struct DockSettings *settings)
+{
+    BOOL r = TRUE;
+    struct DgNode *curr;
+
+    if( DB_WriteBeginBlock(settings) ) {
+
+        if( ! DB_WriteSetting(settings, S_ALIGN, get_name(AlignValues, cfg->align) ) ) {
+            goto error;
+        }
+
+        if( ! DB_WriteSetting(settings, S_POSITION, get_name(PositionValues, cfg->pos) ) ) {
+            goto error;
+        }
+
+        if( ! DB_WriteSetting(settings, S_LABELS, get_name(BooleanValues, cfg->showGadgetLabels) ) ) {
+            goto error;
+        }
+
+        FOR_EACH_GADGET(&cfg->gadgets, curr) {
+
+            if( ! DB_WriteBeginBlock(settings) ) {
+                goto error;
+            }
+
+            if( ! DB_WriteSetting(settings, S_GADGET, curr->n.ln_Name) ) {
+                goto error;
+            }
+
+            dock_gadget_write_settings(curr->dg, settings);
+
+            if( ! DB_WriteEndBlock(settings) ) {
+                goto error;
+            }
+        }
+
+        if( ! DB_WriteEndBlock(settings) ) {
+            goto error;
+        }
+            
+    } else {
+        goto error;
+    }
+
+    goto exit;
+
+error:
+    r = FALSE;
+    
+exit:
+    return r;   
 }

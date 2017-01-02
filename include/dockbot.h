@@ -9,7 +9,23 @@
 #ifndef __DOCKBOT_H__
 #define __DOCKBOT_H__
 
+
+#include <exec/types.h>
+#include <exec/memory.h>
+#include <exec/ports.h>
+#include <clib/exec_protos.h>
+
+#include <string.h>
+
 #include <intuition/intuition.h>
+#include <intuition/classes.h>
+
+
+#define VERSION 1
+#define REVISION 0
+
+#define VERSION_STR "1.0 (28/12/2016)"
+
 
 typedef enum
 {
@@ -26,6 +42,24 @@ typedef enum
 	DP_BOTTOM	
 } DockPosition;
 
+struct DockConfig
+{
+	DockPosition pos;
+	DockAlign align;
+    BOOL showGadgetLabels;
+	struct List gadgets;
+};
+
+struct DgNode
+{
+    struct Node n;
+    Object *dg;
+};
+
+#define FOR_EACH_GADGET(list, curr) for( curr = (struct DgNode *)(list)->lh_Head; \
+                                         curr->n.ln_Succ; \
+                                         curr = (struct DgNode *)curr->n.ln_Succ )
+
 struct Rect
 {
 	UWORD x,y,w,h;
@@ -36,6 +70,8 @@ struct Rect
 #define DEFAULT_SIZE 48
 
 #define MAX_PATH_LENGTH 2048
+
+// Object messages
 
 typedef enum {
 
@@ -62,7 +98,9 @@ typedef enum {
     // Configuration.
 	DM_READCONFIG	    = 1500,
 	DM_WRITECONFIG		= 1501,
-    DM_GETSETTINGS      = 1502,
+    DM_GETEDITOR	    = 1502,
+	DM_EDITOREVENT		= 1503,
+	DM_EDITORUPDATE		= 1504,
 
     // Getters.
     DM_GETINFO          = 1601,
@@ -149,6 +187,80 @@ struct DockMessageGetLabel {
 	STRPTR label;
 };
 
+struct DockMessageGetEditor {
+	ULONG MethodID;
+	struct TagItem *uiTags;
+};
+
+struct TR_Project;
+struct TR_Message;
+
+struct DockMessageEditorEvent
+{
+	ULONG MethodID;
+	struct TR_Message *msg;
+};
+
+struct DockMessageEditorUpdate {
+	ULONG MethodID;
+	struct TR_Project *project;
+};
+
+// Messages from Gadget to Dock.
+
+typedef enum {
+    GM_DRAW         = 1700,
+    GM_QUIT         = 1701
+} GadgetMessageType;
+
+struct GadgetMessage {
+    struct Message m;
+    GadgetMessageType messageType;
+    Object* sender;
+};
+
+
+// Settings
+
+struct Values
+{
+    STRPTR Name;
+    ULONG Value;
+};
+
+#define IS_KEY(key, setting) (strncmp(key, setting.Key, strlen(key)) == 0)
+
+#define GET_STRING(setting, dest) \
+    dest = (STRPTR)DB_AllocMem(setting.ValueLength + 1, MEMF_CLEAR); \ 
+    CopyMem(setting.Value, dest, setting.ValueLength); \
+    dest[setting.ValueLength] = '\0'; 
+
+#define GET_VALUE(setting, values, curr, len, dest) \
+    curr = &values[0];\
+    while( curr->Name ) { \
+        len = strlen(curr->Name);\
+        if( len == setting.ValueLength && strncmp(setting.Value, curr->Name, len) == 0) { \
+            dest = curr->Value;\
+            break; \
+        }\
+        curr++; \
+    }
+
+#define FREE_STRING(str) \
+    if( str ) { \
+        DB_FreeMem(str, strlen(str) + 1); \
+        str = NULL; \
+    }
+
+
+#define CONFIG_FILE "ENV:DockBot.prefs"
+#define CONFIG_FILE_PERM "ENVARC:DockBot.prefs"
+
+#define S_ALIGN "align"
+#define S_POSITION "position"
+#define S_LABELS "labels"
+#define S_GADGET "gadget"
+
 struct DockSettingValue
 {
 	STRPTR Key;
@@ -156,5 +268,7 @@ struct DockSettingValue
 	UWORD KeyLength;
 	UWORD ValueLength;
 };
+
+
 
 #endif

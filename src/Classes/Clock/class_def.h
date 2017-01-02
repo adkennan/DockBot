@@ -27,8 +27,6 @@
 #define METHOD_NEW          clock_new
 #define METHOD_DISPOSE      clock_dispose
 
-#undef METHOD_ADDED
-#undef METHOD_REMOVED
 #define METHOD_TICK         clock_tick
 #undef METHOD_CLICK        
 #undef METHOD_DROP         
@@ -38,9 +36,9 @@
 #define METHOD_DRAW         clock_draw
 
 #define METHOD_READCONFIG   clock_read_config
-#undef METHOD_WRITECONFIG
+#define METHOD_WRITECONFIG  clock_write_config
 #undef METHOD_GETSETTINGS
-  
+
 #undef METHOD_GETHOTKEY   
 #undef METHOD_GETLABEL     
 

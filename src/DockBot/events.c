@@ -28,7 +28,6 @@
 #include "dockbot_pragmas.h"
 
 #include "dock_gadget.h"
-#include "gadget_msg.h"
 
 #include "debug.h"
 
@@ -288,9 +287,8 @@ VOID handle_timer_message(struct DockWindow *dock)
     }
 
     if( dock->runState == RS_RUNNING ) {
-        for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                    curr->n.mln_Succ; 
-                    curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
             dock_gadget_tick(curr->dg);
         }
@@ -324,9 +322,8 @@ VOID handle_gadget_message(struct DockWindow *dock)
     while( msg = (struct GadgetMessage *)GetMsg(dock->gadgetPort) ) {
         if( dock->runState == RS_RUNNING ) {
 
-            for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                 curr->n.mln_Succ; 
-                 curr = (struct DgNode *)curr->n.mln_Succ ) {
+            FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+
                 if( msg->sender == curr->dg ) {
                     exists = TRUE;
                     break;
@@ -400,9 +397,9 @@ VOID handle_cx_message(struct DockWindow *dock)
 
             case CXM_IEVENT:
                 ix = 0;
-                for( curr = (struct DgNode *)dock->gadgets.mlh_Head; 
-                     curr->n.mln_Succ; 
-                     curr = (struct DgNode *)curr->n.mln_Succ ) {
+
+                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+
                     if( ix == msgId ) {
                         dock_gadget_hotkey(curr->dg);
                         break;

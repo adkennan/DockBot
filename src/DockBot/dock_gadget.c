@@ -9,7 +9,6 @@
 #include "dock_gadget.h"
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
-#include "gadget_msg.h"
 
 #include <exec/types.h>
 #include <exec/memory.h>

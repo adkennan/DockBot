@@ -6,11 +6,6 @@
 **
 ************************************/
 
-#include "dock_gadget.h"
-#include "gadget_msg.h"
-#include "dockbot.h"
-#include "dockbot_protos.h"
-
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <exec/ports.h>
@@ -25,6 +20,10 @@
 
 #include <pragmas/exec_pragmas.h>
 #include <pragmas/intuition_pragmas.h>
+
+#include "lib.h"
+#include "dockbot.h"
+#include "dockbot_protos.h"
 
 extern struct IntuitionBase *IntuitionBase;
 
@@ -166,7 +165,9 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
         case DM_HOTKEY:
         
         case DM_WRITECONFIG:
-        case DM_GETSETTINGS:
+        case DM_GETEDITOR:
+        case DM_EDITOREVENT:
+        case DM_EDITORUPDATE:
 
         case DM_GETHOTKEY:
         case DM_GETLABEL:
@@ -179,7 +180,7 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 	return NULL;
 }
 
-Class *init_dock_gadget_class(VOID)
+BOOL InitGadgetClass(struct DockBotLibrary *lib)
 {
 	ULONG HookEntry();
 	Class *c;
@@ -189,16 +190,19 @@ Class *init_dock_gadget_class(VOID)
 		c->cl_Dispatcher.h_SubEntry = dock_gadget_dispatch;
 
         AddClass(c);
+
+        lib->l_GadgetClass = c;
+        return TRUE;
 	}
 
-	return c;
+	return FALSE;
 }
 
-BOOL free_dock_gadget_class(Class * c)
+VOID FreeGadgetClass(struct DockBotLibrary *lib)
 {
-    RemoveClass(c);
+    RemoveClass(lib->l_GadgetClass);
 
-    return FreeClass(c);
+    FreeClass(lib->l_GadgetClass);
 }
 
 

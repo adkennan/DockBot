@@ -19,11 +19,11 @@ C_OPTS=		CPU=$(CPU) STREQ STRMER NOSTKCHK NOSTANDARDIO NOICONS $(INC)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c button.c
+C_SOURCES=	lib.c button.c triton_icon.c
 
-OBJECTS=	lib.o button.o
+OBJECTS=	lib.o button.o triton_icon.o
 
-LIBS=		LIB:sc.lib LIB:amiga.lib
+LIBS=		LIB:sc.lib LIB:amiga.lib LIB:triton.lib
 
 ################
 #

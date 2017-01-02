@@ -1,5 +1,4 @@
 
-
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
 #include <intuition/classusr.h>
@@ -15,7 +14,6 @@
 #include <string.h>
 
 #include "dockbot.h"
-#include "dock_settings.h"
 
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
@@ -217,3 +215,11 @@ DB_METHOD_DM(READCONFIG,DockMessageConfig)
     return 1;
 }
 
+DB_METHOD_DM(WRITECONFIG,DockMessageConfig)
+
+    struct DockSettings *s = msg->settings;
+
+    DB_WriteSetting(s, S_FORMAT, data->format);
+
+    return 1;
+}
