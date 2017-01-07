@@ -9,8 +9,6 @@
 #ifndef __DOCK_GADGET_H__
 #define __DOCK_GADGET_H__
 
-#include "dock.h"
-
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
 
@@ -48,5 +46,15 @@ VOID dock_gadget_get_hotkey(Object *obj
 VOID dock_gadget_hotkey(Object *obj);
 
 VOID dock_gadget_get_label(Object *obj, STRPTR *label);
+
+BOOL dock_gadget_can_edit(Object *obj);
+
+struct TagItem *dock_gadget_get_editor(Object *obj);
+
+VOID dock_gadget_editor_event(Object *obj, struct TR_Message *msg);
+
+VOID dock_gadget_editor_update(Object *obj, struct TR_Project *project);
+
+VOID dock_gadget_init_button(Object *obj, STRPTR name, STRPTR path);
 
 #endif 

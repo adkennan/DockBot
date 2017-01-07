@@ -10,132 +10,33 @@
 
 #include "dockbot.h"
 
-#include "dock_settings.h"
+#include "dock_gadget.h"
 
-#define DB_ROOT_PREFS_CLASS "DockGadgetPrefsBase"
-#define DB_BUTTON_CLASS "dockbuttonPrefs"
-#define DB_BUTTON_GADGET "dockbutton"
+#define DB_BUTTON_CLASS "DockButton"
+
 struct DockPrefs 
 {
-	// Dock Settings
-	DockPosition pos;
-	DockAlign align;
+	struct DockConfig cfg;
 
-	struct List gadgets;
+    struct List classes;
 
-	// Libraries containing prefs classes
-	struct MinList libs;
+    struct DgNode *editGadget;
+    struct TR_Project *editDialog;
 
-    struct List plugins;
-
-	// Built in classes.
-	Class *baseClass;
-	Class *buttonClass;
+    struct TR_Project *newGadgetDialog;
 };
 
-struct DgNode 
-{
-	struct Node n;
-    STRPTR gadgetName;
-	Object *dg;
-    struct TR_Project *editor;
-};
+struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *btn, STRPTR name);
 
-struct LibNode
-{
-	struct MinNode n;
-	struct Library *lib;
-};
-
-Class *init_prefs_base_class(VOID);
-
-BOOL free_prefs_base_class(Class *c);
-
-Class *init_dock_button_class(VOID);
-
-BOOL free_dock_button_class(Class *c);
-
-BOOL init_icon_class(VOID);
+VOID remove_dock_gadget(struct DgNode *dg);
 
 BOOL load_config(struct DockPrefs *prefs);
 
+BOOL save_config(struct DockPrefs *prefs, BOOL permanent);
+
 VOID remove_dock_gadgets(struct DockPrefs *prefs);
 
-BOOL save_config(struct DockPrefs *prefs, BOOL writeToEnvarc);
-
-BOOL find_plugins(struct DockPrefs *prefs);
-
 VOID free_plugins(struct DockPrefs *prefs);
-
-// Gadget Messages
-
-typedef enum {
-
-    DM_GET_NAME,
-    DM_SET_NAME,
-    DM_GET_INFO,
-    DM_CAN_EDIT,
-    DM_GET_EDITOR,
-    DM_HANDLE_EVENT,
-    DM_READ_CONFIG,
-    DM_WRITE_CONFIG,
-    DM_UPDATE,
-    DM_INIT_BUTTON
-
-} DockPrefsMessage;
-
-STRPTR dock_gadget_get_name(Object *obj);
-
-VOID dock_gadget_set_name(Object *obj, STRPTR name);
-
-VOID dock_gadget_get_info(Object *obj
-            , STRPTR *name, STRPTR *version
-            , STRPTR *description, STRPTR *copyright);
-
-BOOL dock_gadget_can_edit(Object *obj);
-
-struct TagItem *dock_gadget_get_editor(Object *obj);
-
-VOID dock_gadget_handle_event(Object *obj, struct TR_Message *msg);
-
-VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings);
-
-VOID dock_gadget_write_settings(Object *obj, struct DockSettings *settings);
-
-VOID dock_gadget_update(Object *obj, struct TR_Project *project);
-
-VOID dock_button_init(Object *obj, STRPTR name, STRPTR path);
-
-struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR gadName);
-
-struct DockMessageSetName {
-    ULONG MethodID;
-    STRPTR name;
-};
-
-struct DockMessageHandleEvent {
-    ULONG MethodID;
-    struct TR_Message *msg;
-};
-
-
-struct DockMessageSettings {
-	ULONG MethodID;
-	struct DockSettings *settings;
-};
-
-struct DockMessageUpdate {
-    ULONG MethodID;
-    struct TR_Project *project;
-};
-
-struct DockMessageButtonInit {
-    ULONG MethodID;
-    STRPTR name;
-    STRPTR path;
-};
-
-struct TagItem *make_tag_list(ULONG data, ...);
 
 #endif // __PREFS_H__
 

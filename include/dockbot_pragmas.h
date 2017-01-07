@@ -30,3 +30,4 @@
 #pragma libcall DockBotBase DB_GetMemInfo 8a 0
 /* Class Management*/
 #pragma libcall DockBotBase DB_CreateDockGadget 90 801
+#pragma libcall DockBotBase DB_ListClasses 96 801

@@ -6,6 +6,7 @@
 **
 ************************************/
 
+#include "dockbot.h"
 #include "dock_gadget.h"
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
@@ -173,4 +174,55 @@ VOID dock_gadget_get_label(Object *obj
 
     *label = msg.label;
 }
+
+BOOL dock_gadget_can_edit(Object *obj)
+{
+    return (BOOL)DoMethod(obj, DM_CANEDIT);
+}
+
+struct TagItem *dock_gadget_get_editor(Object *obj)
+{
+    struct DockMessageGetEditor msg = {
+        DM_GETEDITOR
+    };
+
+    DoMethodA(obj, (Msg)&msg);
+
+    return msg.uiTags;
+}
+
+VOID dock_gadget_editor_event(Object *obj, struct TR_Message *m)
+{
+    struct DockMessageEditorEvent msg = {
+        DM_EDITOREVENT
+    };
+    msg.msg = m;
+    
+    DoMethodA(obj, (Msg)&msg); 
+}
+
+
+VOID dock_gadget_editor_update(Object *obj, struct TR_Project *project)
+{
+    struct DockMessageEditorUpdate msg = {
+        DM_EDITORUPDATE
+    };  
+    msg.project = project;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID dock_gadget_init_button(Object *obj, STRPTR name, STRPTR path)
+{
+    struct DockMessageInitButton msg = {
+        DM_INITBUTTON
+    };
+    msg.name = name;
+    msg.path = path;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+
+
 

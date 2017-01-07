@@ -33,4 +33,5 @@ DB_FreeMem(memoryBlock,byteSize)(a0,d0)
 DB_GetMemInfo()
 * Class Management
 DB_CreateDockGadget(name)(a0)
+DB_ListClasses(list)(a0)
 ##end

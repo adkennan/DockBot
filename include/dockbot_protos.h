@@ -611,4 +611,7 @@ VOID* __asm __saveds DB_GetMemInfo(VOID);
 Object * __asm __saveds DB_CreateDockGadget(
     register __a0 STRPTR name);
 
+BOOL __asm __saveds DB_ListClasses(
+    register __a0 struct List *list);
+
 #endif

@@ -2,7 +2,7 @@
 EXENAME=	DockBot
 EXEPATH=	//bin/
 
-INC=		//include
+INC=		INCLUDEDIRECTORY=//include INCLUDEDIRECTORY=/shared
 
 COMPILER=	SC:c/sc
 LINKER=		SC:c/slink
@@ -12,11 +12,11 @@ LIBS=		LIB:sc.lib LIB:amiga.lib
 CPU=		68030
 DEF_DEBUG_MEM=
 
-C_OPTS=		opt noicons cpu=$(CPU) INCLUDEDIRECTORY=$(INC) $(DEF_DEBUG_MEM)
+C_OPTS=		opt noicons cpu=$(CPU) $(INC) $(DEF_DEBUG_MEM)
 
-C_SOURCES=	main.c dock.c dock_gadget.c dock_handle.c events.c gadgets.c layout.c settings.c debug.c
+C_SOURCES=	main.c dock.c /shared/dock_gadget.c dock_handle.c events.c gadgets.c layout.c settings.c debug.c
 
-OBJECTS=	main.o dock.o dock_gadget.o dock_handle.o events.o gadgets.o layout.o settings.o debug.o
+OBJECTS=	main.o dock.o /shared/dock_gadget.o dock_handle.o events.o gadgets.o layout.o settings.o debug.o
 
 $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<

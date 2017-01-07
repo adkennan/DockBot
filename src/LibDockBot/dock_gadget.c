@@ -159,6 +159,9 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
             send_message_to_dock(c, o, GM_DRAW);
             break;         
 
+        case DM_CANEDIT:
+            return FALSE;
+
         case DM_TICK:
         case DM_CLICK:
         case DM_DROP:
@@ -168,6 +171,7 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
         case DM_GETEDITOR:
         case DM_EDITOREVENT:
         case DM_EDITORUPDATE:
+        case DM_INITBUTTON:
 
         case DM_GETHOTKEY:
         case DM_GETLABEL:

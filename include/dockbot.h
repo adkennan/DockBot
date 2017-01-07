@@ -101,6 +101,8 @@ typedef enum {
     DM_GETEDITOR	    = 1502,
 	DM_EDITOREVENT		= 1503,
 	DM_EDITORUPDATE		= 1504,
+	DM_CANEDIT			= 1505,
+	DM_INITBUTTON		= 1506,
 
     // Getters.
     DM_GETINFO          = 1601,
@@ -204,6 +206,12 @@ struct DockMessageEditorEvent
 struct DockMessageEditorUpdate {
 	ULONG MethodID;
 	struct TR_Project *project;
+};
+
+struct DockMessageInitButton {
+    ULONG MethodID;
+    STRPTR name;
+    STRPTR path;
 };
 
 // Messages from Gadget to Dock.

@@ -16,6 +16,9 @@
 #include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
+#include <clib/dos_protos.h>
+
+#include <dos/exall.h>
 
 #include <pragmas/exec_pragmas.h>
 #include <pragmas/intuition_pragmas.h>
@@ -27,6 +30,11 @@
 
 #include "lib.h"
 
+#define DIR_BUF_SIZE 512
+
+#define GADGET_PATH "PROGDIR:Gadgets/"
+
+extern struct Library *DOSBase;
 extern struct Library *IntuitionBase;
 extern struct DockBotLibrary *DockBotBase;
 
@@ -82,7 +90,7 @@ Object * __asm __saveds DB_CreateDockGadget(
 
     if( ! (o = NewObjectA(NULL, name, TAG_DONE) ) ) {
 
-        sprintf(libName, "PROGDIR:Gadgets/%s.class", name);
+        sprintf(libName, GADGET_PATH "%s.class", name);
 
         if( lib = OpenLibrary(libName, 1) ) {
 
@@ -113,5 +121,69 @@ Object * __asm __saveds DB_CreateDockGadget(
     return o;
 }
 
+
+BOOL __asm __saveds DB_ListClasses(
+    register __a0 struct List *list)
+{
+    BPTR lock;
+    struct ExAllData *buf, *ead;    
+    struct ExAllControl *eac;
+    BOOL more;
+    struct Node *node;
+    UWORD len;
+    STRPTR name;
+    BOOL result = FALSE;
+
+    if( lock = Lock(GADGET_PATH, ACCESS_READ) ) {
+    
+        if( buf = (struct ExAllData *)DB_AllocMem(DIR_BUF_SIZE, MEMF_ANY) ) {
+            
+            if( eac = AllocDosObject(DOS_EXALLCONTROL, NULL)) {
+                
+                eac->eac_LastKey = 0;
+
+                do {
+
+                    result = TRUE;
+
+                    more = ExAll(lock, buf, DIR_BUF_SIZE, ED_NAME, eac);
+
+                    if( !more && IoErr() != ERROR_NO_MORE_ENTRIES ) {
+                        result = FALSE;
+                        continue;
+                    } 
+
+                    ead = buf;
+                    do {
+                                 
+                        len = strlen(ead->ed_Name) + 1;
+          
+                        if( node = DB_AllocMem(sizeof(struct Node) + len, MEMF_ANY) ) {
+                            
+                            name = (STRPTR)((UBYTE *)node + sizeof(struct Node));
+
+                            CopyMem(ead->ed_Name, name, len);
+
+                            node->ln_Name = name;
+
+                            AddTail(list, node);
+                        }
+    
+                        ead = ead->ed_Next;
+
+                    } while(ead);
+                    
+                } while( more );
+
+                FreeDosObject(DOS_EXALLCONTROL, eac);
+            }
+            DB_FreeMem(buf, DIR_BUF_SIZE);
+        }
+
+        UnLock(lock);
+    }
+    
+    return result;
+}
 
 

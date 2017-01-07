@@ -18,8 +18,6 @@
 
 struct Library *DockBotBase;
 
-struct TR_Project *addNewGadDialog;
-
 STRPTR positions[] = { "Left", "Right", "Top", "Bottom", NULL };
 STRPTR alignments[] = { "Top/Left", "Center", "Bottom/Right", NULL };
 
@@ -164,15 +162,21 @@ ProjectDefinition(mainWindowTags)
 
 struct TR_Project *mainWindow;
 
+
+struct TagItem *make_tag_list(ULONG data, ...)
+{
+    struct TagItem *tags = (struct TagItem *)&data;
+
+    return CloneTagItems(tags);
+}
+
+
 VOID gadget_selected(struct DockPrefs *prefs, ULONG index)
 {
     struct DgNode *dg = NULL, *curr;
     ULONG gadCount = 0;
-    
-    for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
-                curr->n.ln_Succ;
-                curr = (struct DgNode *)curr->n.ln_Succ ) {
 
+    FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
         if( gadCount == index ) {
             dg = curr;
         }
@@ -195,7 +199,7 @@ VOID gadget_selected(struct DockPrefs *prefs, ULONG index)
 
 VOID update_gadget_list(struct DockPrefs *prefs)
 {
-    TR_SetAttribute(mainWindow, OBJ_GADGETS, 0L, (ULONG)&(prefs->gadgets));
+    TR_SetAttribute(mainWindow, OBJ_GADGETS, 0L, (ULONG)&(prefs->cfg.gadgets));
 }
 
 struct DgNode *get_selected_gadget(struct DockPrefs *prefs)
@@ -205,29 +209,12 @@ struct DgNode *get_selected_gadget(struct DockPrefs *prefs)
     
     index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value);
 
-    for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
-                curr->n.ln_Succ;
-                curr = (struct DgNode *)curr->n.ln_Succ ) {
+    FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
 
         if( gadCount == index ) {
             return curr;
         }
         gadCount++;
-    }
-
-    return NULL;
-}
-
-struct DgNode *get_gadget_from_window(struct DockPrefs *prefs, struct TR_Project *window)
-{
-    struct DgNode *curr;
-    for( curr = (struct DgNode *)prefs->gadgets.lh_Head;
-                curr->n.ln_Succ;
-                curr = (struct DgNode *)curr->n.ln_Succ ) {
-        
-        if( curr->editor == window ) {
-            return curr;
-        }
     }
 
     return NULL;
@@ -243,7 +230,7 @@ VOID move_gadget_up(struct DockPrefs *prefs)
 
         newPred = dg->n.ln_Pred->ln_Pred;
         Remove((struct Node *)dg);
-        Insert(&(prefs->gadgets), (struct Node *)dg, newPred);
+        Insert(&(prefs->cfg.gadgets), (struct Node *)dg, newPred);
 
         update_gadget_list(prefs);
 
@@ -263,7 +250,7 @@ VOID move_gadget_down(struct DockPrefs *prefs)
 
         newPred = dg->n.ln_Succ;
         Remove((struct Node *)dg);
-        Insert(&(prefs->gadgets), (struct Node *)dg, newPred);
+        Insert(&(prefs->cfg.gadgets), (struct Node *)dg, newPred);
 
         update_gadget_list(prefs);
 
@@ -290,13 +277,7 @@ VOID delete_gadget(struct DockPrefs *prefs)
 
             Remove((struct Node *)dg);
 
-            DisposeObject(dg->dg);
-            
-            if( dg->editor ) {
-                TR_CloseProject(dg->editor);                
-            }
-
-            DB_FreeMem(dg, sizeof(struct DgNode));
+            remove_dock_gadget(dg);
 
             update_gadget_list(prefs);
 
@@ -357,7 +338,7 @@ VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
 
             if( headTags = make_tag_list(
                     WindowID(2),
-                    WindowTitle(dock_gadget_get_name(dg->dg)),
+                    WindowTitle(dg->n.ln_Name),
                     WindowPosition(TRWP_CENTERDISPLAY),
                     WindowFlags(TRWF_HELP),
                     QuickHelpOn(TRUE),
@@ -386,7 +367,7 @@ VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
 
                         TR_LockProject(mainWindow);
 
-                        if( !(dg->editor = TR_OpenProject(Application, windowTags) ) ) {
+                        if( !(prefs->editDialog = TR_OpenProject(Application, windowTags) ) ) {
     
                             printf("uh oh\n");
                         }
@@ -410,7 +391,6 @@ VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
     BPTR lock;
     struct FileInfoBlock *fib;
     Object *btn;
-    struct DockMessageButtonInit dbmi;
     UWORD len;
     struct DgNode *dg;
 
@@ -433,14 +413,12 @@ VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
                         len = strlen(DB_BUTTON_CLASS) + 1;
 
                         if( btn = NewObjectA(NULL, DB_BUTTON_CLASS, TAG_DONE) ) {                 
-                                dbmi.MethodID = DM_INIT_BUTTON;
-                                dbmi.name = msg->am_ArgList->wa_Name;
-                                dbmi.path = path;
-                                DoMethodA(btn, (Msg)&dbmi);
+
+                            dock_gadget_init_button(btn, msg->am_ArgList->wa_Name, path);
 
                             if( gadName = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) {                
 
-                                CopyMem(DB_BUTTON_GADGET, gadName, len);
+                                CopyMem(DB_BUTTON_CLASS, gadName, len);
 
                                 if( dg = add_dock_gadget(prefs, btn, gadName) ) {
 
@@ -477,21 +455,20 @@ VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
 
 VOID open_new_gadget_dialog(struct DockPrefs *prefs)
 {
-    if( ! (addNewGadDialog = TR_OpenProject(Application, newGadgetWindowTags) ) ) {
+    if( ! (prefs->newGadgetDialog = TR_OpenProject(Application, newGadgetWindowTags) ) ) {
     
         return;
     }
 
     TR_LockProject(mainWindow);
 
-    TR_SetAttribute(addNewGadDialog, OBJ_NEW_GADGET, TRAT_Value, (ULONG)&prefs->plugins);    
+    TR_SetAttribute(prefs->newGadgetDialog, OBJ_NEW_GADGET, TRAT_Value, (ULONG)&prefs->classes);    
 }
 
 VOID run_event_loop(struct DockPrefs *prefs) 
 {
     BOOL done = FALSE, closeMsgProj = FALSE;
     struct TR_Message *msg;
-    struct DgNode *dg;
     struct TR_Project *msgProj;
     ULONG msgClass, msgID, msgData;
     UWORD openWindowCount = 0;
@@ -567,22 +544,22 @@ VOID run_event_loop(struct DockPrefs *prefs)
                                 break;
 
                             case OBJ_POSITION:
-                                prefs->pos = msgData;
+                                prefs->cfg.pos = msgData;
                                 break;
 
                             case OBJ_ALIGNMENT:
-                                prefs->align = msgData;
+                                prefs->cfg.align = msgData;
                                 break;
                         }
                         break;
                 }
-            } else if( msgProj == addNewGadDialog ) {
+            } else if( msgProj == prefs->newGadgetDialog ) {
 
                 switch( msgClass ) {
 
                     case TRMS_CLOSEWINDOW:
                         closeMsgProj = TRUE;
-                        addNewGadDialog = NULL;
+                        prefs->newGadgetDialog = NULL;
                         break;
 
                     case TRMS_ACTION:
@@ -590,47 +567,47 @@ VOID run_event_loop(struct DockPrefs *prefs)
 
                             case OBJ_BTN_NEW_OK:
                                 closeMsgProj = TRUE;
-                                addNewGadDialog = NULL;
+                                prefs->newGadgetDialog = NULL;
                                 break;
 
                             case OBJ_BTN_NEW_CAN:
                                 closeMsgProj = TRUE;
-                                addNewGadDialog = NULL;
+                                prefs->newGadgetDialog = NULL;
                                 break;
 
                         }
                         break;
                 }
             
-            } else if( dg = get_gadget_from_window(prefs, msgProj) ) {
+            } else if( prefs->editGadget ) {
                 
                 switch( msgClass ) {
                     case TRMS_CLOSEWINDOW:
                         closeMsgProj = TRUE;
-                        dg->editor = NULL;
+                        prefs->editGadget = NULL;
                         break;
                         
                     case TRMS_ACTION:
                         switch( msgID ) {
                            case OBJ_BTN_GAD_OK:
-                               dock_gadget_update(dg->dg, msgProj);
+                               dock_gadget_editor_update(prefs->editGadget->dg, msgProj);
                                closeMsgProj = TRUE;
-                               dg->editor = NULL;
+                               prefs->editGadget = NULL;
                                break;
 
                            case OBJ_BTN_GAD_CAN:
                                closeMsgProj = TRUE;
-                               dg->editor = NULL;
+                               prefs->editGadget = NULL;
                                break;
 
                            default:
-                              dock_gadget_handle_event(dg->dg, msg);
-                                    break;
+                              dock_gadget_editor_event(prefs->editGadget->dg, msg);
+                              break;
                         }
                         break;
 
                     default:
-                        dock_gadget_handle_event(dg->dg, msg);
+                        dock_gadget_editor_event(prefs->editGadget->dg, msg);
                         break;
     
                 }
@@ -659,41 +636,29 @@ int main(char **argv, int argc)
 
         if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
 
-            NewList(&prefs.gadgets);
-            NewList((struct List *)&prefs.libs);
-            NewList(&prefs.plugins);
+            NewList(&prefs.cfg.gadgets);
+            NewList(&prefs.classes);
 
-            if( prefs.baseClass = init_prefs_base_class() ) {
+            if( DB_ListClasses(&prefs.classes) ) {
 
-                if( prefs.buttonClass = init_dock_button_class() ) {
+                if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
 
-                    if( init_icon_class() ) {
-  
-                        if( find_plugins(&prefs) ) {
+                    if( load_config(&prefs) ) {
 
-                            if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
-
-                                if( load_config(&prefs) ) {
-
-                                    TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.pos);
-                                    TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.align);
+                        TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
+                        TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
         
-                                    update_gadget_list(&prefs);
+                        update_gadget_list(&prefs);
 
-                                    gadget_selected(&prefs, 0);
+                        gadget_selected(&prefs, 0);
 
-                                    run_event_loop(&prefs);
+                        run_event_loop(&prefs);
                                
-                                    remove_dock_gadgets(&prefs);
-                                }
-                                TR_CloseProject(mainWindow);            
-                            }
-                            free_plugins(&prefs);
-                        }
+                        remove_dock_gadgets(&prefs);
                     }
-                    free_dock_button_class(prefs.buttonClass);
+                    TR_CloseProject(mainWindow);            
                 }
-                free_prefs_base_class(prefs.baseClass);
+                free_plugins(&prefs);
             }
             CloseLibrary(DockBotBase);
         }
