@@ -38,19 +38,22 @@
 
 #define METHOD_READCONFIG   button_read_config
 #define METHOD_WRITECONFIG  button_write_config
+#define METHOD_INITEDIT     button_init_edit
 #define METHOD_GETEDITOR	button_get_editor
-#define METHOD_EDITOREVENT	button_editor_event
-//#define METHOD_EDITORUPDATE button_editor_update
+#define METHOD_EDITOREVENT  button_editor_event
+#define METHOD_EDITORUPDATE button_editor_update
+#define METHOD_CANEDIT		button_can_edit
   
 #define METHOD_GETHOTKEY    button_get_hotkey
 #define METHOD_GETLABEL     button_get_label
+
+#define METHOD_INITBUTTON   button_init
 
 struct ButtonLibData
 {
 	struct Library *iconBase;
 	struct Library *dosBase;
-  
-	BOOL tritonOpen;
+    struct Library *utilityBase;
 };
 
 struct ButtonGadgetData

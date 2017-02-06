@@ -31,4 +31,6 @@ extern struct Library *IconBase;
 
 extern struct Library *DockBotBase;
 
+BOOL init_icon_class(TR_App *app);
+
 #endif

@@ -117,9 +117,9 @@ TR_METHOD(Icon, EVENT, EventData)
     return TROM_EVENT_CONTINUE;
 }
 
-BOOL init_icon_class(VOID)
+BOOL init_icon_class(TR_App *app)
 {
-    return TR_AddClassTags(Application, 
+    return TR_AddClassTags(app, 
         TROB_Icon, TROB_DisplayObject, 
         NULL, sizeof(struct TROD_Icon),
 

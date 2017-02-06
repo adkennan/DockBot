@@ -49,11 +49,13 @@ VOID dock_gadget_get_label(Object *obj, STRPTR *label);
 
 BOOL dock_gadget_can_edit(Object *obj);
 
-struct TagItem *dock_gadget_get_editor(Object *obj);
+struct TagItem * dock_gadget_get_editor(Object *obj);
 
-VOID dock_gadget_editor_event(Object *obj, struct TR_Message *msg);
+VOID dock_gadget_editor_event(Object *obj, struct TR_Project *window, struct TR_Message *message);
 
-VOID dock_gadget_editor_update(Object *obj, struct TR_Project *project);
+VOID dock_gadget_editor_update(Object *obj, struct TR_Project *window);
+
+VOID dock_gadget_init_edit(Object *obj, struct TR_App *app);
 
 VOID dock_gadget_init_button(Object *obj, STRPTR name, STRPTR path);
 

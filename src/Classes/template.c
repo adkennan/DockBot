@@ -18,6 +18,8 @@
 
 #include "class_def.h"
 
+#include <libraries/triton.h>
+
 
 /**** Main Library Structure ****/
 
@@ -25,10 +27,11 @@ struct ClassLibrary {
     struct Library          cl_Lib;
     UWORD                   cl_Pad;
     BPTR                    cl_SegList;
+    Class                   *cl_GadgetClass;
     struct Library          *cl_ExecBase;
     struct Library          *cl_IntuitionBase;
     struct Library          *cl_DockBotBase;
-    Class                   *cl_GadgetClass;
+    struct Library          *cl_TritonBase;
 #ifdef GADGET_LIB_DATA
     struct GADGET_LIB_DATA  cl_Data;
 #endif
@@ -166,6 +169,8 @@ APTR FuncTable[] = {
 struct ExecBase *SysBase;
 struct IntuitionBase *IntuitionBase;
 struct Library *DockBotBase;
+extern struct Library *TritonBase;
+struct ClassLibrary *ClassLib;
 
 struct ClassLibrary * __saveds __asm InitLib(
     register __a6 struct Library *sysBase,
@@ -186,6 +191,10 @@ struct ClassLibrary * __saveds __asm InitLib(
 #endif
                     cb->cl_IntuitionBase = (struct Library *)IntuitionBase;
                     cb->cl_DockBotBase = DockBotBase;
+                    cb->cl_TritonBase = NULL;
+                    TritonBase = NULL;
+    
+                    ClassLib = cb;
 
                     return cb;
 
@@ -264,66 +273,70 @@ Class* __saveds __asm _GetEngine(
     return ClassLibraryBase->cl_GadgetClass;
 }
 
+#define METHOD_DEF(NAME) ULONG __saveds METHOD_ ## NAME (Class *c, Object *o, Msg msg);
 
 #ifdef METHOD_NEW
-    ULONG __saveds METHOD_NEW (Class *c, Object *o, Msg msg);
+    METHOD_DEF(NEW)
 #endif
 
 #ifdef METHOD_DISPOSE
-    ULONG __saveds METHOD_DISPOSE (Class *c, Object *o, Msg msg);
+    METHOD_DEF(DISPOSE)
 #endif
 
-
 #ifdef METHOD_DRAW
-    ULONG __saveds METHOD_DRAW (Class *c, Object *o, Msg msg);
+    METHOD_DEF(DRAW)
 #endif
 
 #ifdef METHOD_CLICK
-    ULONG __saveds METHOD_CLICK (Class *c, Object *o, Msg msg);
+    METHOD_DEF(CLICK)
 #endif
 
 #ifdef METHOD_DROP
-    ULONG __saveds METHOD_DROP (Class *c, Object *o, Msg msg);
+    METHOD_DEF(DROP)
 #endif
 
 #ifdef METHOD_TICK
-    ULONG __saveds METHOD_TICK (Class *c, Object *o, Msg msg);
+    METHOD_DEF(TICK)
 #endif
 
 #ifdef METHOD_GETSIZE
-    ULONG __saveds METHOD_GETSIZE (Class *c, Object *o, Msg msg);
+    METHOD_DEF(GETSIZE)
 #endif
 
 #ifdef METHOD_READCONFIG
-    ULONG __saveds METHOD_READCONFIG (Class *c, Object *o, Msg msg);
+    METHOD_DEF(READCONFIG)
 #endif
 
 #ifdef METHOD_WRITECONFIG
-    ULONG __saveds METHOD_WRITECONFIG (Class *c, Object *o, Msg msg);
+    METHOD_DEF(WRITECONFIG)
 #endif
 
 #ifdef METHOD_GETEDITOR
-    ULONG __saveds METHOD_GETEDITOR (Class *c, Object *o, Msg msg);
+    METHOD_DEF(GETEDITOR)
 #endif
 
 #ifdef METHOD_EDITOREVENT
-    ULONG __saveds METHOD_EDITOREVENT (Class *c, Object *o, Msg msg);
+    METHOD_DEF(EDITOREVENT)
 #endif
 
 #ifdef METHOD_EDITORUPDATE
-    ULONG __saveds METHOD_EDITORUPDATE (Class *c, Object *o, Msg msg);
+    METHOD_DEF(EDITORUPDATE)
 #endif
 
 #ifdef METHOD_GETHOTKEY
-    ULONG __saveds METHOD_GETHOTKEY (Class *c, Object *o, Msg msg);
+    METHOD_DEF(GETHOTKEY)
 #endif
 
 #ifdef METHOD_HOTKEY
-    ULONG __saveds METHOD_HOTKEY (Class *c, Object *o, Msg msg);
+    METHOD_DEF(HOTKEY)
+#endif
+
+#ifdef METHOD_INITBUTTON
+    METHOD_DEF(INITBUTTON)
 #endif
 
 #ifdef METHOD_GETLABEL
-    ULONG __saveds METHOD_GETLABEL (Class *c, Object *o, Msg msg);
+    METHOD_DEF(GETLABEL)
 #else
 
 ULONG __saveds GetGadgetLabel (Class *c, Object *o, Msg msg)
@@ -336,6 +349,19 @@ ULONG __saveds GetGadgetLabel (Class *c, Object *o, Msg msg)
     
 #endif
 
+#ifdef METHOD_CANEDIT
+    METHOD_DEF(CANEDIT)
+#else
+
+ULONG __saveds CanEdit(Class *c, Object *o, Msg msg)
+{
+    struct DockMessageCanEdit *dmce = (struct DockMessageCanEdit *)msg;
+    dmce->canEdit = FALSE;
+
+    return TRUE;
+}
+
+#endif
 
 ULONG __saveds GetGadgetInfo(Class *c, Object *o, Msg msg)
 {
@@ -349,11 +375,43 @@ ULONG __saveds GetGadgetInfo(Class *c, Object *o, Msg msg)
     return TRUE;
 }
 
+
+#ifdef METHOD_INITEDIT
+    METHOD_DEF(INITEDIT)
+#endif
+
+ULONG __saveds InitEditor(Class *c, Object *o, Msg msg)
+{
+    BOOL res = TRUE;
+
+    if( !ClassLib->cl_TritonBase ) {
+        if( ClassLib->cl_TritonBase = OpenLibrary(TRITONNAME, TRITONVERSION) ) {
+            TritonBase = ClassLib->cl_TritonBase;
+        } else {
+            res = FALSE;
+        }
+    }
+
+#ifdef METHOD_INITEDIT
+    if( res ) {
+        METHOD_INITEDIT(c, o, msg);
+    }
+#endif
+
+    return res;
+}
+
+#undef METHOD_DEF
+
+#define METHOD_DIS(NAME) case DM_ ## NAME: return METHOD_ ## NAME (c, o, msg);
+
 ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 {
 #ifdef METHOD_NEW
     Object *newObj;
 #endif
+
+    geta4();
 
     switch( msg->MethodID )
     {
@@ -377,73 +435,47 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 #endif
 
 #ifdef METHOD_ADDED
-        case DM_ADDED:
-            return METHOD_ADDED (c, o, msg);
+        METHOD_DIS(ADDED)
 #endif
 
 #ifdef METHOD_REMOVED
-        case DM_REMOVED:
-            return METHOD_REMOVED (c, o, msg);
+        METHOD_DIS(REMOVED)
 #endif
 
 #ifdef METHOD_DRAW
-        case DM_DRAW:
-            return METHOD_DRAW (c, o, msg);
+        METHOD_DIS(DRAW)
 #endif
             
 #ifdef METHOD_TICK
-        case DM_TICK:
-            return METHOD_TICK (c, o, msg);
+        METHOD_DIS(TICK)
 #endif
 
 #ifdef METHOD_CLICK
-        case DM_CLICK:
-            return METHOD_CLICK (c, o, msg);
+        METHOD_DIS(CLICK)
 #endif
 
 #ifdef METHOD_DROP
-        case DM_DROP:
-            return METHOD_DROP (c, o, msg);
+        METHOD_DIS(DROP)
 #endif
 
 #ifdef METHOD_GETSIZE
-        case DM_GETSIZE:
-            return METHOD_GETSIZE (c, o, msg);
+        METHOD_DIS(GETSIZE)
 #endif
 
 #ifdef METHOD_READCONFIG
-        case DM_READCONFIG:
-            return METHOD_READCONFIG (c, o, msg);
+        METHOD_DIS(READCONFIG)
 #endif
 
 #ifdef METHOD_WRITECONFIG
-        case DM_WRITECONFIG:
-            return METHOD_WRITECONFIG (c, o, msg);
-#endif
-
-#ifdef METHOD_GETEDITOR
-        case DM_GETEDITOR:
-            return METHOD_GETEDITOR (c, o, msg);
-#endif
-
-#ifdef METHOD_EDITOREVENT
-        case DM_EDITOREVENT:
-            return METHOD_EDITOREVENT (c, o, msg);
-#endif
-
-#ifdef METHOD_EDITORUPDATE
-        case DM_EDITORUPDATE:
-            return METHOD_EDITORUPDATE (c, o, msg);
+        METHOD_DIS(WRITECONFIG)
 #endif
 
 #ifdef METHOD_GETHOTKEY
-        case DM_GETHOTKEY:
-            return METHOD_GETHOTKEY (c, o, msg);
+        METHOD_DIS(GETHOTKEY)
 #endif
 
 #ifdef METHOD_HOTKEY
-        case DM_HOTKEY:
-            return METHOD_HOTKEY (c, o, msg);
+        METHOD_DIS(HOTKEY)
 #endif
 
         case DM_GETLABEL:
@@ -452,6 +484,32 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 #else
             return GetGadgetLabel(c, o, msg);
 #endif
+
+        case DM_CANEDIT:
+#ifdef METHOD_CANEDIT
+            return METHOD_CANEDIT (c, o, msg);
+#else
+            return CanEdit (c, o, msg);
+#endif
+
+#ifdef METHOD_GETEDITOR
+        METHOD_DIS(GETEDITOR)
+#endif
+
+#ifdef METHOD_EDITOREVENT
+        METHOD_DIS(EDITOREVENT)
+#endif
+
+#ifdef METHOD_EDITORUPDATE
+        METHOD_DIS(EDITORUPDATE)
+#endif
+
+#ifdef METHOD_INITBUTTON
+        METHOD_DIS(INITBUTTON)
+#endif
+
+        case DM_INITEDIT:
+            return InitEditor(c, o, msg);
 
         case DM_GETINFO:
             return GetGadgetInfo(c, o, msg);
@@ -491,6 +549,10 @@ VOID __saveds CleanUpClass(struct ClassLibrary *cb)
 
 VOID __saveds CloseLibs(VOID)
 {
+    if( TritonBase ) {
+        CloseLibrary(TritonBase);
+    }
+
     if( DockBotBase ) {
         CloseLibrary(DockBotBase);
     }

@@ -6,11 +6,13 @@
 #include <exec/lists.h>
 #include <intuition/classes.h>
 
-#include <libraries/triton.h>
-
 #include "dockbot.h"
 
 #include "dock_gadget.h"
+
+#include "gadget_class.h"
+
+#include <libraries/triton.h>
 
 #define DB_BUTTON_CLASS "DockButton"
 
@@ -18,10 +20,15 @@ struct DockPrefs
 {
 	struct DockConfig cfg;
 
+    struct List gadLabels;
     struct List classes;
 
     struct DgNode *editGadget;
     struct TR_Project *editDialog;
+
+	struct Hook getEditorHook;
+	struct Hook editorEventHook;
+	struct Hook editorUpdateHook;
 
     struct TR_Project *newGadgetDialog;
 };
@@ -39,4 +46,3 @@ VOID remove_dock_gadgets(struct DockPrefs *prefs);
 VOID free_plugins(struct DockPrefs *prefs);
 
 #endif // __PREFS_H__
-

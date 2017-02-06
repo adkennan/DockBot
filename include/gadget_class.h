@@ -9,6 +9,8 @@
 #ifndef __GADGET_CLASS_H__
 #define __GADGET_CLASS_H__
 
+VOID geta4(VOID);
+
 // Class Information
 
 //#define CLASS_NAME      
@@ -47,7 +49,12 @@
 
 //#define METHOD_READCONFIG   
 //#define METHOD_WRITECONFIG
-//#define METHOD_GETSETTINGS
+//#define METHOD_WRITECONFIG
+//#define METHOD_INITEDIT
+//#define METHOD_CANEDIT		
+//#define METHOD_GETEDITOR
+//#define METHOD_EDITOREVENT
+//#define METHOD_EDITORUPDATE
   
 //#define METHOD_GETHOTKEY
 //#define METHOD_GETLABEL
@@ -76,5 +83,5 @@
 #define DB_METHOD(NAME) ULONG __saveds METHOD_ ## NAME(Class *c, Object *o, Msg m) \
 { 
 
+#endif
 
-#endif 

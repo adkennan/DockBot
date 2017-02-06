@@ -10,9 +10,11 @@ LINKER=		SC:c/slink
 LIBS=		LIB:sc.lib LIB:amiga.lib 
 
 CPU=		68030
-DEF_DEBUG_MEM=
 
-C_OPTS=		opt noicons cpu=$(CPU) $(INC) $(DEF_DEBUG_MEM)
+DEF_DEBUG_MEM=
+DEF_DEBUG=
+
+C_OPTS=		opt noicons cpu=$(CPU) $(INC) $(DEF_DEBUG_MEM) $(DEF_DEBUG)
 
 C_SOURCES=	main.c dock.c /shared/dock_gadget.c dock_handle.c events.c gadgets.c layout.c settings.c debug.c
 
@@ -22,7 +24,7 @@ $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<
  TO $(EXEPATH)$(EXENAME)
  FROM LIB:c.o $(OBJECTS)
- LIBRARY $(LIBS) NOICONS
+ LIBRARY $(LIBS) NOICONS ADDSYM
 <
 	@Copy /Images/$(EXENAME).info $(EXEPATH)
 	@Copy /Images/$(EXENAME)Min.info $(EXEPATH)

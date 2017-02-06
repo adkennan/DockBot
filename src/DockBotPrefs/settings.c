@@ -27,6 +27,8 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
         dg->n.ln_Name = name;
         dg->dg = obj;
 
+        dock_gadget_init_edit(dg->dg, Application);
+
         return dg;
     }
    
@@ -74,6 +76,7 @@ BOOL load_config(struct DockPrefs *prefs)
 {
     struct DockSettings *s;
     BOOL r = FALSE;
+    struct DgNode *curr;
 
     if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 
@@ -81,6 +84,9 @@ BOOL load_config(struct DockPrefs *prefs)
 
             r = TRUE;
 
+            FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
+                dock_gadget_init_edit(curr->dg, Application);
+            }
         }
 
         DB_CloseSettings(s);

@@ -168,10 +168,11 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
         case DM_HOTKEY:
         
         case DM_WRITECONFIG:
+        case DM_INITBUTTON:
+        
         case DM_GETEDITOR:
         case DM_EDITOREVENT:
         case DM_EDITORUPDATE:
-        case DM_INITBUTTON:
 
         case DM_GETHOTKEY:
         case DM_GETLABEL:

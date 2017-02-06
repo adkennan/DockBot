@@ -1,4 +1,4 @@
-.key HELP/S,CLEAN/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S
+.key HELP/S,CLEAN/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S,DEBUG/S
 
 IF <HELP$NOHELP> EQ HELP
   ECHO "Options: "
@@ -10,6 +10,7 @@ IF <HELP$NOHELP> EQ HELP
   ECHO "  NOCLASSES/S  Do not compile loadable gadget modules."
   ECHO "  NOPREFS/S    Do not compile the preferences application."
   ECHO "  DEBUGMEM/S   Output memory debugging information."
+  ECHO "  DEBUG/S      Compile with debug symbols."
   ECHO
   QUIT
 ENDIF
@@ -72,6 +73,13 @@ ELSE
   SET DEFDEBUGMEM "define=NO_DEBUG_MEM"
 ENDIF
 
+IF <DEBUG$NODEBUG> EQ DEBUG
+  echo Compiling With Debug Symbols
+  SET DEFDEBUG "debug=full"
+ELSE
+  SET DEFDEBUG "nodebug"
+ENDIF
+
 IF NOT EXISTS /bin
   MAKEDIR /bin
 ENDIF
@@ -79,14 +87,21 @@ ENDIF
 IF <NOLIB$LIB> EQ LIB
   echo Compiling dockbot.library
   cd LibDockBot
-  smake <CLEAN> CPU=<CPU>
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd /
 ENDIF
 
 IF <NOEXE$EXE> EQ EXE
   echo Compiling DockBot
   cd DockBot
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG
+  cd /
+ENDIF
+
+IF <NOPREFS$PREFS> EQ PREFS
+  echo Compiling DockBotPrefs
+  cd DockBotPrefs
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd /
 ENDIF
 
@@ -96,23 +111,19 @@ IF <NOCLASSES$CLASSES> EQ CLASSES
     MAKEDIR /bin/Gadgets
   ENDIF
 
-  IF NOT EXISTS /bin/Prefs
-    MAKEDIR /bin/Prefs
-  ENDIF
-
   echo Compiling Classes/Button
   cd Classes/Button
-  smake <CLEAN> CPU=<CPU>
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd //
 
   echo Compiling Classes/Clock
   cd Classes/Clock
-  smake <CLEAN> CPU=<CPU>
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd //
 
   echo Compiling Classes/Mem
   cd Classes/Mem
-  smake <CLEAN> CPU=<CPU>
+  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd //
 ENDIF
 

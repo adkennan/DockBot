@@ -177,39 +177,13 @@ VOID dock_gadget_get_label(Object *obj
 
 BOOL dock_gadget_can_edit(Object *obj)
 {
-    return (BOOL)DoMethod(obj, DM_CANEDIT);
-}
-
-struct TagItem *dock_gadget_get_editor(Object *obj)
-{
-    struct DockMessageGetEditor msg = {
-        DM_GETEDITOR
+    struct DockMessageCanEdit msg = {
+        DM_CANEDIT
     };
 
     DoMethodA(obj, (Msg)&msg);
 
-    return msg.uiTags;
-}
-
-VOID dock_gadget_editor_event(Object *obj, struct TR_Message *m)
-{
-    struct DockMessageEditorEvent msg = {
-        DM_EDITOREVENT
-    };
-    msg.msg = m;
-    
-    DoMethodA(obj, (Msg)&msg); 
-}
-
-
-VOID dock_gadget_editor_update(Object *obj, struct TR_Project *project)
-{
-    struct DockMessageEditorUpdate msg = {
-        DM_EDITORUPDATE
-    };  
-    msg.project = project;
-
-    DoMethodA(obj, (Msg)&msg);
+    return msg.canEdit;
 }
 
 VOID dock_gadget_init_button(Object *obj, STRPTR name, STRPTR path)
@@ -223,6 +197,45 @@ VOID dock_gadget_init_button(Object *obj, STRPTR name, STRPTR path)
     DoMethodA(obj, (Msg)&msg);
 }
 
+struct TagItem * dock_gadget_get_editor(Object *obj)
+{
+    struct DockMessageGetEditor msg = {
+        DM_GETEDITOR
+    };
+    
+    DoMethodA(obj, (Msg)&msg);
 
+    return msg.uiTags;
+}
 
+VOID dock_gadget_editor_event(Object *obj, struct TR_Project *window, struct TR_Message *message)
+{
+    struct DockMessageEditorEvent msg = {
+        DM_EDITOREVENT
+    };
+    msg.window = window;
+    msg.message = message;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID dock_gadget_editor_update(Object *obj, struct TR_Project *window)
+{
+    struct DockMessageEditorUpdate msg = {
+        DM_EDITORUPDATE
+    };
+    msg.window = window;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID dock_gadget_init_edit(Object *obj, struct TR_App *app)
+{
+    struct DockMessageEditorInit msg = {
+        DM_INITEDIT
+    };
+    msg.app = app;
+
+    DoMethodA(obj, (Msg)&msg);
+}
 

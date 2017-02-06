@@ -68,6 +68,7 @@ enum {
 
 struct Library *DOSBase;
 struct Library *IconBase;
+struct Library *UtilityBase;
 
 struct ButtonLibData *libData;
 
@@ -154,10 +155,15 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
         DOSBase = (struct DosLibrary *)cld->dosBase;
         if( cld->iconBase = OpenLibrary("icon.library", 45) ) {
             IconBase = cld->iconBase;
-            return 1;
+            if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
+                UtilityBase = cld->utilityBase;
+                return 1;
+            }
+            CloseLibrary(cld->iconBase);
         }
         CloseLibrary(cld->dosBase);
     }
+    cld->utilityBase = NULL;
     cld->iconBase = NULL;
     cld->dosBase = NULL;
     return 0;
@@ -173,8 +179,8 @@ ULONG __saveds button_lib_expunge(struct ButtonLibData *cld)
         CloseLibrary(cld->dosBase);
     }
 
-    if( cld->tritonOpen ) {
-        TR_CloseTriton();
+    if( cld->utilityBase ) {
+        CloseLibrary(cld->utilityBase);
     }
 
     return 1;
@@ -357,19 +363,23 @@ DB_METHOD_DM(WRITECONFIG,DockMessageConfig)
     return 1;
 }
 
-DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
+DB_METHOD_M(INITEDIT, DockMessageEditorInit)
 
-    if( ! libData->tritonOpen ) {
-
-        if( ! TR_OpenTriton(TRITON11VERSION,
-            TRCA_Name,      CLASS_NAME,
-            TRCA_LongName,  CLASS_NAME,
-            TRCA_Info,      CLASS_DESC,
-            TAG_END) ) {
-
-            return 0;
-        }
+    if( ! init_icon_class(msg->app) ) { 
+        return 0;
     }
+
+    return 1;
+}
+
+DB_METHOD_M(CANEDIT, DockMessageCanEdit)
+
+    msg->canEdit = TRUE;
+
+    return 1;
+}
+
+DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
 
     msg->uiTags = make_tag_list(   
         VertGroupA,
@@ -424,13 +434,13 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
     return 1;
 }
 
-DB_METHOD_M(EDITOREVENT,DockMessageEditorEvent)
+DB_METHOD_M(EDITOREVENT, DockMessageEditorEvent)
 
-    switch( msg->msg->trm_Class ) {
+    switch( msg->message->trm_Class ) {
         case TRMS_NEWVALUE:
-            switch( msg->msg->trm_ID ) {
+            switch( msg->message->trm_ID ) {
                 case OBJ_CYC_START:
-                    TR_SetAttribute(msg->msg->trm_Project, OBJ_STR_CON, TRAT_Disabled, msg->msg->trm_Data == ST_WB);
+                    TR_SetAttribute(msg->window, OBJ_STR_CON, TRAT_Disabled, msg->message->trm_Data == ST_WB);
                     break;
 
                 default:
@@ -445,11 +455,11 @@ DB_METHOD_M(EDITOREVENT,DockMessageEditorEvent)
     return 1;
 }
 
-DB_METHOD_DM(EDITORUPDATE,DockMessageEditorUpdate)
+DB_METHOD_DM(EDITORUPDATE, DockMessageEditorUpdate)
 
     STRPTR str;
     UWORD len;
-    struct TR_Project *proj = msg->project;
+    struct TR_Project *proj = msg->window;
 
     FREE_STRING(data->name)
     FREE_STRING(data->args)
@@ -499,5 +509,29 @@ DB_METHOD_DM(GETLABEL,DockMessageGetLabel)
     return 1;
 }
 
+DB_METHOD_DM(INITBUTTON,DockMessageInitButton)
+
+    UWORD len;
+
+    len = strlen(msg->name) + 1;
+    if( ! (data->name = DB_AllocMem(len, MEMF_ANY) ) ) {
+        return 0;
+    }
+    CopyMem(msg->name, data->name, len);
+
+    len = strlen(msg->path) + 1;
+    if( ! (data->path = DB_AllocMem(len, MEMF_ANY) ) ) {
+        return 0;
+    }
+    CopyMem(msg->path, data->path, len);
+
+    data->args = NULL;
+    data->hotKey = NULL;
+    data->con = NULL;
+
+    load_icon(data);
+
+    return 1;
+}
 
 

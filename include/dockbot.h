@@ -98,11 +98,12 @@ typedef enum {
     // Configuration.
 	DM_READCONFIG	    = 1500,
 	DM_WRITECONFIG		= 1501,
-    DM_GETEDITOR	    = 1502,
-	DM_EDITOREVENT		= 1503,
-	DM_EDITORUPDATE		= 1504,
-	DM_CANEDIT			= 1505,
-	DM_INITBUTTON		= 1506,
+	DM_CANEDIT			= 1502,
+	DM_INITBUTTON		= 1503,
+	DM_GETEDITOR		= 1504,
+	DM_EDITOREVENT		= 1505,
+	DM_EDITORUPDATE		= 1506,
+    DM_INITEDIT         = 1507,
 
     // Getters.
     DM_GETINFO          = 1601,
@@ -189,29 +190,40 @@ struct DockMessageGetLabel {
 	STRPTR label;
 };
 
-struct DockMessageGetEditor {
+struct DockMessageCanEdit {
 	ULONG MethodID;
-	struct TagItem *uiTags;
-};
-
-struct TR_Project;
-struct TR_Message;
-
-struct DockMessageEditorEvent
-{
-	ULONG MethodID;
-	struct TR_Message *msg;
-};
-
-struct DockMessageEditorUpdate {
-	ULONG MethodID;
-	struct TR_Project *project;
+	BOOL canEdit;
 };
 
 struct DockMessageInitButton {
     ULONG MethodID;
     STRPTR name;
     STRPTR path;
+};
+
+struct DockMessageGetEditor {
+	ULONG MethodID;
+	struct TagItem *uiTags;
+};
+
+struct TR_App;
+struct TR_Project;
+struct TR_Message;
+
+struct DockMessageEditorInit {
+    ULONG MethodID;
+    struct TR_App* app;
+};
+
+struct DockMessageEditorEvent {
+	ULONG MethodID;
+	struct TR_Project *window;
+	struct TR_Message *message;
+};
+
+struct DockMessageEditorUpdate {
+	ULONG MethodID;
+	struct TR_Project *window;
 };
 
 // Messages from Gadget to Dock.
@@ -226,7 +238,6 @@ struct GadgetMessage {
     GadgetMessageType messageType;
     Object* sender;
 };
-
 
 // Settings
 

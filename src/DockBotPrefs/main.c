@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 struct Library *DockBotBase;
+struct Library *UtilityBase;
 
 STRPTR positions[] = { "Left", "Right", "Top", "Bottom", NULL };
 STRPTR alignments[] = { "Top/Left", "Center", "Bottom/Right", NULL };
@@ -197,9 +198,41 @@ VOID gadget_selected(struct DockPrefs *prefs, ULONG index)
     }
 }
 
+VOID free_gadget_list(struct DockPrefs *prefs)
+{
+    struct Node *ln;
+
+    while( ! IsListEmpty(&prefs->gadLabels) ) {
+        if( ln = RemTail(&prefs->gadLabels) ) {
+            DB_FreeMem(ln, sizeof(struct Node) + strlen(ln->ln_Name) + 1);
+        }        
+    }
+}
+
 VOID update_gadget_list(struct DockPrefs *prefs)
 {
-    TR_SetAttribute(mainWindow, OBJ_GADGETS, 0L, (ULONG)&(prefs->cfg.gadgets));
+    struct DgNode *curr;
+    struct Node *ln;
+    STRPTR label;
+    UWORD len;
+
+    free_gadget_list(prefs);
+
+    FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
+        dock_gadget_get_label(curr->dg, &label);
+        if( ! label ) {
+            label = curr->n.ln_Name;
+        }
+        len = strlen(label) + 1;
+
+        if( ln = (struct Node *)DB_AllocMem(sizeof(struct Node) + len + 1, MEMF_ANY) ) {
+            ln->ln_Name = (STRPTR)(ln + 1);
+            CopyMem(label, (VOID *)(ln + 1), len);
+            AddTail(&prefs->gadLabels, ln);
+        }
+    }
+
+    TR_SetAttribute(mainWindow, OBJ_GADGETS, 0L, (ULONG)&(prefs->gadLabels));
 }
 
 struct DgNode *get_selected_gadget(struct DockPrefs *prefs)
@@ -291,6 +324,11 @@ ULONG count_tags(struct TagItem *list)
 {
     ULONG c = 0;
     struct TagItem *tstate, *tag;
+
+    if( list == NULL ) {
+        return 0;
+    }
+
     tstate = list;
     while( tag = NextTagItem(&tstate) ) {
         c++;
@@ -301,6 +339,7 @@ ULONG count_tags(struct TagItem *list)
 struct TagItem *copy_tags(struct TagItem *dest, struct TagItem *src)
 {
     struct TagItem *tstate, *tag;
+
     tstate = src;
     while( tag = NextTagItem(&tstate) ) {
         dest->ti_Tag = tag->ti_Tag;
@@ -319,7 +358,9 @@ struct TagItem *merge_tag_lists(struct TagItem *head, struct TagItem *middle, st
 
         dest = newTags;
         dest = copy_tags(dest, head);
-        dest = copy_tags(dest, middle);
+        if( middle != NULL ) {
+            dest = copy_tags(dest, middle);
+        }
         dest = copy_tags(dest, tail);
 
         dest->ti_Tag = TAG_END;
@@ -333,6 +374,8 @@ VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
     struct TagItem *gadTags, *headTags, *windowTags, *tailTags;
 
     if( dg ) {
+
+        prefs->editGadget = dg;
 
         if( gadTags = dock_gadget_get_editor(dg->dg) ) {
 
@@ -370,6 +413,7 @@ VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
                         if( !(prefs->editDialog = TR_OpenProject(Application, windowTags) ) ) {
     
                             printf("uh oh\n");
+                            TR_UnlockProject(mainWindow);
                         }
 
                         FreeTagItems(windowTags);
@@ -593,6 +637,7 @@ VOID run_event_loop(struct DockPrefs *prefs)
                                dock_gadget_editor_update(prefs->editGadget->dg, msgProj);
                                closeMsgProj = TRUE;
                                prefs->editGadget = NULL;
+                               update_gadget_list(prefs);
                                break;
 
                            case OBJ_BTN_GAD_CAN:
@@ -601,13 +646,13 @@ VOID run_event_loop(struct DockPrefs *prefs)
                                break;
 
                            default:
-                              dock_gadget_editor_event(prefs->editGadget->dg, msg);
+                              dock_gadget_editor_event(prefs->editGadget->dg, msgProj, msg);
                               break;
                         }
                         break;
 
                     default:
-                        dock_gadget_editor_event(prefs->editGadget->dg, msg);
+                        dock_gadget_editor_event(prefs->editGadget->dg, msgProj, msg);
                         break;
     
                 }
@@ -636,10 +681,13 @@ int main(char **argv, int argc)
 
         if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
 
-            NewList(&prefs.cfg.gadgets);
-            NewList(&prefs.classes);
+            if( UtilityBase = OpenLibrary("utility.library", 37) ) {
 
-            if( DB_ListClasses(&prefs.classes) ) {
+                NewList(&prefs.cfg.gadgets);
+                NewList(&prefs.gadLabels);
+                NewList(&prefs.classes);
+
+//            if( DB_ListClasses(&prefs.classes) ) {
 
                 if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
 
@@ -655,16 +703,29 @@ int main(char **argv, int argc)
                         run_event_loop(&prefs);
                                
                         remove_dock_gadgets(&prefs);
+                        free_gadget_list(&prefs);
+                    } else {
+                        printf("Couldn't load config.\n");
                     }
                     TR_CloseProject(mainWindow);            
+                } else { 
+                    printf("Couldn't open window.\n");
                 }
                 free_plugins(&prefs);
-            }
+//            } else {
+//                printf("Couldn't load class list.\n");
+//            }
+              CloseLibrary(UtilityBase);
+              }
             CloseLibrary(DockBotBase);
+        } else {
+            printf("Couldn't open dockbot.library.\n");
         }
 
 
         TR_CloseTriton();
+    } else {
+        printf("Couldn't open triton.\n");
     }
 }
 
