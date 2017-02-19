@@ -31,6 +31,7 @@ struct DockPrefs
 	struct Hook editorUpdateHook;
 
     struct TR_Project *newGadgetDialog;
+    BOOL editGadgetIsNew;
 };
 
 struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *btn, STRPTR name);

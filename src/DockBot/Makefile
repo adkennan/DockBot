@@ -12,9 +12,9 @@ LIBS=		LIB:sc.lib LIB:amiga.lib
 CPU=		68030
 
 DEF_DEBUG_MEM=
-DEF_DEBUG=
+DEF_DEBUG=opt
 
-C_OPTS=		opt noicons cpu=$(CPU) $(INC) $(DEF_DEBUG_MEM) $(DEF_DEBUG)
+C_OPTS=		noicons cpu=$(CPU) $(INC) $(DEF_DEBUG_MEM) $(DEF_DEBUG)
 
 C_SOURCES=	main.c dock.c /shared/dock_gadget.c dock_handle.c events.c gadgets.c layout.c settings.c debug.c
 

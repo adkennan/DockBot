@@ -27,6 +27,8 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
         dg->n.ln_Name = name;
         dg->dg = obj;
 
+        AddTail((struct List *)&prefs->cfg.gadgets, (struct Node *)dg);
+
         dock_gadget_init_edit(dg->dg, Application);
 
         return dg;
@@ -37,6 +39,8 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
 
 VOID remove_dock_gadget(struct DgNode *dg)
 {
+    Remove((struct Node *)dg);
+
     FREE_STRING(dg->n.ln_Name);
 
     DisposeObject(dg->dg);

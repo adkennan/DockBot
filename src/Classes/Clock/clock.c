@@ -10,6 +10,7 @@
 #include <proto/intuition.h>
 #include <proto/dos.h>
 #include <proto/locale.h>
+#include <clib/utility_protos.h>
 
 #include <string.h>
 
@@ -18,12 +19,27 @@
 #include "dockbot_protos.h"
 #include "dockbot_pragmas.h"
 
+#include <libraries/triton.h>
+#include <proto/triton.h>
+
 #include "class_def.h"
 
 struct Library *LocaleBase;
+struct Library *UtilityBase;
 
 #define S_FORMAT "format"
 #define DEFAULT_FORMAT "%Q:%M"
+
+enum {
+    OBJ_STR_FORMAT = 2001
+};  
+
+struct TagItem *make_tag_list(ULONG data, ...)
+{
+    struct TagItem *tags = (struct TagItem *)&data;
+
+    return CloneTagItems(tags);
+}
 
 ULONG __saveds clock_lib_init(struct ClockLibData* cld)
 {
@@ -31,10 +47,15 @@ ULONG __saveds clock_lib_init(struct ClockLibData* cld)
         DOSBase = (struct DosLibrary *)cld->dosBase;
         if( cld->localeBase = OpenLibrary("locale.library", 37) ) {
             LocaleBase = cld->localeBase;
-            return 1;
+            if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
+                UtilityBase = cld->utilityBase;
+                return 1;
+            }
+            CloseLibrary(cld->localeBase);
         }
         CloseLibrary(cld->dosBase);
     }
+    cld->utilityBase = NULL;
     cld->localeBase = NULL;
     cld->dosBase = NULL;
     return 0;
@@ -42,6 +63,10 @@ ULONG __saveds clock_lib_init(struct ClockLibData* cld)
 
 ULONG __saveds clock_lib_expunge(struct ClockLibData *cld)
 {
+    if( cld->utilityBase ) {
+        CloseLibrary(cld->utilityBase);
+    }
+
     if( cld->localeBase ) {
         CloseLibrary(cld->localeBase);
     }
@@ -220,6 +245,59 @@ DB_METHOD_DM(WRITECONFIG,DockMessageConfig)
     struct DockSettings *s = msg->settings;
 
     DB_WriteSetting(s, S_FORMAT, data->format);
+
+    return 1;
+}
+
+DB_METHOD_DM(GETEDITOR,DockMessageGetEditor)
+
+    if( ! data->format ) {
+        if( data->format = (STRPTR)DB_AllocMem(strlen(DEFAULT_FORMAT) + 1, MEMF_CLEAR) ) {
+            CopyMem(DEFAULT_FORMAT, data->format, strlen(DEFAULT_FORMAT) + 1);
+        }
+    }
+
+    msg->uiTags = make_tag_list(   
+        VertGroupA,
+            Space,
+            LineArray,
+                Space,
+                BeginLine,
+                    Space,
+                    TextN("Format"),
+                    Space,
+                    StringGadget(data->format, OBJ_STR_FORMAT),
+                    Space,
+                EndLine,
+                Space,
+            EndArray,
+        EndGroup,
+        TAG_END);
+
+    return 1;
+}
+
+DB_METHOD_DM(EDITORUPDATE,DockMessageEditorUpdate)
+
+    STRPTR str;
+    UWORD len;
+    struct TR_Project *proj = msg->window;
+
+
+    FREE_STRING(data->format);
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_FORMAT, 0);
+    if( str && (len = strlen(str)) ) {        
+        data->format = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, data->format, len + 1);
+    }
+
+    return 1;
+}
+
+DB_METHOD_M(CANEDIT, DockMessageCanEdit)
+
+    msg->canEdit = TRUE;
 
     return 1;
 }

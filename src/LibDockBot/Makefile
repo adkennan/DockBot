@@ -12,7 +12,7 @@ FD_CONV=	SC:c/fd2pragma
 FD_FILE=	$(LIBNAME).fd
 PRAGMA_FILE=	$(INC)/$(LIBNAME)_pragmas.h
 
-DEF_DEBUG=
+DEF_DEBUG=opt
 
 C_COMPILER=	SC:c/sc
 

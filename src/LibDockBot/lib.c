@@ -149,6 +149,7 @@ APTR FuncTable[] = {
     DB_GetMemInfo,
     
     DB_CreateDockGadget,
+    DB_ListClasses,
 
     (APTR)-1
 };

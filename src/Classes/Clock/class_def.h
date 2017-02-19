@@ -28,19 +28,16 @@
 #define METHOD_DISPOSE      clock_dispose
 
 #define METHOD_TICK         clock_tick
-#undef METHOD_CLICK        
-#undef METHOD_DROP         
-#undef METHOD_HOTKEY	    
 
 #define METHOD_GETSIZE      clock_get_size
 #define METHOD_DRAW         clock_draw
 
 #define METHOD_READCONFIG   clock_read_config
 #define METHOD_WRITECONFIG  clock_write_config
-#undef METHOD_GETSETTINGS
 
-#undef METHOD_GETHOTKEY   
-#undef METHOD_GETLABEL     
+#define METHOD_GETEDITOR    clock_get_editor
+#define METHOD_EDITORUPDATE clock_editor_update
+#define METHOD_CANEDIT		clock_can_edit
 
 
 #define MAX_DISPLAY_LENGTH 20
@@ -49,6 +46,7 @@ struct ClockLibData
 {
   struct Library *localeBase;
   struct Library *dosBase;
+  struct Library *utilityBase;
 };
 
 struct ClockGadgetData 

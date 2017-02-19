@@ -32,7 +32,9 @@
 
 #define DIR_BUF_SIZE 512
 
-#define GADGET_PATH "PROGDIR:Gadgets/"
+#define GADGET_PATH "PROGDIR:Gadgets"
+#define GADGET_EXT ".class"
+#define GADGET_PAT "#?.CLASS"
 
 extern struct Library *DOSBase;
 extern struct Library *IntuitionBase;
@@ -90,7 +92,7 @@ Object * __asm __saveds DB_CreateDockGadget(
 
     if( ! (o = NewObjectA(NULL, name, TAG_DONE) ) ) {
 
-        sprintf(libName, GADGET_PATH "%s.class", name);
+        sprintf(libName, GADGET_PATH "/%s.class", name);
 
         if( lib = OpenLibrary(libName, 1) ) {
 
@@ -133,54 +135,69 @@ BOOL __asm __saveds DB_ListClasses(
     UWORD len;
     STRPTR name;
     BOOL result = FALSE;
+    UBYTE *pattern;
+    LONG parseLen = strlen(GADGET_PAT) * 3;
 
-    if( lock = Lock(GADGET_PATH, ACCESS_READ) ) {
+    if( pattern = DB_AllocMem(parseLen, MEMF_CLEAR) ) {
+
+        if( ParsePatternNoCase(GADGET_PAT, pattern, parseLen) != -1 ) {
+
+            if( lock = Lock(GADGET_PATH, SHARED_LOCK) ) {
     
-        if( buf = (struct ExAllData *)DB_AllocMem(DIR_BUF_SIZE, MEMF_ANY) ) {
+                if( buf = (struct ExAllData *)DB_AllocMem(DIR_BUF_SIZE, MEMF_CLEAR) ) {
             
-            if( eac = AllocDosObject(DOS_EXALLCONTROL, NULL)) {
+                    if( eac = AllocDosObject(DOS_EXALLCONTROL, NULL)) {
                 
-                eac->eac_LastKey = 0;
-
-                do {
-
-                    result = TRUE;
-
-                    more = ExAll(lock, buf, DIR_BUF_SIZE, ED_NAME, eac);
-
-                    if( !more && IoErr() != ERROR_NO_MORE_ENTRIES ) {
-                        result = FALSE;
-                        continue;
-                    } 
-
-                    ead = buf;
-                    do {
-                                 
-                        len = strlen(ead->ed_Name) + 1;
-          
-                        if( node = DB_AllocMem(sizeof(struct Node) + len, MEMF_ANY) ) {
-                            
-                            name = (STRPTR)((UBYTE *)node + sizeof(struct Node));
-
-                            CopyMem(ead->ed_Name, name, len);
-
-                            node->ln_Name = name;
-
-                            AddTail(list, node);
-                        }
+                        eac->eac_MatchString = pattern;
+                        eac->eac_LastKey = 0;
     
-                        ead = ead->ed_Next;
+                        do {
 
-                    } while(ead);
+                            more = ExAll(lock, buf, DIR_BUF_SIZE, ED_NAME, eac);
+
+                            if( !more && IoErr() != ERROR_NO_MORE_ENTRIES ) {
+                                result = FALSE;
+                                break;
+                            } 
                     
-                } while( more );
+                            result = TRUE;
+  
+                            if( eac->eac_Entries == 0 ) {
+                                continue;
+                            }
 
-                FreeDosObject(DOS_EXALLCONTROL, eac);
+                            ead = buf;
+                            do {
+
+                                len = strlen(ead->ed_Name) - strlen(GADGET_EXT);
+          
+                                if( node = (struct Node *)DB_AllocMem(sizeof(struct Node) + len + 1, MEMF_CLEAR) ) {
+                            
+                                    name = (STRPTR)((UBYTE *)node + sizeof(struct Node));
+
+                                    CopyMem(ead->ed_Name, name, len);
+//                                    name[len + 1] = '\0';
+
+                                    node->ln_Name = name;
+
+                                    AddTail(list, node);
+                                }
+    
+                                ead = ead->ed_Next;
+
+                            } while(ead);
+                    
+                        } while( more );
+
+                        FreeDosObject(DOS_EXALLCONTROL, eac);
+                    }
+                    DB_FreeMem(buf, DIR_BUF_SIZE);
+                }
+        
+                UnLock(lock);
             }
-            DB_FreeMem(buf, DIR_BUF_SIZE);
         }
-
-        UnLock(lock);
+        DB_FreeMem(pattern, parseLen);
     }
     
     return result;

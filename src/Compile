@@ -44,6 +44,8 @@ IF NOT EXISTS c:wbrun
 ENDIF
 ECHO OK
 
+ECHO
+
 ; Decide on a CPU to compile for.
 CPU CHECK 68040 >NIL:
 IF WARN 
@@ -64,17 +66,20 @@ ENDIF
 
 .def CPU $defcpu
 
-echo Compiling for <CPU>
+ECHO Compiling for <CPU>
+ECHO
 
 IF <DEBUGMEM$NODEBUGMEM> EQ DEBUGMEM
-  echo Enabling Memory Debug Output
+  ECHO Enabling Memory Debug Output
+  ECHO
   SET DEFDEBUGMEM "define=DEBUG_MEM"
 ELSE
   SET DEFDEBUGMEM "define=NO_DEBUG_MEM"
 ENDIF
 
 IF <DEBUG$NODEBUG> EQ DEBUG
-  echo Compiling With Debug Symbols
+  ECHO Compiling With Debug Symbols
+  ECHO
   SET DEFDEBUG "debug=full"
 ELSE
   SET DEFDEBUG "nodebug"
@@ -85,7 +90,8 @@ IF NOT EXISTS /bin
 ENDIF
 
 IF <NOLIB$LIB> EQ LIB
-  echo Compiling dockbot.library
+  ECHO Compiling dockbot.library
+  ECHO
   cd LibDockBot
   smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd /
@@ -93,6 +99,7 @@ ENDIF
 
 IF <NOEXE$EXE> EQ EXE
   echo Compiling DockBot
+  echo
   cd DockBot
   smake <CLEAN> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG
   cd /
