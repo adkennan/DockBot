@@ -1,9 +1,6 @@
 
 #include "button.h"
 
-#define TRAT_Icon_DiskObj TRTG_PRVOAT(1)
-
-
 struct TROD_Icon {
     struct TROD_DisplayObject DO;
     struct DiskObject *DiskObj;

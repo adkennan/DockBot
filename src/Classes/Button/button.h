@@ -29,6 +29,8 @@ extern struct Library *IconBase;
 
 #define TROB_Icon TRTG_PRVCLS(1)
 
+#define TRAT_Icon_DiskObj TRTG_PRVOAT(1)
+
 extern struct Library *DockBotBase;
 
 BOOL init_icon_class(TR_App *app);

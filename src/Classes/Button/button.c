@@ -11,12 +11,14 @@
 #include <dos/dos.h>
 #include <dos/dostags.h>
 #include <workbench/workbench.h>
+#include <libraries/asl.h>
 
 #include <clib/utility_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/graphics_protos.h>
 #include <clib/dos_protos.h>
+#include <clib/asl_protos.h>
 
 #include <stdio.h>
 
@@ -47,6 +49,7 @@ STRPTR startTypes[] = { "Workbench", "Shell", NULL };
 
 #define WBSTART "C:WBRun"
 
+#define DEFAULT_PATH "SYS:"
 
 #define COPY_STRING(src, dst) \
     l = strlen(src);\
@@ -62,16 +65,16 @@ enum {
     OBJ_CYC_START,
     OBJ_STR_CON,
     OBJ_STR_HOTKEY,
-    OBJ_ICON
+    OBJ_ICON,
+    OBJ_BTN_SELECT,
+    OBJ_TXT_PATH
 };
 
 
 struct Library *DOSBase;
 struct Library *IconBase;
 struct Library *UtilityBase;
-
-struct ButtonLibData *libData;
-
+struct Library *AslBase;
 
 struct TagItem *make_tag_list(ULONG data, ...)
 {
@@ -149,15 +152,101 @@ VOID dock_button_launch(struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames
     }
 }
 
+
+VOID load_icon(struct ButtonGadgetData *data)
+{
+    struct Screen *screen;
+    
+    if( data->diskObj = GetDiskObjectNew(data->path) ) {
+        if( screen = LockPubScreen(NULL) ) {
+
+            LayoutIconA(data->diskObj, screen, NULL);
+
+            UnlockPubScreen(NULL, screen);
+        }
+    }
+}
+
+STRPTR get_start_type(struct Values *values, UWORD val) {
+
+    while( values->Name ) {
+        if( values->Value == val ) {
+            return values->Name;
+        }
+        values++;
+    }
+    return NULL;
+}
+
+
+
+VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
+{
+    STRPTR buf;
+    struct FileRequester *fr;
+    ULONG len;
+    struct TagItem tags[] = {
+        { ASL_Hail, (ULONG)"Choose an application" },
+        { ASL_OKText, (ULONG)"Select" },
+        { ASL_CancelText, (ULONG)"Cancel" },
+        { ASL_File, NULL },
+        { ASL_Dir, NULL }
+    };        
+
+    tags[4].ti_Data = (ULONG)(data->lastPath ? data->lastPath : (STRPTR)DEFAULT_PATH);
+
+    if( fr = (struct FileRequester *)AllocAslRequest(ASL_FileRequest, tags) ) {
+        if( AslRequest(fr, NULL) ) {
+
+            FREE_STRING(data->path);
+
+            if( buf = DB_AllocMem(1024, MEMF_ANY) ) {
+                CopyMem(fr->rf_Dir, buf, strlen(fr->rf_Dir) + 1);
+                if( AddPart(buf, fr->rf_File, 1024) ) {
+                    len = strlen(buf) + 1;
+                    if( data->path = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
+                        CopyMem(buf, data->path, len);
+                    }
+                }
+                TR_SetAttribute(window, OBJ_TXT_PATH, TRAT_Text, (ULONG)data->path);
+                DB_FreeMem(buf, 1024);
+            }
+
+            FREE_STRING(data->name);
+            len = strlen(fr->rf_File) + 1;
+            if( data->name = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
+                CopyMem(fr->rf_File, data->name, len);
+            }
+            TR_SetAttribute(window, OBJ_STR_NAME, 0L, (ULONG)data->name);
+                
+            if( data->diskObj ) {
+                FreeDiskObject(data->diskObj);
+            }
+            load_icon(data);
+            TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_DiskObj, (ULONG)data->diskObj); 
+
+        }
+        FreeAslRequest(fr);
+    }
+}
+
+
 ULONG __saveds button_lib_init(struct ButtonLibData* cld)
 {
+    cld->aslBase = NULL;
+    AslBase = NULL;
+
     if( cld->dosBase = OpenLibrary("dos.library", 37) ) {
         DOSBase = (struct DosLibrary *)cld->dosBase;
         if( cld->iconBase = OpenLibrary("icon.library", 45) ) {
             IconBase = cld->iconBase;
             if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
                 UtilityBase = cld->utilityBase;
-                return 1;
+                if( cld->aslBase = OpenLibrary("asl.library", 37) ) {
+                    AslBase = cld->aslBase;
+                    return 1;
+                }
+                CloseLibrary(cld->utilityBase);
             }
             CloseLibrary(cld->iconBase);
         }
@@ -166,6 +255,7 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
     cld->utilityBase = NULL;
     cld->iconBase = NULL;
     cld->dosBase = NULL;
+    cld->aslBase = NULL;
     return 0;
 }
 
@@ -181,6 +271,10 @@ ULONG __saveds button_lib_expunge(struct ButtonLibData *cld)
 
     if( cld->utilityBase ) {
         CloseLibrary(cld->utilityBase);
+    }
+
+    if( cld->aslBase ) {
+        CloseLibrary(cld->aslBase);
     }
 
     return 1;
@@ -280,31 +374,6 @@ DB_METHOD_DM(GETSIZE,DockMessageGetSize)
     return 1;
 }
 
-VOID load_icon(struct ButtonGadgetData *data)
-{
-    struct Screen *screen;
-    
-    if( data->diskObj = GetDiskObjectNew(data->path) ) {
-        if( screen = LockPubScreen(NULL) ) {
-
-            LayoutIconA(data->diskObj, screen, NULL);
-
-            UnlockPubScreen(NULL, screen);
-        }
-    }
-}
-
-STRPTR get_start_type(struct Values *values, UWORD val) {
-
-    while( values->Name ) {
-        if( values->Value == val ) {
-            return values->Name;
-        }
-        values++;
-    }
-    return NULL;
-}
-
 DB_METHOD_DM(READCONFIG,DockMessageConfig)
     
     struct DockSettingValue v;
@@ -392,7 +461,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
             Space,
             HorizGroupSC,
                 Space,
-                TextT(data->path),
+                TextT(data->path), TRAT_ID, OBJ_TXT_PATH,
                 Space,
             EndGroup,
             Space,
@@ -402,7 +471,8 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                     Space,
                     TextN("Name"),
                     Space,
-                    StringGadget(data->name, OBJ_STR_NAME),
+                    StringGadget(data->name, OBJ_STR_NAME),                
+                    GetFileButton(OBJ_BTN_SELECT),
                     Space,
                 EndLine,
                 Space,
@@ -445,7 +515,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
     return 1;
 }
 
-DB_METHOD_M(EDITOREVENT, DockMessageEditorEvent)
+DB_METHOD_DM(EDITOREVENT, DockMessageEditorEvent)
 
     switch( msg->message->trm_Class ) {
         case TRMS_NEWVALUE:
@@ -457,6 +527,18 @@ DB_METHOD_M(EDITOREVENT, DockMessageEditorEvent)
                 default:
                     break;
             }
+            break;
+
+        case TRMS_ACTION:
+            switch( msg->message->trm_ID ) {
+                case OBJ_BTN_SELECT:
+                    select_file(data, msg->window);
+                    break;
+
+                default:
+                    break;
+            }
+            break; 
 
         default:
             break;

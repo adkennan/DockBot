@@ -59,7 +59,7 @@ ProjectDefinition(newGadgetWindowTags)
     WindowPosition(TRWP_CENTERDISPLAY),
     WindowFlags(TRWF_HELP),
     QuickHelpOn(TRUE),
-    VertGroupA,
+    VertGroupEA,
         Space,
         HorizGroupA,
             Space,
@@ -72,27 +72,22 @@ ProjectDefinition(newGadgetWindowTags)
             ListSSN(NULL, OBJ_NEW_GADGET, 0, 0),
             Space,
         EndGroup,
-        Space,
-        HorizGroupA,
-            NamedFrameBox("About"),           
-                ColumnArray,
+        HorizGroupEA,
+            Space,
+            NamedFrameBox("About"),
+                VertGroupA,
                     Space,
-                    BeginColumn,
+                    HorizGroupA,
                         Space,
-                        TextN("Name"),
+                        TROB_Text, 0L, TRAT_ID, OBJ_NEW_STR_DESC,
+                            TRAT_Text, (ULONG)"\n\n\n\n\n", 
+                            TRAT_MinWidth, 30,
+                            TRAT_Flags, TRTX_MULTILINE | TRTX_NOUNDERSCORE,
                         Space,
-                        TextN("Description"),
-                        Space,
-                    EndColumn,
+                    EndGroup,
                     Space,
-                    BeginColumn,
-                        Space,
-                        StringGadget(NULL, OBJ_NEW_STR_NAME),
-                        Space,
-                        StringGadget(NULL, OBJ_NEW_STR_DESC),
-                        Space,
-                    EndColumn,                
-                EndArray,
+                EndGroup,
+            Space,
         EndGroup,
         Space,
         HorizGroupEC,
@@ -570,9 +565,10 @@ VOID class_selected(struct DockPrefs *prefs)
     STRPTR desc;
     STRPTR copy;
     STRPTR vers;
+    STRPTR text;
     Object *g;
     struct Node *curr;
-    ULONG gadCount = 0, index;
+    ULONG gadCount = 0, index, len;
 
     index = TR_GetAttribute(prefs->newGadgetDialog, OBJ_NEW_GADGET, TRAT_Value);
 
@@ -583,9 +579,15 @@ VOID class_selected(struct DockPrefs *prefs)
 
                 dock_gadget_get_info(g, &name, &vers, &desc, &copy);
 
-                TR_SetAttribute(prefs->newGadgetDialog, OBJ_NEW_STR_NAME, 0, (ULONG)name);
-                TR_SetAttribute(prefs->newGadgetDialog, OBJ_NEW_STR_DESC, 0, (ULONG)desc);
+                len = strlen(name) + strlen(vers) + strlen(desc) + strlen(copy) + 8;
+                if( text = DB_AllocMem(len, MEMF_CLEAR) ) {
 
+                    sprintf(text, "%s %s\n\n%s\n\n%s\n", name, vers, desc, copy);    
+
+                    TR_SetAttribute(prefs->newGadgetDialog, OBJ_NEW_STR_DESC, TRAT_Text, (ULONG)text);
+
+                    DB_FreeMem(text, len);
+                }
                 DisposeObject(g);
             }
 
