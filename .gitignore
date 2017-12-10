@@ -30,3 +30,11 @@
 
 # Debug files
 *.dSYM/
+
+bin/
+*.auts.info
+Makefile.info
+Compile*.info
+*.c.info
+*.h.info
+

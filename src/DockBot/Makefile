@@ -1,6 +1,8 @@
 
+DIR=		/bin
+
 EXENAME=	DockBot
-EXEPATH=	//bin/
+EXEPATH=	/$(DIR)/
 
 INC=		INCLUDEDIRECTORY=//include INCLUDEDIRECTORY=/shared
 

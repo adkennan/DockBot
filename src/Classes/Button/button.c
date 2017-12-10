@@ -58,6 +58,16 @@ STRPTR startTypes[] = { "Workbench", "Shell", NULL };
     *dst = ' ';\
     dst++; 
 
+#define COPY_STRING_QUOTED(src, dst) \
+    l = strlen(src);\
+    *dst = '"';\
+    dst++;\
+    CopyMem(src, dst, l);\
+    dst += l;\
+    *dst = '"';\
+    dst++;\
+    *dst = ' ';\
+    dst++;
 
 enum {
     OBJ_STR_NAME = 1001,
@@ -107,7 +117,7 @@ VOID dock_button_launch(struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames
         len += strlen(dbd->args) + 1;
     }
     for( i = 0; i < dropCount; i++ ) {
-        len += strlen(dropNames[i]) + 1;
+        len += strlen(dropNames[i]) + 3;
     }
     if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
         
@@ -123,7 +133,7 @@ VOID dock_button_launch(struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames
         }
 
         for( i = 0; i < dropCount; i++ ) {
-            COPY_STRING(dropNames[i], pos);
+            COPY_STRING_QUOTED(dropNames[i], pos);
         }
         pos--;
         *pos = '\0';
@@ -182,7 +192,8 @@ STRPTR get_start_type(struct Values *values, UWORD val) {
 
 VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
 {
-    STRPTR buf;
+    STRPTR buf, t1, t2, t3;
+    BOOL freePath = FALSE;
     struct FileRequester *fr;
     ULONG len;
     struct TagItem tags[] = {
@@ -193,7 +204,24 @@ VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
         { ASL_Dir, NULL }
     };        
 
-    tags[4].ti_Data = (ULONG)(data->lastPath ? data->lastPath : (STRPTR)DEFAULT_PATH);
+    if( data->path ) {
+
+        t1 = PathPart(data->path);
+        len = strlen(data->path) - strlen(t1) + 1;
+        if( buf = DB_AllocMem(len, MEMF_CLEAR) ) {
+
+            t2 = data->path;
+            t3 = buf;
+            while( t2 != t1 ) {
+                *(t3++) = *(t2++);
+            }
+
+            tags[4].ti_Data = (ULONG)buf;
+            freePath = TRUE;
+        }
+    } else {
+        tags[4].ti_Data = (ULONG)DEFAULT_PATH;
+    }
 
     if( fr = (struct FileRequester *)AllocAslRequest(ASL_FileRequest, tags) ) {
         if( AslRequest(fr, NULL) ) {
@@ -227,6 +255,10 @@ VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
 
         }
         FreeAslRequest(fr);
+    }
+
+    if( freePath ) {
+        DB_FreeMem((VOID *)tags[4].ti_Data, strlen((STRPTR)tags[4].ti_Data) + 1);
     }
 }
 
@@ -471,9 +503,11 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                     Space,
                     TextN("Name"),
                     Space,
-                    StringGadget(data->name, OBJ_STR_NAME),                
-                    GetFileButton(OBJ_BTN_SELECT),
-                    Space,
+                    HorizGroup,
+                        StringGadget(data->name, OBJ_STR_NAME),                
+                        GetFileButton(OBJ_BTN_SELECT),
+                    EndGroup,
+                    Space,  
                 EndLine,
                 Space,
                 BeginLine,

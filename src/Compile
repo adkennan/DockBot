@@ -1,4 +1,4 @@
-.key HELP/S,CLEAN/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S,DEBUG/S
+.key HELP/S,CLEAN/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S,DEBUG/S,DIR/K
 
 IF <HELP$NOHELP> EQ HELP
   ECHO "Options: "
@@ -11,6 +11,7 @@ IF <HELP$NOHELP> EQ HELP
   ECHO "  NOPREFS/S    Do not compile the preferences application."
   ECHO "  DEBUGMEM/S   Output memory debugging information."
   ECHO "  DEBUG/S      Compile with debug symbols."
+  ECHO "  DIR/K        Set the output directory. Defaults to /bin."
   ECHO
   QUIT
 ENDIF
@@ -44,7 +45,7 @@ IF NOT EXISTS c:wbrun
 ENDIF
 ECHO OK
 
-ECHO
+ECHO " "
 
 ; Decide on a CPU to compile for.
 CPU CHECK 68040 >NIL:
@@ -67,11 +68,11 @@ ENDIF
 .def CPU $defcpu
 
 ECHO Compiling for <CPU>
-ECHO
+ECHO " "
 
 IF <DEBUGMEM$NODEBUGMEM> EQ DEBUGMEM
   ECHO Enabling Memory Debug Output
-  ECHO
+  ECHO " "
   SET DEFDEBUGMEM "define=DEBUG_MEM"
 ELSE
   SET DEFDEBUGMEM "define=NO_DEBUG_MEM"
@@ -79,58 +80,67 @@ ENDIF
 
 IF <DEBUG$NODEBUG> EQ DEBUG
   ECHO Compiling With Debug Symbols
-  ECHO
+  ECHO " "
   SET DEFDEBUG "debug=full"
 ELSE
   SET DEFDEBUG "nodebug"
 ENDIF
 
-IF NOT EXISTS /bin
-  MAKEDIR /bin
+.def DIR /bin
+
+ECHO "Output to <DIR>"
+ECHO " "
+
+IF NOT EXISTS <DIR>
+  MAKEDIR <DIR>
 ENDIF
 
 IF <NOLIB$LIB> EQ LIB
   ECHO Compiling dockbot.library
-  ECHO
+  ECHO " "
   cd LibDockBot
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd /
 ENDIF
 
 IF <NOEXE$EXE> EQ EXE
   echo Compiling DockBot
-  echo
+  echo " "
   cd DockBot
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG
   cd /
 ENDIF
 
 IF <NOPREFS$PREFS> EQ PREFS
   echo Compiling DockBotPrefs
+  echo " "
   cd DockBotPrefs
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd /
 ENDIF
 
 IF <NOCLASSES$CLASSES> EQ CLASSES
 
-  IF NOT EXISTS /bin/Gadgets
-    MAKEDIR /bin/Gadgets
+  IF NOT EXISTS <DIR>/Gadgets
+    MAKEDIR <DIR>/Gadgets
   ENDIF
 
   echo Compiling Classes/Button
+  echo " "
   cd Classes/Button
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd //
 
   echo Compiling Classes/Clock
+  echo " "
   cd Classes/Clock
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd //
 
   echo Compiling Classes/Mem
+  echo " "
   cd Classes/Mem
-  smake <CLEAN> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
   cd //
 ENDIF
 

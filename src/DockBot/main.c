@@ -6,9 +6,16 @@
 **
 ************************************/
 
+#include <exec/memory.h>
 #include <exec/libraries.h>
 
 #include <clib/exec_protos.h>
+
+#include <stdio.h>
+#include <string.h>
+
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
 
 #include "debug.h"
 
@@ -37,6 +44,26 @@ BOOL already_running(VOID)
     return FALSE;
 }
 
+const char __libErr[33] = "Unable to open version %d of %s.";
+
+struct Library *OpenLib(STRPTR name, UWORD version) {
+
+    struct Library *lib;
+    STRPTR msg;
+    UWORD l;
+
+    if( !(lib = OpenLibrary(name, version) ) ) {
+        l = strlen(name) + strlen(__libErr);
+        if( msg = DB_AllocMem(l, MEMF_ANY) ) {
+            sprintf(msg, __libErr, version, name);
+            DB_ShowError(msg);
+            DB_FreeMem(msg, l);
+        }
+    }
+
+    return lib;
+}
+
 int main(int argc, char** argv)
 {
     struct DockWindow *dock;
@@ -44,21 +71,22 @@ int main(int argc, char** argv)
     if( already_running() ) {
         return 0;
     }
+
+    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
    
-    if( DosBase = OpenLibrary("dos.library", 37) ) {
-        if( GfxBase = OpenLibrary("graphics.library", 37) ) {
+        if( DosBase = OpenLib("dos.library", 37) ) {
 
-            if( LayersBase = OpenLibrary("layers.library", 37) ) {
+            if( GfxBase = OpenLib("graphics.library", 37) ) {
 
-                if( IntuitionBase = OpenLibrary("intuition.library", 37) ) {
+                if( LayersBase = OpenLib("layers.library", 37) ) {
+
+                    if( IntuitionBase = OpenLib("intuition.library", 37) ) {
     
-                    if( GadToolsBase = OpenLibrary("gadtools.library", 37) ) {
+                        if( GadToolsBase = OpenLib("gadtools.library", 37) ) {
         
-                        if( WorkbenchBase = OpenLibrary("workbench.library", 37) ) {
+                            if( WorkbenchBase = OpenLib("workbench.library", 37) ) {
 
-                            if( CxBase = OpenLibrary("commodities.library", 37) ) {
-    
-                                if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+                                if( CxBase = OpenLib("commodities.library", 37) ) {
     
                                     if( dock = create_dock() ) {
                 
@@ -68,20 +96,20 @@ int main(int argc, char** argv)
                   
                                         LOG_MEMORY
                                     }
-                                    CloseLibrary(DockBotBase);
+                                    CloseLibrary(CxBase);
                                 }
-                                CloseLibrary(CxBase);
+                                CloseLibrary(WorkbenchBase);
                             }
-                            CloseLibrary(WorkbenchBase);
-                        }
-                        CloseLibrary(GadToolsBase);
-                    }        
-                    CloseLibrary(IntuitionBase);
+                            CloseLibrary(GadToolsBase);
+                        }        
+                        CloseLibrary(IntuitionBase);
+                    }
+                    CloseLibrary(LayersBase);
                 }
-                CloseLibrary(LayersBase);
+                CloseLibrary(GfxBase);
             }
-            CloseLibrary(GfxBase);
-        }
-        CloseLibrary(DosBase);
-    }  
+            CloseLibrary(DosBase);
+        }  
+        CloseLibrary(DockBotBase);
+    }
 }

@@ -31,3 +31,5 @@
 /* Class Management*/
 #pragma libcall DockBotBase DB_CreateDockGadget 90 801
 #pragma libcall DockBotBase DB_ListClasses 96 801
+/* User Messages*/
+#pragma libcall DockBotBase DB_ShowError 9c 801

@@ -1,6 +1,7 @@
 begin
   align=left
   position=bottom
+  labels=true
   begin
     gadget=DockClock
     format=%H:%M

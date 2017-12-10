@@ -2,51 +2,109 @@
 ; DockBot Installer
 ;
 
-(set #welcome "This is the installer for DockBot." )
+;
+; English text strings
+;
+(set #welcome-msg "This is the installer for DockBot." )
+
+(set #app-dir-prompt "Please select the location to install DockBot." )
+(set #app-dir-help "This is the directory DockBot will be placed in." )
+
+(set #run-on-start-prompt "Do you want DockBot to be run when Workbench starts?" )
+(set #run-on-start-help "If you select No the WbStartup launcher will be placed in " )
+
+(set #cpu-type-prompt "Which CPU are you using?" )
+(set #cpu-type-help "A version of DockBot built for you specific CPU will be installed." )
+
+(set #copy-prefs-prompt "Do you want to replace your existing DockBot configuration?" )
+(set #copy-prefs-help "An existing DockBot.prefs file was found. Choosing Yes will overwrite it. Choosing No will leave it alone." )
+
+;
+; Default values
+;
 (set #app-dir "SYS:DockBot" )
 (set #run-on-start "Yes" )
+(set #cpu-type (database "cpu") )
+(set #copy-prefs "No")
+
 (set #launcher-dir "SYS:WbStartup")
 (set #launcher-name "DockBotStart")
 (set #prefs-file "ENVARC:DockBot.prefs")
 (set #prefs-file-curr "ENV:DockBot.prefs")
 
-(set #copy-prefs "Yes")
+;
+; Here we go
+;
 
-(message #welcome)
+(message #welcome-msg )
 (welcome)
 (complete 0)
+
 (if (> @user-level 0)
 	(
 		(set #app-dir
 			(askdir
-				(prompt "Please select the location to install DockBot.")
-				(default "Sys:DockBot")
-				(help "This is the directory DockBot will be placed in.")
+				(prompt #app-dir-prompt)
+				(default #app-dir)
+				(help #app-dir-help)
 			)
 		)
 		(set #run-on-start
 			(askbool
-				(prompt "Do you want DockBot to be run when Workbench starts?")
+				(prompt #run-on-start-prompt)
 				(choices "Yes" "No")
-				(help (cat "If you select No the WbStartup launcher will be placed in "
-							#app-dir)
+				(help (cat #run-on-start-help #app-dir) )
+			)
+		)
+
+		(if (> @user-level 1)
+			(
+				(if (= #cpu-type "68000") (set #cpu-selection 0))
+				(if (= #cpu-type "68020") (set #cpu-selection 1))
+				(if (= #cpu-type "68030") (set #cpu-selection 2))
+				(if (= #cpu-type "68040") (set #cpu-selection 3))
+				(if (= #cpu-type "68060") (set #cpu-selection 4))
+				(set #cpu-selection
+					(askchoice
+						(prompt #cpu-type-prompt)
+						(choices "68000" "68020" "68030" "68040" "68060")
+						(default #cpu-selection)
+						(help #cpu-type-help )
+					)
+				)
+				(if (= #cpu-selection 0) (set #cpu-type "68000"))
+				(if (= #cpu-selection 1) (set #cpu-type "68020"))
+				(if (= #cpu-selection 2) (set #cpu-type "68030"))
+				(if (= #cpu-selection 3) (set #cpu-type "68040"))
+				(if (= #cpu-selection 4) (set #cpu-type "68060"))
+
+			)
+		)
+
+
+		(if (exists #prefs-file) 
+			(set #copy-prefs 
+				(askbool
+					(prompt #copy-prefs-prompt )
+					(choices "Yes" "No")
+					(help #copy-prefs-help )
 				)
 			)
 		)
 	)
 )
-(if (exists #prefs-file) 
-	(set #copy-prefs 
-		(askbool
-			(prompt "Do you want to replace your existing DockBot configuration?")
-			(choices "Yes" "No")
-			(help "An existing DockBot.prefs file was found. Choosing Yes will overwrite it. Choosing No will leave it alone.")
-		)
-	)
-)
+
+;
+; So.. we don't actually have binaries for every CPU...
+;
+(if (= #cpu-type "68010") (set #cpu-type "68000"))
+(if (= #cpu-type "68030") (set #cpu-type "68020"))
+(if (= #cpu-type "68060") (set #cpu-type "68040"))
+
+
 (set @default-dest #app-dir)
-(complete 35)
-(copyfiles (source "bin/")
+(complete 25)
+(copyfiles (source (tackon "bin" #cpu-type))
 		   (dest #app-dir)
  		   (help copyfiles-help)
 		   (all)
@@ -68,7 +126,7 @@
 		)
 	)
 )
-(complete 70)
+(complete 75)
 (if (= #run-on-start "No" )
 	(
 	(set #launcher-dir #app-dir)

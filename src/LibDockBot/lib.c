@@ -151,6 +151,8 @@ APTR FuncTable[] = {
     DB_CreateDockGadget,
     DB_ListClasses,
 
+    DB_ShowError,
+
     (APTR)-1
 };
 

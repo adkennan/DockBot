@@ -26,30 +26,31 @@ enum {
     OBJ_MENU_ABOUT  = 1001,
     OBJ_MENU_QUIT   = 1002,
 
-    OBJ_POSITION    = 1003,
-    OBJ_ALIGNMENT   = 1004,
+    OBJ_POSITION    = 1013,
+    OBJ_ALIGNMENT   = 1014,
+    OBJ_SHOW_LABELS = 1015,
     
-    OBJ_GADGETS     = 1005,
+    OBJ_GADGETS     = 1016,
 
-    OBJ_BTN_NEW     = 1006,
-    OBJ_BTN_DELETE  = 1007,
-    OBJ_BTN_EDIT    = 1008,
-    OBJ_BTN_UP      = 1009,
-    OBJ_BTN_DOWN    = 1010,
+    OBJ_BTN_NEW     = 1021,
+    OBJ_BTN_DELETE  = 1022,
+    OBJ_BTN_EDIT    = 1023,
+    OBJ_BTN_UP      = 1024,
+    OBJ_BTN_DOWN    = 1025,
 
-    OBJ_BTN_SAVE    = 1011,
-    OBJ_BTN_USE     = 1012,
-    OBJ_BTN_TEST    = 1013,
-    OBJ_BTN_CANCEL  = 1014,
+    OBJ_BTN_SAVE    = 1031,
+    OBJ_BTN_USE     = 1032,
+    OBJ_BTN_TEST    = 1033,
+    OBJ_BTN_CANCEL  = 1034,
 
-    OBJ_BTN_GAD_OK  = 1015,
-    OBJ_BTN_GAD_CAN = 1016,
+    OBJ_BTN_GAD_OK  = 1041,
+    OBJ_BTN_GAD_CAN = 1042,
 
-    OBJ_NEW_GADGET  = 1017,
-    OBJ_BTN_NEW_OK  = 1018,
-    OBJ_BTN_NEW_CAN = 1019,
-    OBJ_NEW_STR_NAME= 1020,
-    OBJ_NEW_STR_DESC= 1021
+    OBJ_NEW_GADGET  = 1051,
+    OBJ_BTN_NEW_OK  = 1052,
+    OBJ_BTN_NEW_CAN = 1053,
+    OBJ_NEW_STR_NAME= 1054,
+    OBJ_NEW_STR_DESC= 1055
 };
 
 ProjectDefinition(newGadgetWindowTags)
@@ -116,24 +117,36 @@ ProjectDefinition(mainWindowTags)
         Space,
         VertGroupA,
             Space,
-            NamedFrameBox("Dock Settings"),           
-                ColumnArray,
+            NamedFrameBox("Dock Settings"),
+                LineArray,
                     Space,
-                    BeginColumn,
+                    BeginLine,
                         Space,
                         TextN("Position"),
                         Space,
-                        TextN("Alignment"),
-                        Space,
-                    EndColumn,
-                    Space,
-                    BeginColumn,
-                        Space,
                         CycleGadget(positions, 0, OBJ_POSITION),
+                        Space,
+                    EndLine,
+                    Space,
+                    BeginLine,
+                        Space,
+                        TextN("Alignment"),
                         Space,
                         CycleGadget(alignments, 0, OBJ_ALIGNMENT),
                         Space,
-                    EndColumn,
+                    EndLine,
+                    Space,
+                    BeginLine,
+                        Space,
+                        TextN("Show Labels"),
+                        Space,
+                        HorizGroupSAC,
+                            Space,
+                            CheckBox(OBJ_SHOW_LABELS),
+                            Space,
+                        EndGroup,
+                        Space,
+                    EndLine,
                     Space,
                 EndArray,
             Space,
@@ -429,7 +442,7 @@ VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
 
                         if( !(prefs->editDialog = TR_OpenProject(Application, windowTags) ) ) {
     
-                            printf("uh oh\n");
+                            DB_ShowError("Unable to display editor dialogue.");
                             TR_UnlockProject(mainWindow);
                         }
 
@@ -696,6 +709,10 @@ VOID run_event_loop(struct DockPrefs *prefs)
                             case OBJ_ALIGNMENT:
                                 prefs->cfg.align = msgData;
                                 break;
+
+                            case OBJ_SHOW_LABELS:
+                                prefs->cfg.showGadgetLabels = (BOOL)msgData;
+                                break;
                         }
                         break;
                 }
@@ -784,19 +801,46 @@ VOID run_event_loop(struct DockPrefs *prefs)
     }
 }
 
+
+const char __libErr[33] = "Unable to open version %d of %s.";
+
+VOID ShowOpenLibError(STRPTR name, UWORD version) {
+    STRPTR msg;
+    UWORD l;
+  
+    l = strlen(name) + strlen(__libErr);
+    if( msg = DB_AllocMem(l, MEMF_ANY) ) {
+        sprintf(msg, __libErr, version, name);
+        DB_ShowError(msg);
+        DB_FreeMem(msg, l);
+    }
+}
+
+struct Library *OpenLib(STRPTR name, UWORD version) {
+
+    struct Library *lib;
+
+    if( !(lib = OpenLibrary(name, version) ) ) {
+        ShowOpenLibError(name, version);
+    }
+
+    return lib;
+}
+
+
 int main(char **argv, int argc)
 {
     struct DockPrefs prefs;
 
-    if( TR_OpenTriton(TRITON11VERSION,
-        TRCA_Name,      "DockBotPrefs",
-        TRCA_LongName,  "DockBot Preferences",
-        TRCA_Info,      "Preferences editor for DockBot",
-        TAG_END) ) {
+    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
 
-        if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+        if( TR_OpenTriton(TRITON11VERSION,
+            TRCA_Name,      "DockBotPrefs",
+            TRCA_LongName,  "DockBot Preferences",
+            TRCA_Info,      "Preferences editor for DockBot",
+            TAG_END) ) {
 
-            if( UtilityBase = OpenLibrary("utility.library", 37) ) {
+            if( UtilityBase = OpenLib("utility.library", 37) ) {
 
                 NewList(&prefs.cfg.gadgets);
                 NewList(&prefs.gadLabels);
@@ -810,6 +854,7 @@ int main(char **argv, int argc)
 
                             TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
                             TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
+                            TR_SetAttribute(mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
         
                             update_gadget_list(&prefs);
 
@@ -822,25 +867,24 @@ int main(char **argv, int argc)
 
                             free_plugins(&prefs);
                         } else {
-                            printf("Couldn't load class list.\n");
+                            DB_ShowError("Couldn't load class list.");
                         }
 
                     } else {
-                        printf("Couldn't load config.\n");
+                        DB_ShowError("Couldn't load config.");
                     }
                     TR_CloseProject(mainWindow);            
                 } else { 
-                    printf("Couldn't open window.\n");
+                    DB_ShowError("Couldn't open window.");
                 }
                 CloseLibrary(UtilityBase);
             }
-            CloseLibrary(DockBotBase);
+            TR_CloseTriton();
         } else {
-            printf("Couldn't open dockbot.library.\n");
+            ShowOpenLibError("triton.library", TRITON11VERSION);
         }
-        TR_CloseTriton();
-    } else {
-        printf("Couldn't open triton.\n");
+            
+        CloseLibrary(DockBotBase);
     }
 }
 

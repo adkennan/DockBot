@@ -34,4 +34,6 @@ DB_GetMemInfo()
 * Class Management
 DB_CreateDockGadget(name)(a0)
 DB_ListClasses(list)(a0)
+* User Messages
+DB_ShowError(message)(a0)
 ##end

@@ -614,4 +614,25 @@ Object * __asm __saveds DB_CreateDockGadget(
 BOOL __asm __saveds DB_ListClasses(
     register __a0 struct List *list);
 
+
+/****** dockbot.library/DB_ShowError ***************************************
+*
+*   NAME
+*	DB_ShowError - Display an error message to the user.
+*
+*   SYNOPSIS
+*	DB_FreeMem(message)
+*	              A0
+*	DB_FreeMem(STRPTR);
+*
+*   FUNCTION
+*   Displays the message to the user in a requester.
+*
+*   INPUTS
+*   message - The error message to display to the user.
+*
+***************************************************************************/
+VOID __asm __saveds DB_ShowError(
+    register __a0 STRPTR message);
+
 #endif
