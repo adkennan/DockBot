@@ -38,3 +38,5 @@ Compile*.info
 *.c.info
 *.h.info
 
+*.uaem
+

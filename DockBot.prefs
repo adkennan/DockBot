@@ -1,0 +1,24 @@
+begin
+  align=right
+  position=left
+  labels=true
+  begin
+    gadget=DockClock
+    format=%H:%M
+  end
+  begin
+    gadget=DockMem
+  end
+  begin
+    gadget=DockButton
+    name=Multiview
+    path=System:Utilities/Multiview
+    start=wb
+  end
+  begin
+    gadget=DockButton
+    name=Shell
+    path=System:System/Shell
+    start=wb
+  end
+end

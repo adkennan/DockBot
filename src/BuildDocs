@@ -1,0 +1,7 @@
+; Generates amigaguide documents from include files.
+
+adoc -I -o doc/dockbot.doc include/#?.h
+
+adtoht DOC doc INC include HDOC doc/inc HINC doc/inc
+
+delete doc/inc/iconlib ALL

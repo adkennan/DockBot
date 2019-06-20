@@ -1,0 +1,24 @@
+(set @default-dest "")
+(set tritonlib "triton.library")
+
+(set #bad-kick "You must be using Kickstart 2.04 to run Triton.")
+(set #copying-triton "Copying triton.library to Libs:...")
+(set #install-msg
+(cat "\n\nTriton installation script.\n"
+     "This script installs Triton library on your Amiga.\n\n"
+     "Read the 'ReadMe' file for\n"
+     "more information on Triton.\n\n"
+     "Triton © 1993-1994 Stefan Zeiger.\n"
+     "All rights reserved."))
+
+(if (< (/ (getversion) 65536) 37) ((abort #bad-kick)))
+
+(message #install-msg)
+
+(copylib
+	(prompt "\n" #copying-triton)
+	(help @copylib-help)
+	(source tritonlib)
+	(dest "Libs:")
+	(confirm)
+)

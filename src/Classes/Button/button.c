@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -45,10 +45,6 @@ struct Values StartValues[] = {
 
 STRPTR startTypes[] = { "Workbench", "Shell", NULL };
 
-#define DEFAULT_CONSOLE "NIL:"
-
-#define WBSTART "C:WBRun"
-
 #define DEFAULT_PATH "SYS:"
 
 #define COPY_STRING(src, dst) \
@@ -85,6 +81,7 @@ struct Library *DOSBase;
 struct Library *IconBase;
 struct Library *UtilityBase;
 struct Library *AslBase;
+struct ButtonLibData *StaticData;
 
 struct TagItem *make_tag_list(ULONG data, ...)
 {
@@ -93,41 +90,24 @@ struct TagItem *make_tag_list(ULONG data, ...)
     return CloneTagItems(tags);
 }
 
-VOID dock_button_launch(struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
+VOID dock_button_launch(Object *o, struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
 {
-    STRPTR cmd;
+    STRPTR args = NULL;
     STRPTR pos;
-    STRPTR con;
-    BPTR fhIn;
-    BPTR fhOut;
-    UWORD i, len, l;
+    UWORD i, len = 0, l;
 
-    struct TagItem shellTags[] = {
-        { SYS_UserShell, TRUE },
-        { SYS_Asynch, TRUE },
-        { SYS_Input, NULL },
-        { SYS_Output, NULL },
-        { TAG_DONE, 0 }
-    };
-
-    
-    len = dbd->startType == ST_WB ? (strlen(WBSTART) + 1) : 0;
-    len += strlen(dbd->path) + 1;
     if( dbd->args ) {
         len += strlen(dbd->args) + 1;
     }
     for( i = 0; i < dropCount; i++ ) {
         len += strlen(dropNames[i]) + 3;
     }
-    if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
-        
-        pos = cmd;
-        if( dbd->startType == ST_WB ) {
-            COPY_STRING(WBSTART, pos);
+    if( len > 0 ) {
+        if( !( args = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) ) {
+            return;
         }
-        
-        COPY_STRING(dbd->path, pos);
-                
+
+        pos = args;
         if( dbd->args ) {
             COPY_STRING(dbd->args, pos);
         }
@@ -136,30 +116,10 @@ VOID dock_button_launch(struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames
             COPY_STRING_QUOTED(dropNames[i], pos);
         }
         pos--;
-        *pos = '\0';
-
-        con = dbd->con;
-        if( con == NULL ) {
-            con = DEFAULT_CONSOLE;
-        }
-
-        if( fhOut = Open(con, MODE_OLDFILE) ) {
-            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
-
-                shellTags[2].ti_Data = fhIn;
-                shellTags[3].ti_Data = fhOut;
-
-                if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
-                    Close(fhIn);
-                    Close(fhOut);
-                }
-
-            } else {
-                Close(fhOut);
-            }
-        }
-        DB_FreeMem(cmd, len);
+        *pos = '\0'; 
     }
+
+    DB_RequestLaunch(o, dbd->path, args, dbd->con, dbd->startType == ST_WB ? TRUE : FALSE);
 }
 
 
@@ -276,6 +236,7 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
                 UtilityBase = cld->utilityBase;
                 if( cld->aslBase = OpenLibrary("asl.library", 37) ) {
                     AslBase = cld->aslBase;
+
                     return 1;
                 }
                 CloseLibrary(cld->utilityBase);
@@ -369,7 +330,7 @@ DB_METHOD_D(TICK)
 
 DB_METHOD_D(CLICK)
 
-    dock_button_launch(data, m, NULL, 0);
+    dock_button_launch(o, data, m, NULL, 0);
 
     data->counter = 2;
     data->iconState = 1;
@@ -380,7 +341,7 @@ DB_METHOD_D(CLICK)
 
 DB_METHOD_DM(DROP,DockMessageDrop)
 
-    dock_button_launch(data, m, msg->paths, msg->pathCount);
+    dock_button_launch(o, data, m, msg->paths, msg->pathCount);
 
     data->counter = 2;
     data->iconState = 1;
@@ -661,4 +622,10 @@ DB_METHOD_DM(INITBUTTON,DockMessageInitButton)
     return 1;
 }
 
+DB_METHOD_M(LAUNCHED,DockMessageLaunch)
+
+    FREE_STRING(msg->args);
+
+    return 1;
+}
 

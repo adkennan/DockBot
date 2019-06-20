@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -12,7 +12,7 @@
 #define APP_NAME        "DockBot"
 #define APP_VERSION     "1.0"
 #define APP_DESCRIPTION "A Dock For AmigaOS 3"
-#define APP_COPYRIGHT   "© 2016 Andrew Kennan"
+#define APP_COPYRIGHT   "© 2019 Andrew Kennan"
 
 #include <exec/types.h>
 #include <exec/lists.h>
@@ -87,6 +87,9 @@ struct DockWindow
     Object *hoverGad;
     struct Window *hoverWin;
     UWORD hoverCount;
+
+    // Path to WBRun
+    UBYTE progPath[2048];
 };
 
 #define TIMER_INTERVAL 250L

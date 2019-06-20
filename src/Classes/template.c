@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2019 Andrew Kennan
+**
+************************************/
 
 #include <utility/hooks.h>
 #include <intuition/intuition.h>
@@ -299,6 +306,10 @@ Class* __saveds __asm _GetEngine(
     METHOD_DEF(TICK)
 #endif
 
+#ifdef METHOD_LAUNCHED
+    METHOD_DEF(LAUNCHED)
+#endif    
+
 #ifdef METHOD_GETSIZE
     METHOD_DEF(GETSIZE)
 #endif
@@ -456,6 +467,10 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 
 #ifdef METHOD_DROP
         METHOD_DIS(DROP)
+#endif
+
+#ifdef METHOD_LAUNCHED
+        METHOD_DIS(LAUNCHED)
 #endif
 
 #ifdef METHOD_GETSIZE

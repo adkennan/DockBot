@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -325,6 +325,22 @@ VOID hide_dock_window(struct DockWindow *dock)
     }
 }
 
+BOOL get_prog_path(struct DockWindow *dock)
+{
+    BPTR lock;
+    BOOL result = FALSE;
+            
+    if( lock = Lock("PROGDIR:", ACCESS_READ) ) {
+
+        result = NameFromLock(lock, (STRPTR)&dock->progPath, 2048);
+    
+        UnLock(lock);
+
+    }
+
+    return result;
+}
+
 struct DockWindow* create_dock(VOID)
 {
 	struct DockWindow *dock;
@@ -347,7 +363,10 @@ struct DockWindow* create_dock(VOID)
                         
                         if( init_timer_notification(dock) ) {
 
-                            return dock;
+                            if( get_prog_path(dock) ) {
+
+                                return dock;
+                            }
                         }
                     }        
                 }

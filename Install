@@ -7,7 +7,7 @@
 ;
 (set #welcome-msg "This is the installer for DockBot." )
 
-(set #app-dir-prompt "Please select the location to install DockBot." )
+(set #app-dir-prompt "Please select the location to install DockBot. A drawer named DockBot will be created there." )
 (set #app-dir-help "This is the directory DockBot will be placed in." )
 
 (set #run-on-start-prompt "Do you want DockBot to be run when Workbench starts?" )
@@ -22,15 +22,13 @@
 ;
 ; Default values
 ;
-(set #app-dir "SYS:DockBot" )
-(set #run-on-start "Yes" )
+(set #app-dir "SYS:Tools" )
+(set #run-on-start 1 )
 (set #cpu-type (database "cpu") )
-(set #copy-prefs "No")
+(set #copy-prefs 1)
 
 (set #launcher-dir "SYS:WbStartup")
 (set #launcher-name "DockBotStart")
-(set #prefs-file "ENVARC:DockBot.prefs")
-(set #prefs-file-curr "ENV:DockBot.prefs")
 
 ;
 ; Here we go
@@ -82,7 +80,7 @@
 		)
 
 
-		(if (exists #prefs-file) 
+		(if (exists "ENVARC:DockBot.prefs") 
 			(set #copy-prefs 
 				(askbool
 					(prompt #copy-prefs-prompt )
@@ -101,7 +99,9 @@
 (if (= #cpu-type "68030") (set #cpu-type "68020"))
 (if (= #cpu-type "68060") (set #cpu-type "68040"))
 
-
+(if (NOT (patmatch "?#DockBot" #app-dir)) 
+	(set #app-dir (tackon #app-dir "DockBot"))
+)
 (set @default-dest #app-dir)
 (complete 25)
 (copyfiles (source (tackon "bin" #cpu-type))
@@ -110,26 +110,69 @@
 		   (all)
            (infos)
 )
+(complete 35)
+(copyfiles (source "src/Images/DockBot.info")
+           (dest #app-dir)
+ 		   (help copyfiles-help)
+           (infos)
+)
+(copyfiles (source "src/Images/DockBotPrefs.info")
+           (dest #app-dir)
+ 		   (help copyfiles-help)
+           (infos)
+)
+(copyfiles (source "src/Images/DockBotMin.info")
+           (dest #app-dir)
+ 		   (help copyfiles-help)
+           (infos)
+)
+(complete 40)
+(copyfiles (source "Extras/WBRun")
+		   (dest #app-dir)
+		   (help copyfiles-help)
+)
+(complete 45)
+(copyfiles (source "Extras/Triton/triton.library")
+		   (dest #app-dir)
+		   (help copyfiles-help)
+)
 (complete 50)
-(if (= #copy-prefs "Yes" )
+(if (= #copy-prefs 1 )
 	(
-
 		(copyfiles 
-			(source "Default.prefs")
-			(dest #prefs-file)
+			(source "DockBot.prefs")
+			(dest "ENVARC:")			
 			(help copyfiles-help)
 		)
 		(copyfiles 
-			(source "Default.prefs")
-			(dest #prefs-file-curr)
+			(source "DockBot.prefs")
+			(dest "ENV:")
 			(help copyfiles-help)
 		)
 	)
 )
+(complete 50)
+(copyfiles (source "doc")
+           (dest (tackon #app-dir "doc"))
+           (help copyfiles-help)
+           (all)
+           (infos)
+)
+(complete 60)
+(copyfiles (source "LICENCE")
+           (dest #app-dir)
+           (help copyfiles-help)
+           (infos)
+)
+(copyfiles (source "README.md")
+           (dest #app-dir)
+           (help copyfiles-help)
+           (infos)
+)
 (complete 75)
-(if (= #run-on-start "No" )
+(if (= #run-on-start 0 )
 	(
-	(set #launcher-dir #app-dir)
+	    (set #launcher-dir #app-dir)
 	)
 )
 (set #launcher (tackon #launcher-dir #launcher-name))
@@ -144,7 +187,7 @@
 
 (textfile 
 	(dest #launcher)
-	(append (cat "C:WBRUN " (tackon #app-dir "DockBot")))
+	(append (cat (tackon #app-dir "WBRUN") " " (tackon #app-dir "DockBot")))
 	(safe)
 )
 (complete 100)

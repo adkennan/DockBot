@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -14,9 +14,9 @@
 #define CLASS_NAME      "DockButton"
 #define CLASS_VERSION   1
 #define CLASS_REVISION  0
-#define CLASS_VER_STR   "1.0 (25/04/2016)"
+#define CLASS_VER_STR   "1.0 (0/06/2019)"
 #define CLASS_DESC		"A button for DockBot"
-#define CLASS_COPYRIGHT "© 2016 Andrew Kennan"
+#define CLASS_COPYRIGHT "© 2019 Andrew Kennan"
 #define PRIVATE_DATA    ButtonGadgetData
 #define PARENT_CLASS    DB_ROOT_CLASS
 
@@ -32,6 +32,7 @@
 #define METHOD_CLICK        button_click
 #define METHOD_DROP         button_drop
 #define METHOD_HOTKEY		button_click
+#define METHOD_LAUNCHED     button_launched
 
 #define METHOD_GETSIZE      button_get_size
 #define METHOD_DRAW         button_draw

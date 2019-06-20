@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -38,6 +38,27 @@
 #define TIMER_SIG(dw) (dw->timerPort ? (1 << dw->timerPort->mp_SigBit) : 0)
 #define GADGET_SIG(dw) (dw->gadgetPort ? (1 << dw->gadgetPort->mp_SigBit) : 0)
 #define CX_SIG(dw) (dw->cxPort ? (1 << dw->cxPort->mp_SigBit) : 0)
+
+#define DEFAULT_CONSOLE "NIL:"
+
+#define COPY_STRING(src, dst) \
+    l = strlen(src);\
+    CopyMem(src, dst, l);\
+    dst += l;\
+    *dst = ' ';\
+    dst++; 
+
+#define COPY_STRING_QUOTED(src, dst) \
+    l = strlen(src);\
+    *dst = '"';\
+    dst++;\
+    CopyMem(src, dst, l);\
+    dst += l;\
+    *dst = '"';\
+    dst++;\
+    *dst = ' ';\
+    dst++;
+
 
 BOOL init_timer_notification(struct DockWindow *dock)
 {
@@ -175,28 +196,121 @@ VOID handle_icon_event(struct DockWindow* dock)
     }
 }
 
-VOID open_settings(VOID)
+VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR console, BOOL wb)
 {
-    BPTR fhOut;
+    STRPTR cmd;
+    STRPTR pos;
+    STRPTR con;
     BPTR fhIn;
+    BPTR fhOut;
+    UWORD len = 0, l;
 
-    if( fhOut = Open("NIL:", MODE_OLDFILE) ) {
-        if( fhIn = Open("NIL:", MODE_OLDFILE) ) {
-        
-            if( SystemTags("DockBotPrefs", 
-                    SYS_Input, fhIn,
-                    SYS_Output, fhOut,
-                    SYS_Asynch, TRUE,
-                    TAG_END) == -1 ) {
+    struct TagItem shellTags[] = {
+        { SYS_UserShell, TRUE },
+        { SYS_Asynch, TRUE },
+        { SYS_Input, NULL },
+        { SYS_Output, NULL },
+        { TAG_DONE, 0 }
+    };
 
-                Close(fhOut);
-                Close(fhIn);
-            }
 
-        } else { 
-            Close(fhOut);
-        }
+    if( wb ) {
+        len = strlen((STRPTR)&dock->progPath) + 6;
+    }   
+    
+    len += strlen(path) + 1;
+    if( args ) {
+        len += strlen(args) + 1;
     }
+
+    if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
+        
+        pos = cmd;
+        if( wb ) {
+            COPY_STRING((STRPTR)&dock->progPath, pos);
+            pos--;
+            COPY_STRING("/WBRUN ", pos);
+        }
+        
+        COPY_STRING(path, pos);
+                
+        if( args ) {
+            COPY_STRING(args, pos);
+        }
+
+        pos--;
+        *pos = '\0';
+
+        con = console;
+        if( con == NULL ) {
+            con = DEFAULT_CONSOLE;
+        }
+
+        if( fhOut = Open(con, MODE_OLDFILE) ) {
+            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
+
+                shellTags[2].ti_Data = fhIn;
+                shellTags[3].ti_Data = fhOut;
+                
+                if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
+                    Close(fhIn);
+                    Close(fhOut);
+                }
+
+            } else {
+                Close(fhOut);
+            }
+        }
+        DB_FreeMem(cmd, len);
+    }
+}
+
+VOID launch(struct DockWindow *dock, struct GadgetMessageLaunch *msg)
+{
+    execute_external(
+        dock,
+        msg->path,
+        msg->args, 
+        msg->console,
+        msg->wb
+    );
+
+    dock_gadget_launched(msg->m.sender,
+                         msg->path,
+                         msg->args,
+                         msg->console,
+                         msg->wb);
+}
+
+VOID open_settings(struct DockWindow *dock)
+{
+    UWORD l;
+    UBYTE path[256];
+    STRPTR pos = (STRPTR)&path;
+
+    COPY_STRING((STRPTR)dock->progPath, pos);
+    pos--;
+    COPY_STRING("/DockBotPrefs", pos);
+    pos--;
+    *pos = '\0';
+
+    execute_external(dock, (STRPTR)&path, NULL, NULL, TRUE);
+}
+
+
+VOID open_help(struct DockWindow *dock)
+{
+    UWORD l;
+    UBYTE arg[256];
+    STRPTR pos = (STRPTR)&arg;
+
+    COPY_STRING((STRPTR)dock->progPath, pos);
+    pos--;
+    COPY_STRING("/doc/DockBot.guide", pos);
+    pos--;
+    *pos = '\0';
+
+    execute_external(dock, "SYS:Utilities/Multiview", (STRPTR)&arg, NULL, TRUE);
 }
 
 VOID handle_window_event(struct DockWindow *dock)
@@ -253,7 +367,11 @@ VOID handle_window_event(struct DockWindow *dock)
                             break;
 
                        case MI_SETTINGS:
-                            open_settings();
+                            open_settings(dock);
+                            break;
+
+                       case MI_HELP:
+                            open_help(dock);
                             break;
 
                        default:
@@ -340,6 +458,10 @@ VOID handle_gadget_message(struct DockWindow *dock)
                     case GM_QUIT:
                         dock->runState = RS_QUITTING;
                         break;    
+
+                    case GM_LAUNCH:
+                        launch(dock, (struct GadgetMessageLaunch *)msg);
+                        break;
                 }
             }
         }

@@ -1,3 +1,10 @@
+/************************************
+**
+**  DockBot - A Dock For AmigaOS 3
+**
+**  © 2019 Andrew Kennan
+**
+************************************/
 
 #include "prefs.h"
 
@@ -832,7 +839,7 @@ int main(char **argv, int argc)
 {
     struct DockPrefs prefs;
 
-    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+    if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
 
         if( TR_OpenTriton(TRITON11VERSION,
             TRCA_Name,      "DockBotPrefs",

@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -48,7 +48,19 @@ VOID read_settings(Msg msg)
     }    
 }
 
-VOID send_message_to_dock(Class *c, Object *o, GadgetMessageType gm)
+VOID send_message_to_dock(Class *c, Object *o, GadgetMessageType gm, struct GadgetMessage *msg)
+{
+	struct DockGadgetData *dgd = INST_DATA(c,o);
+
+    msg->m.mn_Node.ln_Type = NT_MESSAGE;
+    msg->m.mn_ReplyPort = NULL;
+    msg->messageType = gm;
+    msg->sender = o;
+
+    PutMsg(dgd->dockPort, (struct Message *)msg);
+}
+
+VOID send_message_no_params(Class *c, Object *o, GadgetMessageType gm)
 {
 	struct DockGadgetData *dgd = INST_DATA(c,o);
     struct GadgetMessage *msg;
@@ -56,13 +68,29 @@ VOID send_message_to_dock(Class *c, Object *o, GadgetMessageType gm)
     if( dgd->dockPort ) {
         if( msg = DB_AllocMem(sizeof(struct GadgetMessage), MEMF_CLEAR) ) {
 
-            msg->m.mn_Node.ln_Type = NT_MESSAGE;
             msg->m.mn_Length = sizeof(struct GadgetMessage);
-            msg->m.mn_ReplyPort = NULL;
-            msg->messageType = gm;
-            msg->sender = o;
 
-            PutMsg(dgd->dockPort, (struct Message *)msg);
+            send_message_to_dock(c, o, gm, msg);
+        }
+    }
+}
+
+VOID send_launch_msg_to_dock(Class *c, Object *o, struct DockMessageLaunch *dml)
+{
+	struct DockGadgetData *dgd = INST_DATA(c,o);
+    struct GadgetMessageLaunch *msg;
+
+    if( dgd->dockPort ) {
+        if( msg = DB_AllocMem(sizeof(struct GadgetMessageLaunch), MEMF_CLEAR) ) {
+
+            msg->m.m.mn_Length = sizeof(struct GadgetMessageLaunch);
+
+            msg->path = dml->path;
+            msg->args = dml->args;
+            msg->console = dml->console;
+            msg->wb = dml->wb;
+
+            send_message_to_dock(c, o, GM_LAUNCH, (struct GadgetMessage *)msg);
         }
     }
 }
@@ -75,6 +103,7 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
     struct DockMessageDraw* dm;
     struct DockMessageHitTest* ht;
     struct DockMessageAdded *am;
+    struct DockMessageLaunch *dml;
 	struct DockGadgetData *dgd;
     
 	Object *no;
@@ -152,12 +181,17 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
             break;
 
         case DM_REQ_QUIT:
-            send_message_to_dock(c, o, GM_QUIT);
+            send_message_no_params(c, o, GM_QUIT);
             break;
 
         case DM_REQ_DRAW:
-            send_message_to_dock(c, o, GM_DRAW);
+            send_message_no_params(c, o, GM_DRAW);
             break;         
+
+        case DM_REQ_LAUNCH:
+            dml = (struct DockMessageLaunch *)msg;
+            send_launch_msg_to_dock(c, o, dml);
+            break;
 
         case DM_CANEDIT:
             return FALSE;

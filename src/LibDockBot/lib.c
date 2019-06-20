@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -128,6 +128,7 @@ APTR FuncTable[] = {
     DB_GetDockGadgetBounds,
     DB_RequestDockQuit,
     DB_RequestDockGadgetDraw,
+    DB_RequestLaunch,
 
     DB_DrawOutsetFrame,
     DB_DrawInsetFrame,

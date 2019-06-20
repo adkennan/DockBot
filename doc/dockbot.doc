@@ -6,14 +6,19 @@ dockbot.library/DB_DrawInsetFrame
 dockbot.library/DB_DrawOutsetFrame
 dockbot.library/DB_FreeMem
 dockbot.library/DB_GetDockGadgetBounds
+dockbot.library/DB_ListClasses
 dockbot.library/DB_OpenSettingsRead
 dockbot.library/DB_OpenSettingsWrite
 dockbot.library/DB_ReadBeginBlock
+dockbot.library/DB_ReadConfig
 dockbot.library/DB_ReadEndBlock
 dockbot.library/DB_ReadSetting
 dockbot.library/DB_RequestDockGadgetDraw
 dockbot.library/DB_RequestDockQuit
+dockbot.library/DB_RequestLaunch
+dockbot.library/DB_ShowError
 dockbot.library/DB_WriteBeginBlock
+dockbot.library/DB_WriteConfig
 dockbot.library/DB_WriteEndBlock
 dockbot.library/DB_WriteSetting
 dockbot.library/DB_AllocMem                          dockbot.library/DB_AllocMem
@@ -150,9 +155,7 @@ dockbot.library/DB_WriteSetting
 	DB_FreeMem(VOID *,ULONG);
 
    FUNCTION
-	Returns a block of memory to the pools managed by the DockBot library.
-	Only use this function with memory blocks previously allocated by the
-	DB_AllocMem function.
+  	Frees a block of memory previously allocated with DB_AllocMem.
 
    INPUTS
 	memoryBlock - The block of memory allocated by DB_AllocMem.
@@ -184,6 +187,28 @@ dockbot.library/DB_WriteSetting
    EXAMPLE
 	struct Rect bounds;
 	DB_GetDockGadgetBounds(obj, &bounds);
+
+dockbot.library/DB_ListClasses                    dockbot.library/DB_ListClasses
+
+   NAME
+	DB_ListClasses - List the available gadget classes.
+
+   SYNOPSIS
+	DB_ListClasses(list)
+	               A0
+    DB_ListClasses(struct List *)
+
+   FUNCTION
+	Populates the supplied list object with nodes containing the names of
+
+
+   INPUTS
+
+   RESULT
+
+   EXAMPLE
+
+   SEE ALSO
 
 dockbot.library/DB_OpenSettingsRead          dockbot.library/DB_OpenSettingsRead
 
@@ -280,6 +305,27 @@ dockbot.library/DB_WriteSetting
 
    SEE ALSO
 	DB_OpenSettingsRead(),DB_ReadEndBlock()
+
+dockbot.library/DB_ReadConfig                      dockbot.library/DB_ReadConfig
+
+   NAME
+	DB_ReadConfig - Read the DockBot configuration file.
+
+   SYNOPSIS
+	success = DB_ReadConfig(cfg,settings)
+	  D0					A0  A1
+    BOOL DB_ReadConfig(struct DockConfig *, struct DockSettings *)
+
+   FUNCTION
+	Reads the configuration data from the settings object and populates
+    the cfg object.
+
+   INPUTS
+    cfg			- The container for configuration data.
+	settings	- The structure used to read configuration data.
+
+   RESULT
+	TRUE if the configuration was read.
 
 dockbot.library/DB_ReadEndBlock                  dockbot.library/DB_ReadEndBlock
 
@@ -403,6 +449,50 @@ dockbot.library/DB_WriteSetting
    SEE ALSO
 	dockbot.h
 
+dockbot.library/DB_RequestLaunch                dockbot.library/DB_RequestLaunch
+
+   NAME
+	DB_RequestLaunch -- Requests the launch of an external program.
+
+   SYNOPSIS
+	DB_RequestLaunch(obj, path, args, console, wb)
+	                 A0   A1    A2    A3       D0
+	DB_RequestLaunch(Object *, STRPTR, STRPTR, STRPTR, BOOL);
+
+   FUNCTION
+	Sends an asynchronous message from a gadget to the DockBot application
+	requesting that it launch an external program.
+
+   INPUTS
+	obj - The dock gadget making the request.
+    path - The path to the executable to be launched.
+    args - Optional command line arguments to pass.
+    console - Optional console options to use when launching a DOS application.
+    wb - Indicates whether the program should be launched as if started by
+         Workbench.
+
+   EXAMPLE
+    DB_RequestLaunch(obj, "SYS:Utilities/MultiView", "T:image.iff", NULL, TRUE);
+
+   SEE ALSO
+	dockbot.h
+
+dockbot.library/DB_ShowError                        dockbot.library/DB_ShowError
+
+   NAME
+	DB_ShowError - Display an error message to the user.
+
+   SYNOPSIS
+	DB_ShowError(message)
+	              A0
+	DB_ShowError(STRPTR);
+
+   FUNCTION
+    Displays the message to the user in a requester.
+
+   INPUTS
+    message - The error message to display to the user.
+
 dockbot.library/DB_WriteBeginBlock            dockbot.library/DB_WriteBeginBlock
 
    NAME
@@ -434,6 +524,26 @@ dockbot.library/DB_WriteSetting
 
    SEE ALSO
 	DB_OpenSettingsWrite(), DB_WriteEndBlock()
+
+dockbot.library/DB_WriteConfig                    dockbot.library/DB_WriteConfig
+
+   NAME
+	DB_WriteConfig - Write the DockBot configuration file.
+
+   SYNOPSIS
+	success = DB_WriteConfig(cfg,settings)
+	  D0					 A0  A1
+    BOOL DB_WriteConfig(struct DockConfig *, struct DockSettings *)
+
+   FUNCTION
+	Writes the configuration data in cfg to the settings object.
+
+   INPUTS
+    cfg			- The container for configuration data.
+	settings	- The structure used to write configuration data.
+
+   RESULT
+	TRUE if the configuration was written.
 
 dockbot.library/DB_WriteEndBlock                dockbot.library/DB_WriteEndBlock
 

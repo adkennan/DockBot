@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -37,5 +37,24 @@ VOID __asm __saveds DB_RequestDockGadgetDraw(
 	register __a0 Object *obj) 
 {
     DoMethod(obj, DM_REQ_DRAW);
+}
+
+VOID __asm __saveds DB_RequestLaunch(
+    register __a0 Object *obj,
+    register __a1 STRPTR path,
+    register __a2 STRPTR args,
+    register __a3 STRPTR console,
+    register __d0 BOOL wb) 
+{
+    struct DockMessageLaunch msg = {
+        DM_REQ_LAUNCH
+    };
+
+    msg.path = path;
+    msg.args = args;
+    msg.console = console;
+    msg.wb = wb;
+
+    DoMethodA(obj, (Msg)&msg);    
 }
 

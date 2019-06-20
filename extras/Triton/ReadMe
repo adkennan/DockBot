@@ -1,0 +1,44 @@
+
+               **********************************************
+
+                                   Triton
+
+                   An object oriented GUI creation system.
+
+                            Release OpenTriton 2.0
+
+                         (c) 1993-1998 Stefan Zeiger
+
+               **********************************************
+
+
+    This  is a minimum distribution  version  of Triton, the object  oriented
+graphical user interface  creation system for  AmigaOS.  Not included in this
+minimum distribution are:
+
+    - A Prefs editor for customizing Triton GUIs
+    - An optimized version of triton.library for OS3.0+
+    - Language catalogs
+    - Developer support material
+
+    If  you  want a full  distribution,  you can download  Triton from AmiNet
+(directory dev/gui).
+
+    See the Triton Home Page for more information:
+
+        http://home.pages.de/~szeiger/triton.html
+
+
+    Contacting the author:
+
+        EMail:      szeiger@usa.net
+
+        Mail:       Stefan Zeiger
+                    Seligenstädter Weg 24
+                    D-63796 Kahl
+                    Germany
+
+        Voice:      +49-6188-900712
+
+          WWW:      http://home.pages.de/~szeiger/
+

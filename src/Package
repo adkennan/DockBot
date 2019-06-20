@@ -1,0 +1,3 @@
+CD //
+LHA a -r DockBot.lha DockBot DockBot.info
+CD DockBot/src

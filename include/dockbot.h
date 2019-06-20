@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -24,7 +24,7 @@
 #define VERSION 1
 #define REVISION 0
 
-#define VERSION_STR "1.0 (28/12/2016)"
+#define VERSION_STR "1.0 (03/06/2019)"
 
 
 typedef enum
@@ -84,12 +84,14 @@ typedef enum {
 	DM_SETBOUNDS 	    = 1206,
     DM_GETBOUNDS        = 1207,
 	DM_HITTEST		    = 1208,
+    DM_REQ_LAUNCH       = 1209,
 
     // Event Handlers.
 	DM_TICK 		    = 1302,
 	DM_CLICK 		    = 1303,
 	DM_DROP 		    = 1304,
 	DM_HOTKEY			= 1305,
+    DM_LAUNCHED         = 1306,
 
     // Rendering.
 	DM_GETSIZE 		    = 1400,
@@ -206,6 +208,15 @@ struct DockMessageGetEditor {
 	struct TagItem *uiTags;
 };
 
+struct DockMessageLaunch {
+	ULONG MethodID;
+    STRPTR path;
+    STRPTR args;
+    STRPTR console;
+    BOOL wb;
+};
+
+
 struct TR_App;
 struct TR_Project;
 struct TR_Message;
@@ -230,7 +241,8 @@ struct DockMessageEditorUpdate {
 
 typedef enum {
     GM_DRAW         = 1700,
-    GM_QUIT         = 1701
+    GM_QUIT         = 1701,
+    GM_LAUNCH       = 1702
 } GadgetMessageType;
 
 struct GadgetMessage {
@@ -238,6 +250,16 @@ struct GadgetMessage {
     GadgetMessageType messageType;
     Object* sender;
 };
+
+
+struct GadgetMessageLaunch {
+    struct GadgetMessage m;
+    STRPTR path;
+    STRPTR args;
+    STRPTR console;
+    BOOL wb;
+};
+
 
 // Settings
 

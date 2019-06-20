@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS
 **
-**  © 2016 Andrew Kennan    
+**  © 2019 Andrew Kennan    
 **
 ************************************/
 

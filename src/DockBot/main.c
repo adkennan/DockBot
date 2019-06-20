@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -19,7 +19,7 @@
 
 #include "debug.h"
 
-const char __ver[40] = "$VER:DockBot 1.0 (10.04.2016)";
+const char __ver[40] = "$VER:DockBot 1.0 (03.06.2019)";
 
 struct Library *DosBase;
 struct Library *LayersBase;
@@ -72,21 +72,21 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+    if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
    
-        if( DosBase = OpenLib("dos.library", 37) ) {
+        if( DosBase = OpenLib("dos.library", 39) ) {
 
-            if( GfxBase = OpenLib("graphics.library", 37) ) {
+            if( GfxBase = OpenLib("graphics.library", 39) ) {
 
-                if( LayersBase = OpenLib("layers.library", 37) ) {
+                if( LayersBase = OpenLib("layers.library", 39) ) {
 
-                    if( IntuitionBase = OpenLib("intuition.library", 37) ) {
+                    if( IntuitionBase = OpenLib("intuition.library", 39) ) {
     
-                        if( GadToolsBase = OpenLib("gadtools.library", 37) ) {
+                        if( GadToolsBase = OpenLib("gadtools.library", 39) ) {
         
-                            if( WorkbenchBase = OpenLib("workbench.library", 37) ) {
+                            if( WorkbenchBase = OpenLib("workbench.library", 39) ) {
 
-                                if( CxBase = OpenLib("commodities.library", 37) ) {
+                                if( CxBase = OpenLib("commodities.library", 39) ) {
     
                                     if( dock = create_dock() ) {
                 
@@ -111,5 +111,7 @@ int main(int argc, char** argv)
             CloseLibrary(DosBase);
         }  
         CloseLibrary(DockBotBase);
+    } else {
+        printf("ERROR: DockBot.library not found.");
     }
 }

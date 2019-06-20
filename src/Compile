@@ -1,9 +1,10 @@
-.key HELP/S,CLEAN/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S,DEBUG/S,DIR/K
+.key HELP/S,CLEAN/S,CLEANOBJ/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S,DEBUG/S,STRIP/S,OPT/S,DIR/K
 
 IF <HELP$NOHELP> EQ HELP
   ECHO "Options: "
   ECHO "  HELP/S       Show this help message."
   ECHO "  CLEAN/S      Remove object files and binaries."
+  ECHO "  CLEANOBJ/S   Remove object files."
   ECHO "  CPU/K        Sets the CPU to target. Defaults to CPU of this machine."
   ECHO "  NOEXE/S      Do not compile the DockBot executable."
   ECHO "  NOLIB/S      Do not compile dockbot.library."
@@ -11,7 +12,9 @@ IF <HELP$NOHELP> EQ HELP
   ECHO "  NOPREFS/S    Do not compile the preferences application."
   ECHO "  DEBUGMEM/S   Output memory debugging information."
   ECHO "  DEBUG/S      Compile with debug symbols."
-  ECHO "  DIR/K        Set the output directory. Defaults to /bin."
+  ECHO "  STRIP/S      Strip all debug information."
+  ECHO "  OPT/S        Optimize output."
+  ECHO "  DIR/K        Set the output directory. Defaults to /bin/<CPU>."
   ECHO
   QUIT
 ENDIF
@@ -26,21 +29,6 @@ ENDIF
 VERSION sc:c/sc 6 58 >NIL:
 IF WARN
   ECHO Need version 6.58
-  QUIT
-ENDIF
-ECHO OK
-
-ECHO NOLINE "  icon.library 46: "
-VERSION icon.library 46 >NIL:
-IF WARN
-  ECHO Not Found
-  QUIT
-ENDIF
-ECHO OK
-
-ECHO NOLINE "  wbrun: "
-IF NOT EXISTS c:wbrun 
-  ECHO Not Found
   QUIT
 ENDIF
 ECHO OK
@@ -86,7 +74,23 @@ ELSE
   SET DEFDEBUG "nodebug"
 ENDIF
 
-.def DIR /bin
+IF <STRIP$NOSTRIP> EQ STRIP
+  ECHO Removing all Debug information
+  ECHO " "
+  SET DEFSTRIP "StripDebug"
+ELSE
+  SET DEFSTRIP ""
+ENDIF
+
+IF <OPT$NOOPT> EQ OPT
+  ECHO "Optimizing"
+  ECHO " "
+  SET DEFOPT "opt"
+ELSE
+  SET DEFOPT ""
+ENDIF
+
+.def DIR /bin/<CPU>
 
 ECHO "Output to <DIR>"
 ECHO " "
@@ -99,7 +103,7 @@ IF <NOLIB$LIB> EQ LIB
   ECHO Compiling dockbot.library
   ECHO " "
   cd LibDockBot
-  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT
   cd /
 ENDIF
 
@@ -107,7 +111,7 @@ IF <NOEXE$EXE> EQ EXE
   echo Compiling DockBot
   echo " "
   cd DockBot
-  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT
   cd /
 ENDIF
 
@@ -115,32 +119,34 @@ IF <NOPREFS$PREFS> EQ PREFS
   echo Compiling DockBotPrefs
   echo " "
   cd DockBotPrefs
-  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT
   cd /
 ENDIF
 
 IF <NOCLASSES$CLASSES> EQ CLASSES
 
-  IF NOT EXISTS <DIR>/Gadgets
-    MAKEDIR <DIR>/Gadgets
+  IF <CLEAN$NOCLEAN> EQ NOCLEAN
+	IF NOT EXISTS <DIR>/Gadgets
+      MAKEDIR <DIR>/Gadgets
+    ENDIF
   ENDIF
 
   echo Compiling Classes/Button
   echo " "
   cd Classes/Button
-  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT
   cd //
 
   echo Compiling Classes/Clock
   echo " "
   cd Classes/Clock
-  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT
   cd //
 
   echo Compiling Classes/Mem
   echo " "
   cd Classes/Mem
-  smake <CLEAN> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG
+  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT
   cd //
 ENDIF
 

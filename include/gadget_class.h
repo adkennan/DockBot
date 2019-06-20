@@ -2,7 +2,7 @@
 **
 **  DockBot - A Dock For AmigaOS 3
 **
-**  © 2016 Andrew Kennan
+**  © 2019 Andrew Kennan
 **
 ************************************/
 
@@ -58,6 +58,8 @@ VOID geta4(VOID);
   
 //#define METHOD_GETHOTKEY
 //#define METHOD_GETLABEL
+
+//#define METHOD_LAUNCHED
 
 // Method with data and message.
 

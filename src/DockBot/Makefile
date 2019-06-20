@@ -14,9 +14,11 @@ LIBS=		LIB:sc.lib LIB:amiga.lib
 CPU=		68030
 
 DEF_DEBUG_MEM=
-DEF_DEBUG=opt
+DEF_DEBUG=
+DEF_STRIP=
+DEF_OPT=
 
-C_OPTS=		noicons cpu=$(CPU) $(INC) $(DEF_DEBUG_MEM) $(DEF_DEBUG)
+C_OPTS=		noicons cpu=$(CPU) $(DEF_OPT) STRINGMERGE $(INC) $(DEF_DEBUG_MEM) $(DEF_DEBUG)
 
 C_SOURCES=	main.c dock.c /shared/dock_gadget.c dock_handle.c events.c gadgets.c layout.c settings.c debug.c
 
@@ -26,14 +28,15 @@ $(EXENAME): $(OBJECTS)
    $(LINKER) WITH <<
  TO $(EXEPATH)$(EXENAME)
  FROM LIB:c.o $(OBJECTS)
- LIBRARY $(LIBS) NOICONS ADDSYM
+ LIBRARY $(LIBS) NOICONS $(DEF_STRIP) SMALLDATA
 <
-	@Copy /Images/$(EXENAME).info $(EXEPATH)
-	@Copy /Images/$(EXENAME)Min.info $(EXEPATH)
 
 .c.o:
 	$(COMPILER) $(C_OPTS) $*.c
 
+cleanobj:
+	@Delete $(OBJECTS)
+
 clean:
 	@Delete $(OBJECTS)
-	@Delete $(EXEPATH)$(EXENAME) $(EXEPATH)$(EXENAME).info $(EXEPATH)$(EXENAME)Min.info
+	@Delete $(EXEPATH)$(EXENAME) 

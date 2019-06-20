@@ -239,3 +239,16 @@ VOID dock_gadget_init_edit(Object *obj, struct TR_App *app)
     DoMethodA(obj, (Msg)&msg);
 }
 
+VOID dock_gadget_launched(Object *obj, STRPTR path, STRPTR args, STRPTR console, BOOL wb)
+{
+    struct DockMessageLaunch msg = {
+        DM_LAUNCHED
+    };
+    msg.path = path;
+    msg.args = args;
+    msg.console = console;
+    msg.wb = wb;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+

@@ -1,0 +1,320 @@
+@database The DockBot Manual
+@wordwrap
+
+@node Main "The DockBot Manual"
+
+DockBot is an application launcher for AmigaOS 3.
+
+It is (hopefully) lighter on system resources and easier to configure than ToolManager and AmiDock ;)
+
+The main DockBot window is called the Dock. It contains a number of "gadgets" that display information or react to actions. For example, the Clock gadget displays the current time and a Button gadget can launch an application.
+
+@{"Requirements" link requirements}
+@{"Installation" link installation}
+@{"Configuration" link configuration}
+@{"Usage" link usage}
+@{"Developers" link developers}
+@{"TODO" link todo}
+@{"Contact Me" link contact}
+
+DockBot is free software released under the @{"MIT licence" link licence}.
+
+@endnode
+
+@node licence "Licence - The DockBot Manual"
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Andrew Kennan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+@endnode
+
+@node requirements "Requirements - The DockBot Manual"
+
+DockBot depends on a few pieces of third party software.
+
+icon.library v46.4 - PeterK's amazing library provides icon manipulation functions not available in the stock system. Why aren't you already using it?
+
+Triton - An object oriented GUI creation system by Stefan Zeiger. A redistributable copy is included with DockBot.
+
+WBRun - Runs programs as if executed by Workbench by Sylvain Rougier and Pierre Carrette. A copy is included with DockBot.
+
+@endnode
+
+@node installation "Installation - The DockBot Manual"
+
+Installation of DockBot should be pretty easy.
+
+By default DockBot will be installed in SYS:Tools however this can be changed.
+
+DockBot will try to install binaries optimized for your CPU.
+
+A startup script named DockBotStart will be placed in SYS:WBStartup. If you move or rename the DockBot drawer this script must be updated.
+
+@endnode
+
+@node configuration "Configuration - The DockBot Manual"
+
+A configuration application named DockBotPrefs is included. It can be launched by choosing the Settings option from the DockBot Project menu.
+
+The settings window is divided into two parts. The top part controls the position and orientation of the window. The lower part defines the gadgets that appear in the window.
+
+Position can be one of Left, Right, Top or Bottom. This sets the edge of the screen the dock window will be attached to.
+
+Alignment can be one of Top/Left, Centre or Bottom/Right. This lets you control whether the window will appear in a corner or the centre of the screen edge.
+
+When checked, the Show Labels checkbox will cause a tooltip to be displayed next to gadgets when the mouse is hovered over the window.
+
+There are two ways to add a gadget to the dock:
+
+- You can drag an icon from a Workbench window onto the DockBotPrefs window.
+
+- Click the New button and select the type of gadget to add.
+
+The three gadgets available are:
+
+- @{"DockButton" link configDockButton} - a button representing an executable file. Displays the icon of the executable.
+
+- DockClock - a clock. See @{"Time Formats" link timeFormats} for information on configuring it.
+
+- DockMem - a memory meter with a graphical representation of the available chip and fast memory.
+
+Once added to the dock, gadgets can be ordered with the Up and Down buttons. If the gadget has additional configuration options the Edit button will be enabled when the gadget is selected.
+
+@endnode
+
+@node configDockButton "Buttons - The DockBot Manual"
+
+A Button in DockBot represents an executable file. DockBot will display the icon associated with the executable. Clicking on it will launch the application. Dragging and dropping icons from Workbench onto it will launch the application with the icons as parameters.
+
+Buttons have the following options:
+
+- Name - a label for the button. Defaults to the name of the application.
+- Arguments - command line arguments to pass to the application. 
+- Key - A global hotkey to use for launching the application. See the section on CS_POPKEY in the Workbench User's Guide for acceptable key combinations.
+- Start Type - Either Workbench or Shell. Select Workbench for applications that are started by double-clicking an icon. Use Shell for applications started from the CLI.
+- Console - For applications with a start type of Shell, describes the console window to open them in. For example, CON:10/10/400/200/My Window/CLOSE. See the section on Customizing The Window in the AmigaDOS User's Guide for more information.
+
+@endnode
+
+@node timeFormats "Time Formats - The DockBot Manual"
+
+The DockClock gadget uses the date and time formats accepted by the Amiga OS.
+
+- %a - abbreviated weekday name
+- %A - weekday name
+- %b - abbreviated month name
+- %B - month name
+- %c - same as "%a %b %d %H:%M:%S %Y"
+- %C - same as "%a %b %e %T %Y"
+- %d - day number with leading zeros
+- %D - same as "%m/%d/%y"
+- %e - day number with leading spaces
+- %h - abbreviated month name
+- %H - hour using 24-hour style with leading zeros
+- %I - hour using 12-hour style with leading zeros
+- %j - julian date
+- %m - month number with leading zeros
+- %M - the number of minutes with leading zeros
+- %p - AM or PM strings
+- %q - hour using 24-hour style
+- %Q - hour using 12-hour style
+- %r - same as "%I:%M:%S %p"
+- %R - same as "%H:%M"
+- %S - number of seconds with leading zeros
+- %T - same as "%H:%M:%S"
+- %U - week number, taking Sunday as the first day of the week
+- %w - weekday number
+- %W - week number, taking Monday as the first day of the week
+- %x - same as "%m/%d/%y"
+- %X - same as "%H:%M:%S"
+- %y - year using two digits with leading zeros
+- %Y - year using four digits with leading zeros
+
+
+@endnode
+
+@node usage "Usage - The DockBot Manual"
+
+Using DockBot is, hopefully, pretty obvious. Click icons to launch applications. 
+
+Dragging a workbench icon onto the dock will launch the application with the icon as a parameter.
+
+@endnode
+
+@node developers "Developers - The DockBot Manual"
+
+DockBot is open source software. Feel free to fix it... I mean... contribute...
+
+The repository for the DockBot source code can be found at https://github.com/adkennan/DockBot. Feel free to submit a pull request!
+
+@{"Setting up" link devSetup} the development environment.
+@{"Compiling" link devCompiling} DockBot.
+Available @{"Library Functions" link inc/dockbot/MAIN}.
+Writing a new @{"Gadget" link devGadget}.
+
+@endnode
+
+@node devSetup "Development Environment - The DockBot Manual"
+
+The following third party software has been used in the development of DockBot:
+
+- SAS/C 6.58
+- icon.library 46.4 (http://aminet.net/package/util/libs/IconLib_46.4)
+- OpenTriton GUI system (http://aminet.net/package/dev/gui/opentriton-dev)
+- adoc (http://aminet.net/package/dev/misc/adoc-1.02)
+- ADtoHT2 (http://aminet.net/package/text/hyper/ADtoHT2_1)
+
+I use the following script to initialize my development environment:
+
+	ASSIGN sc:         SYS:Applications/Development/SasC
+	ASSIGN lib:        sc:lib
+	ASSIGN include:    sc:include
+	ASSIGN cxxinclude: sc:cxxinclude
+
+	ASSIGN lib:        SYS:Dev/Triton/lib     ADD
+	ASSIGN include:    SYS:Dev/Triton/include ADD
+
+	PATH   sc:c        ADD
+
+I have adoc and ADtoHT2 installed in my path as well.
+
+@endnode
+
+@node devCompiling "Compiling - The DockBot Manual"
+
+The src drawer contains three scripts used to build DockBot:
+
+- Compile - Compiles all components for a single CPU.
+- CompileDist - Compiles DockBot for all 68000, 68020 and 68040 CPUs for distribution.
+- BuildDocs - Generates autodocs and converts them to AmigaGuide.
+
+The Compile script has the following options:
+
+- HELP/S       Show a help message.
+- CLEAN/S      Remove object files and binaries.
+- CLEANOBJ/S   Remove object files.
+- CPU/K        Sets the CPU to target. Defaults to CPU of this machine.
+- NOEXE/S      Do not compile the DockBot executable.
+- NOLIB/S      Do not compile dockbot.library.
+- NOCLASSES/S  Do not compile loadable gadget modules.
+- NOPREFS/S    Do not compile the preferences application.
+- DEBUGMEM/S   Output memory debugging information.
+- DEBUG/S      Compile with debug symbols.
+- STRIP/S      Strip all debug information.
+- OPT/S        Optimize the compiler output.
+- DIR/K        Set the output directory. Defaults to /bin/<CPU>.
+
+CompileDist only has a single option:
+
+- CLEAN/S      Removes object files and binaries for all CPUs.
+
+BuildDocs has no options.
+
+To build DockBot for your CPU, open a shell window, CD to the src drawer and execute the Compile script.
+
+@endnode
+
+@node devGadget "Writing Gadgets - The DockBot Manual"
+
+DockBot is written to be extendable because... why not? :)
+
+Each gadget is a BOOPSI class deriving from a base class named "dockgadget." 
+
+To create a new gadget create a new drawer in src/Classes. Copy the lib.c, Makefile and class_def.h files from another gadget. Edit class_def.h and Makefile to suit.
+
+The class_def.h file should define a number of macros. The complete list of macros can be found in include/gadget_class.h.
+
+These macros are used to describe the gadget:
+
+- CLASS_VERSION - major version number of the class.
+- CLASS_REVISION - minor version number of the class.
+- CLASS_VER_STR - the version string of the class. Typically contains the version and date like "<major>.<minor> (DD/MM/YYYY)".
+- CLASS_DESC - A short description of the class.
+- CLASS_COPYRIGHT - A copyright message for the class.
+
+These macros describe the structs the gadget uses to store data:
+
+- PRIVATE_DATA - The name of a struct used to store instance data for the gadget.
+- GADGET_LIB_DATA - The name of a struct used to store global data for the gadget.
+
+These macros describe functions called when the gadget class library is loaded or unloaded:
+
+- GADGET_LIB_INIT - Called when the gadget class is loaded.
+- GADGET_LIB_EXPUNGE - Called when the gadget class is unloaded.
+
+These macros describe methods implemented by the gadget class:
+
+- METHOD_NEW - Called when the gadget is instantiated.
+- METHOD_DISPOSE - Called when the gadget is deleted.
+
+- METHOD_CLICK - Called when the user clicks on the gadget with the mouse.
+- METHOD_HOTKEY - Called when the user presses the hotkey for the gadget.
+- METHOD_TICK - Called once per second to allow for simple animation.
+- METHOD_DROP - Called when the user drops Workbench icons on the gadget.
+- METHOD_DRAW - Draws the gadget.
+- METHOD_LAUNCHED - Called after the dock has launched an external program at the request of the gadget.
+
+- METHOD_GETHOTKEY - Returns the hotkey to be registered for activating the gadget.
+- METHOD_GETSIZE - Returns the preferred size of the gadget.
+- METHOD_GETLABEL - Returns a label for the gadget.
+
+- METHOD_READCONFIG - Reads configuration data.
+- METHOD_WRITECONFIG - Writes configuration data.
+
+- METHOD_GETEDITOR - Returns a TagList containing a Triton GUI definition for editing the gadget's configuration.
+- METHOD_INITEDIT - Called to initialize the editor. By default, opens the Triton library.
+- METHOD_EDITOREVENT - Called when the editor GUI generates an event.
+- METHOD_EDITORUPDATE - Called to update the gadget configuration data from the editor GUI.
+- METHOD_CANEDIT - Indicates whether the gadget provides a GUI for editing settings.
+- METHOD_INITBUTTON - Button specific method called when an icon is dropped on the Settings window.
+
+These macros are used to provide implementations of the above methods:
+
+- DB_METHOD - A method with no parameters or access to gadget private data.
+- DB_METHOD_D - A method with access to gadget private data.
+- DB_METHOD_M - A method with a message parameter but no access to private data.
+- DB_METHOD_DM - A method with both gadget private data and a message.
+
+@endnode
+
+@node todo "TODO - The DockBot Manual"
+
+Here is an incomplete list of things that could be done to improve DockBot:
+
+- Localization. All strings are hard coded in English.
+- Support multiple dock windows.
+- Docks on different public screens.
+- Change the Button class to allow choosing any image instead of always using an icon.
+- Detect new versions of workbench.library and use that to launch programs or open drawers.
+- New gadgets such as a sub-dock.
+- Maybe an AREXX port...
+
+@endnode
+
+@node contact "Contact Me - The DockBot Manual"
+
+I am often to be found procrastinating on EAB with the username bwldrbst. Feel free to PM me any questions or raise them in the forums.
+
+If you're actually trying to use DockBot and have run into a bug, please report it at https://github.com/adkennan/DockBot/.
+
+@endnode
+
