@@ -2,9 +2,13 @@ Short:        A program launcher for OS 3.
 Uploader:     adkennan@gmail.com (Andrew Kennan)
 Author:       Andrew Kennan
 Type:         util/wb
-Version:      1.0
+Version:      1.1
 Architecture: m68k-amigaos >= 3.0
 Requires:     util/libs/IconLib_46.4.lha
+
+Changes:
+
+* Fixed issues with the installer that prevented DockBot from running.
 
 DockBot is a program launcher for OS 3. It can display a list of icons in a 
 window on your Workbench screen. Programs can be started by clicking the icons,
