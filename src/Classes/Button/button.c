@@ -230,7 +230,7 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
 
     if( cld->dosBase = OpenLibrary("dos.library", 37) ) {
         DOSBase = (struct DosLibrary *)cld->dosBase;
-        if( cld->iconBase = OpenLibrary("icon.library", 45) ) {
+        if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
             IconBase = cld->iconBase;
             if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
                 UtilityBase = cld->utilityBase;

@@ -1,3 +1,9 @@
 CD //
+
+IF EXISTS DockBot.lha
+  DELETE DockBot.lha
+ENDIF
+
 LHA a -r DockBot.lha DockBot DockBot.info
+
 CD DockBot/src

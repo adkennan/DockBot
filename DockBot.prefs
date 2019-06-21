@@ -12,13 +12,19 @@ begin
   begin
     gadget=DockButton
     name=Multiview
-    path=System:Utilities/Multiview
+    path=SYS:Utilities/Multiview
     start=wb
   end
   begin
     gadget=DockButton
     name=Shell
-    path=System:System/Shell
+    path=SYS:System/Shell
+    start=wb
+  end
+  begin
+    gadget=DockButton
+    name=Calculator
+    path=SYS:Tools/Calculator
     start=wb
   end
 end

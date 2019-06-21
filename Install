@@ -131,6 +131,10 @@
 		   (dest #app-dir)
 		   (help copyfiles-help)
 )
+(copyfiles (source "Extras/parm.library")
+		   (dest #app-dir)
+		   (help copyfiles-help)
+)
 (complete 45)
 (copyfiles (source "Extras/Triton/triton.library")
 		   (dest #app-dir)
@@ -187,7 +191,8 @@
 
 (textfile 
 	(dest #launcher)
-	(append (cat (tackon #app-dir "WBRUN") " " (tackon #app-dir "DockBot")))
+    (append (cat "CD " #app-dir "\n"))
+	(append "WBRUN DockBot")
 	(safe)
 )
 (complete 100)

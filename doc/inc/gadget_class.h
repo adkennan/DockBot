@@ -1,6 +1,6 @@
 @DATABASE "gadget_class.h"
 @MASTER   "Stuff:Andrew/DockBot/include/gadget_class.h"
-@REMARK   This file was created by ADtoHT 2.1 on 17-Jun-19 21:51:23
+@REMARK   This file was created by ADtoHT 2.1 on 21-Jun-19 17:12:28
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 
