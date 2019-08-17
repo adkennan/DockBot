@@ -2,7 +2,7 @@ Short:        A program launcher for OS 3.
 Uploader:     adkennan@gmail.com (Andrew Kennan)
 Author:       Andrew Kennan
 Type:         util/wb
-Version:      1.1
+Version:      1.2
 Architecture: m68k-amigaos >= 3.0
 Requires:     util/libs/IconLib_46.4.lha
 
