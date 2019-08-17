@@ -8,6 +8,13 @@ Requires:     util/libs/IconLib_46.4.lha
 
 Changes:
 
+Version 1.2:
+
+* Fixed bug in horizontal alignment of main window.
+* Cancel in Prefs window now reverts to last saved config.
+
+Version 1.1:
+
 * Fixed issues with the installer that prevented DockBot from running.
 
 DockBot is a program launcher for OS 3. It can display a list of icons in a 
