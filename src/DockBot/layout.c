@@ -203,7 +203,7 @@ ULONG get_window_left(struct Screen* screen, DockPosition pos, DockAlign align, 
 					l = 0;
 					break;
 				case DA_CENTER:
-					l = (screen->Width + width) / 2;
+					l = (screen->Width - width) / 2;
 					break;
 				case DA_RIGHT:
 					l = screen->Width - width;

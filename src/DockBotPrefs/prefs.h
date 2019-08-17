@@ -53,4 +53,6 @@ VOID remove_dock_gadgets(struct DockPrefs *prefs);
 
 VOID free_plugins(struct DockPrefs *prefs);
 
+VOID revert_config(VOID);
+
 #endif // __PREFS_H__

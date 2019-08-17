@@ -661,9 +661,13 @@ VOID run_event_loop(struct DockPrefs *prefs)
                     case TRMS_ACTION:
                         switch( msgID ) {
                             case OBJ_MENU_QUIT:
+                                done = TRUE;
+                                break;
+
                             case OBJ_BTN_CANCEL:
-                               done = TRUE;
-                               break;
+                                revert_config();
+                                done = TRUE;
+                                break;
 
                             case OBJ_BTN_UP:
                                 move_gadget_up(prefs);

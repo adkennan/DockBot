@@ -123,3 +123,43 @@ BOOL save_config(struct DockPrefs *prefs, BOOL permanent)
     return r;
 }
 
+VOID revert_config(VOID) {
+
+    BPTR fh1;
+    BPTR fh2;
+    struct FileInfoBlock *fib;
+    BYTE *buf;
+
+    if( fib = AllocDosObjectTags(DOS_FIB, TAG_DONE) ) {
+           
+        if( fh1 = Open(CONFIG_FILE_PERM, MODE_OLDFILE) ) {
+
+            if( ExamineFH(fh1, fib) ) {
+
+                if( buf = DB_AllocMem(fib->fib_Size, MEMF_ANY) ) {
+                
+                    Read(fh1, buf, fib->fib_Size);
+
+                    if( fh2 = Open(CONFIG_FILE, MODE_READWRITE) ) {
+
+                        SetFileSize(fh2, 0, OFFSET_BEGINNING);
+
+                        Write(fh2, buf, fib->fib_Size);
+
+                        Close(fh2);
+                    }
+
+                    DB_FreeMem(buf, fib->fib_Size);
+
+                }
+
+            }
+
+            Close(fh1);
+
+        }
+
+        FreeDosObject(DOS_FIB, fib);
+    }
+}
+
