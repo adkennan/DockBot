@@ -1,0 +1,137 @@
+#language english
+#version 1
+;
+; DockBot Preferences application
+;
+; Application Info
+;
+MSG_APP_Title (//)
+DockBot Preferences
+;
+MSG_APP_Info (//)
+Preferences editor for DockBot
+;
+; Generic
+;
+MSG_OK (//)
+_OK
+MSG_Cancel (//)
+Cancel
+;
+; Errors
+;
+MSG_ERR_ClassList (//)
+Couldn't load class list.
+;
+MSG_ERR_LoadConfig (//)
+Couldn't load config.
+;
+MSG_ERR_OpenWindow (//)
+Couldn't open window.
+;
+MSG_ERR_OpenLibrary (//)
+Unable to open version %d of %s.
+;
+MSG_ERR_EditorFailure (//)
+Unable to display editor dialogue.
+;
+MSG_ERR_CantAddDirectory (//)
+Sorry, directories cannot be added to the dock.
+;
+; Positions
+;
+MSG_POS_Left (//)
+Left
+MSG_POS_Right (//)
+Right
+MSG_POS_Top (//)
+Top
+MSG_POS_Bottom (//)
+Bottom
+;
+; Alignments
+;
+MSG_ALIGN_TopLeft (//)
+Top/Left
+MSG_ALIGN_Center (//)
+Center
+MSG_ALIGN_BottomRight (//)
+Bottom/Right
+;
+; New Gadget Dialog
+;
+MSG_NGD_Title (//)
+New Dock Gadget
+;
+MSG_NGD_ChooseGadget (//)
+Choose Gadget
+;
+MSG_NGD_About (//)
+About
+;
+; Main Window Menu
+;
+MSG_MENU_Project (//)
+Project
+;
+MSG_MENU_About (//)
+?_About
+;
+MSG_MENU_Quit (//)
+Q_Quit
+;
+; Main Window
+;
+MSG_MW_Title (//)
+DockBot Preferences
+;
+MSG_MW_DockSettings (//)
+Dock Settings
+;
+MSG_MW_Position (//)
+Position
+;
+MSG_MW_Alignment (//)
+Alignment
+;
+MSG_MW_ShowLabels (//)
+Show Labels
+;
+MSG_MW_Gadgets (//)
+Gadgets
+;
+MSG_MW_NewGadget (//)
+_New...
+;
+MSG_MW_EditGadget (//)
+_Edit...
+;
+MSG_MW_DeleteGadget (//)
+Delete
+;
+MSG_MW_GadgetUp (//)
+_Up
+;
+MSG_MW_GadgetDown (//)
+_Down
+;
+MSG_MW_ConfigSave (//)
+Save
+;
+MSG_MW_ConfigTest (//)
+Test
+;
+MSG_MW_ConfigUse (//)
+Use
+;
+; Delete Gadget Dialog
+;
+MSG_DEL_Title (//)
+Delete Gadget
+;
+MSG_DEL_Text (//)
+Are you sure you want to delete this gadget?
+;
+MSG_DEL_Buttons (//)
+_OK|Cancel
+;

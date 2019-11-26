@@ -1,0 +1,47 @@
+#language english
+#version 1
+;
+; DockButton
+;
+;
+MSG_Description (//)
+A button for DockBot
+;
+;
+; Start Types
+;
+MSG_ST_Workbench (//)
+Workbench
+;
+MSG_ST_Shell (//)
+Shell
+;
+; File Requester
+;
+MSG_FR_ChooseApplication (//)
+Choose an application
+;
+MSG_FR_OkText (//)
+Select
+;
+MSG_FR_CancelText (//)
+Cancel
+;
+;
+; Editor UI
+;
+MSG_UI_Name (//)
+Name
+;
+MSG_UI_Args (//)
+Arguments
+;
+MSG_UI_Key (//)
+Key
+;
+MSG_UI_StartType (//)
+Start Type
+;
+MSG_UI_Console (//)
+Console
+;

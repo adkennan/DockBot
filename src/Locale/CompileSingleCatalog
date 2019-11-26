@@ -1,0 +1,8 @@
+.key LANGUAGE/A,APP/A
+
+ECHO Compiling <LANGUAGE> catalog for <APP>
+ECHO " "
+
+IF EXISTS Catalogs/<LANGUAGE>/<APP>.ct
+	flexcat Catalogs/<APP>.cd Catalogs/<LANGUAGE>/<APP>.ct CATALOG Catalogs/<LANGUAGE>/<APP>.catalog NOBEEP
+ENDIF

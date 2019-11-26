@@ -57,6 +57,8 @@ Triton - An object oriented GUI creation system by Stefan Zeiger. A redistributa
 
 WBRun - Runs programs as if executed by Workbench by Sylvain Rougier and Pierre Carrette. A copy is included with DockBot.
 
+ScreenNotify - (Optional) Stefan Becker's handy library allows applications to be notified when the Workbench screen mode is changing. 
+
 @endnode
 
 @node installation "Installation - The DockBot Manual"
@@ -149,7 +151,6 @@ The DockClock gadget uses the date and time formats accepted by the Amiga OS.
 - %y - year using two digits with leading zeros
 - %Y - year using four digits with leading zeros
 
-
 @endnode
 
 @node usage "Usage - The DockBot Manual"
@@ -179,9 +180,11 @@ The following third party software has been used in the development of DockBot:
 
 - SAS/C 6.58
 - icon.library 46.4 (http://aminet.net/package/util/libs/IconLib_46.4)
+- screennotify.library 1.0 (http://aminet.net/package/util/libs/ScreenNotify10.lha)
 - OpenTriton GUI system (http://aminet.net/package/dev/gui/opentriton-dev)
 - adoc (http://aminet.net/package/dev/misc/adoc-1.02)
 - ADtoHT2 (http://aminet.net/package/text/hyper/ADtoHT2_1)
+- Flexcat (http://aminet.net/package/dev/misc/FlexCat-2.18.lha)
 
 I use the following script to initialize my development environment:
 
@@ -193,9 +196,11 @@ I use the following script to initialize my development environment:
 	ASSIGN lib:        SYS:Dev/Triton/lib     ADD
 	ASSIGN include:    SYS:Dev/Triton/include ADD
 
+    ASSIGN include:    SYS:Dev/ScreenNotify/include ADD
+
 	PATH   sc:c        ADD
 
-I have adoc and ADtoHT2 installed in my path as well.
+I have adoc, ADtoHT2 and FlexCat installed in my path as well.
 
 @endnode
 

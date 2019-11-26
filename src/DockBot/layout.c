@@ -14,11 +14,6 @@
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 
-#include "dock_gadget.h"
-
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
 
 UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
 {

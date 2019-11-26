@@ -1,0 +1,11 @@
+.key LANGUAGE/A
+
+ECHO Compiling catalogs for <LANGUAGE>
+ECHO " "
+
+LIST Catalogs/#?.cd FILES LFORMAT "EXECUTE CompileSingleCatalog <LANGUAGE> %M" >T:CatalogCompile
+
+EXECUTE T:CatalogCompile
+
+DELETE T:CatalogCompile
+

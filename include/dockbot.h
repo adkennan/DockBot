@@ -22,10 +22,15 @@
 
 
 #define VERSION 1
-#define REVISION 0
+#define REVISION 3
 
-#define VERSION_STR "1.0 (03/06/2019)"
+#define VERSION_STR BUILDVER " (" DS ")"
 
+#ifdef DEBUG_OUT
+#define DEBUG(x) x
+#else 
+#define DEBUG(x) 
+#endif
 
 typedef enum
 {

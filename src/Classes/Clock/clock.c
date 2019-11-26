@@ -17,8 +17,10 @@
 #include <proto/intuition.h>
 #include <proto/dos.h>
 #include <proto/locale.h>
+#include <proto/graphics.h>
 #include <clib/utility_protos.h>
 
+#include <stdio.h>
 #include <string.h>
 
 #include "dockbot.h"
@@ -31,8 +33,10 @@
 
 #include "class_def.h"
 
-struct Library *LocaleBase;
+#include "dockclock_cat.h"
+
 struct Library *UtilityBase;
+extern struct GfxBase *GfxBase;
 
 #define S_FORMAT "format"
 #define DEFAULT_FORMAT "%Q:%M"
@@ -41,6 +45,23 @@ enum {
     OBJ_STR_FORMAT = 2001
 };  
 
+struct TextLine {
+    struct MinNode n;
+    struct IntuiText text;
+    struct TextAttr ta;
+    STRPTR format;
+    UWORD pos;
+    UWORD width;
+    UWORD height;
+    BOOL changed;
+    UBYTE output[MAX_DISPLAY_LENGTH];
+};
+
+#define FOR_EACH_LINE for( line = (struct TextLine *)data->lines.mlh_Head; \
+                                         line->n.mln_Succ; \
+                                         line = (struct TextLine *)line->n.mln_Succ )
+
+
 struct TagItem *make_tag_list(ULONG data, ...)
 {
     struct TagItem *tags = (struct TagItem *)&data;
@@ -48,34 +69,157 @@ struct TagItem *make_tag_list(ULONG data, ...)
     return CloneTagItems(tags);
 }
 
+
+VOID create_lines(struct ClockGadgetData *data) 
+{
+    struct TextLine *line;
+    STRPTR pos;
+    STRPTR start;
+    UWORD len = strlen(data->format) + 1;
+
+    if( !(data->splitFormat = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) ) {
+        return;
+    }
+
+    CopyMem(data->format, data->splitFormat, len);     
+
+    start = data->splitFormat;
+    pos = start;
+    while( *pos ) {
+        if( *pos == '%' && *(pos + 1) == 'n' ) {
+            *pos = '\0';
+            pos++;
+
+            if( line = (struct TextLine *)DB_AllocMem(sizeof(struct TextLine), MEMF_CLEAR) ) {
+
+                line->format = start;
+                start = pos + 1;             
+
+                AddTail((struct List *)&data->lines, (struct Node *)line);
+            }
+        }
+        pos++;
+    }
+
+    if( pos != start ) {
+        
+        if( line = (struct TextLine *)DB_AllocMem(sizeof(struct TextLine), MEMF_CLEAR) ) {
+
+            line->format = start;
+
+            AddTail((struct List *)&data->lines, (struct Node *)line);
+        }
+    }
+}
+
+VOID measure_text(struct ClockGadgetData *data, struct DrawInfo *drawInfo, UWORD *w, UWORD *h)
+{
+    struct TextLine *line;
+    
+    *h = 0;
+    *w = 0;
+    FOR_EACH_LINE {
+
+        line->text.ITextFont = &line->ta;
+        line->text.ITextFont->ta_Name = drawInfo->dri_Font->tf_Message.mn_Node.ln_Name;
+        line->text.ITextFont->ta_YSize = drawInfo->dri_Font->tf_YSize;
+        line->text.ITextFont->ta_Style = drawInfo->dri_Font->tf_Style;
+        line->text.ITextFont->ta_Flags = drawInfo->dri_Font->tf_Flags;
+        line->text.FrontPen = drawInfo->dri_Pens[TEXTPEN];
+        line->text.BackPen = drawInfo->dri_Pens[BACKGROUNDPEN];
+        line->text.DrawMode = JAM1;
+        line->text.IText = (STRPTR)&line->output;
+        line->text.NextText = NULL;
+
+        line->width = IntuiTextLength(&line->text);
+
+        if( line->n.mln_Succ ) {
+            line->text.NextText = &((struct TextLine *)line->n.mln_Succ)->text;
+        }
+
+        if( line->width > *w ) {
+            *w = line->width;
+        }
+
+        line->height = drawInfo->dri_Font->tf_YSize;
+        *h += line->height;
+    }
+}
+
+
+VOID __saveds __asm write_char(
+    register __a0 struct Hook *hook,
+    register __a2 void *object,
+    register __a1 char c)
+{
+    struct TextLine *line = (struct TextLine *)hook->h_Data;
+
+    if( line->pos < MAX_DISPLAY_LENGTH ) {
+
+        if( c != line->output[line->pos] ) {       
+            line->changed = TRUE;
+            line->output[line->pos] = c;
+        }
+        line->pos++;
+    }
+}
+
+BOOL format_time(struct ClockGadgetData *data, struct DateStamp *ds)
+{
+    struct TextLine *line;
+    BOOL changed = FALSE;
+    struct Hook hook = {
+        { NULL, NULL },
+        (unsigned long (*)())write_char,
+        NULL,
+        NULL
+    };
+
+    FOR_EACH_LINE
+    {
+        line->pos = 0;
+        line->changed = FALSE;
+
+        hook.h_Data = line;
+    
+        FormatDate(data->locale, line->format, ds, &hook);
+
+        if( line->changed ) {
+            changed = TRUE;
+        }   
+    }
+
+    return changed;
+}
+
+
 ULONG __saveds clock_lib_init(struct ClockLibData* cld)
 {
     if( cld->dosBase = OpenLibrary("dos.library", 37) ) {
         DOSBase = (struct DosLibrary *)cld->dosBase;
-        if( cld->localeBase = OpenLibrary("locale.library", 37) ) {
-            LocaleBase = cld->localeBase;
-            if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
-                UtilityBase = cld->utilityBase;
+        if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
+            UtilityBase = cld->utilityBase;
+            if( cld->gfxBase = OpenLibrary("graphics.library", 37) ) {
+                GfxBase = (struct GfxBase *)cld->gfxBase;
+           
                 return 1;
             }
-            CloseLibrary(cld->localeBase);
         }
         CloseLibrary(cld->dosBase);
     }
     cld->utilityBase = NULL;
-    cld->localeBase = NULL;
     cld->dosBase = NULL;
     return 0;
 }
 
 ULONG __saveds clock_lib_expunge(struct ClockLibData *cld)
 {
-    if( cld->utilityBase ) {
-        CloseLibrary(cld->utilityBase);
+    if( cld->gfxBase ) {
+        CloseLibrary(cld->gfxBase);
     }
 
-    if( cld->localeBase ) {
-        CloseLibrary(cld->localeBase);
+    if( cld->utilityBase ) {
+        CloseLibrary(cld->utilityBase);
     }
 
     if( cld->dosBase ) {
@@ -88,6 +232,9 @@ ULONG __saveds clock_lib_expunge(struct ClockLibData *cld)
 DB_METHOD_D(NEW)
 
     if( data->locale = OpenLocale(NULL) ) {
+
+        NewList((struct List *)&data->lines);
+
         return 1;
     }
     return 0;
@@ -99,87 +246,59 @@ DB_METHOD_D(DISPOSE)
         CloseLocale(data->locale);
     }
     
+    while( ! IsListEmpty((struct List *)&data->lines) ) {
+        DB_FreeMem(RemHead((struct List *)&data->lines), sizeof(struct TextLine));
+    }
+
+    if( data->splitFormat ) {
+        DB_FreeMem(data->splitFormat, strlen(data->format));
+    }
+
     FREE_STRING(data->format);
 
     return 1;
 }
 
-VOID __saveds set_text_font(struct IntuiText *text)
-{
+DB_METHOD_DM(DRAW,DockMessageDraw)
+
+    struct TextLine *line;
+    struct Rect b;
+    UWORD textW, textH, yPos;
     struct Screen *screen;
     struct DrawInfo *drawInfo;
-    
+
+    DB_GetDockGadgetBounds(o, &b);
+
     if( screen = LockPubScreen(NULL) ) {
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
+    
+            measure_text(data, drawInfo, &textW, &textH);
 
-            text->ITextFont->ta_Name = drawInfo->dri_Font->tf_Message.mn_Node.ln_Name;
-            text->ITextFont->ta_YSize = drawInfo->dri_Font->tf_YSize;
-            text->ITextFont->ta_Style = drawInfo->dri_Font->tf_Style;
-            text->ITextFont->ta_Flags = drawInfo->dri_Font->tf_Flags;
-            text->FrontPen = drawInfo->dri_Pens[TEXTPEN];
-            text->BackPen = drawInfo->dri_Pens[BACKGROUNDPEN];
-            text->DrawMode = JAM2;
+            SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
+            RectFill(msg->rp, b.x, b.y, b.w + b.x - 1, b.h + b.y - 1);
+
+            DB_DrawOutsetFrame(msg->rp, &b);
+
+            yPos = b.y + (b.h - textH) / 2;
+
+            FOR_EACH_LINE
+            {
+                line->text.LeftEdge = b.x + (b.w - line->width) / 2;
+                line->text.TopEdge = yPos;
+
+                yPos += line->height;
+            }   
+
+            PrintIText(msg->rp, &((struct TextLine *)data->lines.mlh_Head)->text, 0, 0);
 
             FreeScreenDrawInfo(screen, drawInfo);
         }
 
         UnlockPubScreen(NULL, screen);
     }     
-}
-
-DB_METHOD_DM(DRAW,DockMessageDraw)
-
-    struct Rect b;
-    struct IntuiText text;
-    struct TextAttr ta;
-    UWORD w;
-
-    DB_GetDockGadgetBounds(o, &b);
-
-    DB_DrawOutsetFrame(msg->rp, &b);
-
-    text.ITextFont = &ta;
-    set_text_font(&text);
-
-    text.ITextFont = &ta;
-    text.IText = data->time;
-    text.NextText = NULL;
-            
-    w = IntuiTextLength(&text);
-
-    text.LeftEdge = b.x + (b.w - w) / 2;
-    text.TopEdge = b.y + (b.h - text.ITextFont->ta_YSize) / 2;
-
-    PrintIText(msg->rp, &text, 0, 0);
 
     return 1;    
-}
-
-VOID __saveds __asm write_char(
-    register __a0 struct Hook *hook,
-    register __a2 void *object,
-    register __a1 char c)
-{
-    struct ClockGadgetData *cd = (struct ClockGadgetData *)hook->h_Data;
-
-    if( cd->pos < MAX_DISPLAY_LENGTH ) {
-        cd->time[cd->pos++] = c;
-    }
-}
-
-VOID __saveds format_time(struct ClockGadgetData *cd, struct DateStamp *ds)
-{
-    struct Hook hook = {
-        { NULL, NULL },
-        (unsigned long (*)())write_char,
-        NULL,
-        NULL
-    };
-    hook.h_Data = cd;
-    
-    cd->pos = 0;
-    FormatDate(cd->locale, cd->format, ds, &hook);
 }
 
 DB_METHOD_D(TICK)
@@ -195,11 +314,7 @@ DB_METHOD_D(TICK)
 
     DateStamp(&ds);
     
-    if( ds.ds_Minute != data->minutes ) {
-    
-        data->minutes = ds.ds_Minute;
-
-        format_time(data, &ds);
+    if( format_time(data, &ds) ) {
     
         DB_RequestDockGadgetDraw(o);
     }
@@ -207,8 +322,10 @@ DB_METHOD_D(TICK)
     return 1;
 }
 
-DB_METHOD_M(GETSIZE,DockMessageGetSize)
+DB_METHOD_DM(GETSIZE,DockMessageGetSize)
 
+    struct DateStamp ds;
+    UWORD w, h;
     struct Screen *screen;
     struct DrawInfo *drawInfo;
 
@@ -216,14 +333,18 @@ DB_METHOD_M(GETSIZE,DockMessageGetSize)
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
 
-            msg->h = drawInfo->dri_Font->tf_YSize + 4;
-            msg->w = DEFAULT_SIZE;
+            DateStamp(&ds);
+            format_time(data, &ds);
+            measure_text(data, drawInfo, &w, &h);
+
+            msg->w = w + 4;
+            msg->h = h + 4;
 
             FreeScreenDrawInfo(screen, drawInfo);
         }
 
-        UnlockPubScreen(NULL, screen);            
-    }    
+        UnlockPubScreen(NULL, screen);
+    }     
 
     return 1;
 }
@@ -239,10 +360,12 @@ DB_METHOD_DM(READCONFIG,DockMessageConfig)
     }
 
     if( ! data->format ) {
-        if( data->format = (STRPTR)DB_AllocMem(strlen(DEFAULT_FORMAT) + 1, MEMF_CLEAR) ) {
+        if( data->format = (STRPTR)DB_AllocMem(strlen(DEFAULT_FORMAT) + 1, MEMF_ANY) ) {
             CopyMem(DEFAULT_FORMAT, data->format, strlen(DEFAULT_FORMAT) + 1);
         }
     }
+
+    create_lines(data);
 
     return 1;
 }
@@ -271,7 +394,7 @@ DB_METHOD_DM(GETEDITOR,DockMessageGetEditor)
                 Space,
                 BeginLine,
                     Space,
-                    TextN("Format"),
+                    TextN(MSG_UI_Format),
                     Space,
                     StringGadget(data->format, OBJ_STR_FORMAT),
                     Space,
@@ -289,7 +412,6 @@ DB_METHOD_DM(EDITORUPDATE,DockMessageEditorUpdate)
     STRPTR str;
     UWORD len;
     struct TR_Project *proj = msg->window;
-
 
     FREE_STRING(data->format);
 

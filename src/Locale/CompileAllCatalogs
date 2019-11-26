@@ -1,0 +1,8 @@
+
+FAILAT 21
+
+LIST Catalogs/#? DIRS LFORMAT "CompileCatalog %M" >T:CatalogUpdate
+
+EXECUTE T:CatalogUpdate
+
+DELETE T:CatalogUpdate

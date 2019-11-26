@@ -17,6 +17,7 @@
 #include <proto/exec.h>
 #include <proto/intuition.h>
 
+#include <stdio.h>
 #include <string.h>
 
 #include "dockbot.h"
@@ -27,30 +28,6 @@
 #include "class_def.h"
 
 extern struct GfxBase *GfxBase;
-
-VOID __saveds set_text_font(struct IntuiText *text)
-{
-    struct Screen *screen;
-    struct DrawInfo *drawInfo;
-    
-    if( screen = LockPubScreen(NULL) ) {
-    
-        if( drawInfo = GetScreenDrawInfo(screen) ) {
-
-            text->ITextFont->ta_Name = drawInfo->dri_Font->tf_Message.mn_Node.ln_Name;
-            text->ITextFont->ta_YSize = drawInfo->dri_Font->tf_YSize;
-            text->ITextFont->ta_Style = drawInfo->dri_Font->tf_Style;
-            text->ITextFont->ta_Flags = drawInfo->dri_Font->tf_Flags;
-            text->FrontPen = drawInfo->dri_Pens[TEXTPEN];
-            text->BackPen = drawInfo->dri_Pens[BACKGROUNDPEN];
-            text->DrawMode = JAM2;
-
-            FreeScreenDrawInfo(screen, drawInfo);
-        }
-
-        UnlockPubScreen(NULL, screen);
-    }     
-}
 
 ULONG __saveds mem_lib_init(struct MemLibData *mld)
 {
@@ -69,14 +46,86 @@ ULONG __saveds mem_lib_expunge(struct MemLibData *mld)
     return 1;
 }
 
+VOID __saveds set_text_font(struct IntuiText *text)
+{
+    struct Screen *screen;
+    struct DrawInfo *drawInfo;
+    
+    if( screen = LockPubScreen(NULL) ) {
+    
+        if( drawInfo = GetScreenDrawInfo(screen) ) {
+
+            text->ITextFont->ta_Name = drawInfo->dri_Font->tf_Message.mn_Node.ln_Name;
+            text->ITextFont->ta_YSize = drawInfo->dri_Font->tf_YSize;
+            text->ITextFont->ta_Style = drawInfo->dri_Font->tf_Style;
+            text->ITextFont->ta_Flags = drawInfo->dri_Font->tf_Flags;
+            text->DrawMode = JAM1;
+            text->NextText = NULL;
+
+            FreeScreenDrawInfo(screen, drawInfo);
+        }
+
+        UnlockPubScreen(NULL, screen);
+    }     
+}
+
+
+VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWORD ix, STRPTR label, ULONG total, ULONG free)
+{
+    struct IntuiText text;
+    struct TextAttr ta;
+    BYTE buf[32];
+    struct Rect frame;
+    
+    frame.x = bounds->x;
+    frame.h = bounds->h / 2;
+    frame.y = bounds->y + (frame.h * ix);
+    frame.w = bounds->w;
+
+    SetAPen(rp, di->dri_Pens[BACKGROUNDPEN]);
+    RectFill(rp, frame.x, frame.y, frame.x + frame.w, frame.y + frame.h);
+
+    DB_DrawOutsetFrame(rp, &frame);
+    
+    frame.x += 1;
+    frame.y += 1;
+    frame.w -= 2;
+    frame.h -= 2;
+
+    DB_DrawInsetFrame(rp, &frame);
+
+    frame.x += 1;
+    frame.y += 1;
+    frame.w = (((((total - free) * 100) / total) * frame.w) / 100) - 2;
+    frame.h -= 2;
+
+    SetAPen(rp, di->dri_Pens[FILLPEN]);
+    RectFill(rp, frame.x, frame.y, frame.x + frame.w - 2, frame.y + frame.h - 2);
+
+    DB_DrawOutsetFrame(rp, &frame);
+    
+    sprintf((STRPTR)&buf, label, (free * 100) / total);
+
+    text.ITextFont = &ta;
+    text.ITextFont->ta_Name = di->dri_Font->tf_Message.mn_Node.ln_Name;
+    text.ITextFont->ta_YSize = di->dri_Font->tf_YSize;
+    text.ITextFont->ta_Style = di->dri_Font->tf_Style;
+    text.ITextFont->ta_Flags = di->dri_Font->tf_Flags;
+    text.DrawMode = JAM1;
+    text.NextText = NULL;
+    text.IText = (STRPTR)&buf;
+    text.FrontPen = di->dri_Pens[TEXTPEN];
+    text.LeftEdge = frame.x + 2;
+    text.TopEdge = frame.y + 1;
+
+    PrintIText(rp, &text, 0, 0);
+}
+
 DB_METHOD_M(DRAW,DockMessageDraw)
 
     struct Screen *screen;
     struct DrawInfo *drawInfo;
-    struct Rect b, barFrame;
-    struct IntuiText l1, l2;
-    struct TextAttr ta1, ta2;
-    UWORD w;
+    struct Rect b;
     ULONG totalChip, freeChip, totalFast, freeFast;
     
     totalChip = AvailMem(MEMF_CHIP | MEMF_TOTAL);
@@ -87,62 +136,15 @@ DB_METHOD_M(DRAW,DockMessageDraw)
 
     DB_GetDockGadgetBounds(o, &b);
 
-    DB_DrawOutsetFrame(msg->rp, &b);
-
-    l1.ITextFont = &ta1;
-    set_text_font(&l1);
-
-    l1.LeftEdge = b.x + 3;
-    l1.TopEdge = b.y + 1 + ((b.h - ((l1.ITextFont->ta_YSize + 2) * 2)) / 2);
-    l1.IText = "C:";
-    l1.NextText = NULL;
-            
-    if( totalFast > 0 ) {
-      l1.NextText = &l2;  
-
-      l2.ITextFont = &ta2;
-      set_text_font(&l2);
-
-      l2.LeftEdge = l1.LeftEdge;
-      l2.TopEdge = l1.TopEdge + 2 + l1.ITextFont->ta_YSize;
-      l2.IText = "F:";
-      l2.NextText = NULL;
-    }
-
-    w = IntuiTextLength(&l1);
-
-    PrintIText(msg->rp, &l1, 0, 0);
-
-    barFrame.x = b.x + w + 2;
-    barFrame.w = b.w - w - 5;
-    barFrame.y = l1.TopEdge;
-    barFrame.h = l1.ITextFont->ta_YSize;
-
     if( screen = LockPubScreen(NULL) ) {
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
 
-            SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
-            RectFill(msg->rp, barFrame.x, barFrame.y, barFrame.w + barFrame.x, barFrame.h + barFrame.y);
+            draw_mem(msg->rp, drawInfo, &b, 0, (STRPTR)MSG_LBL_Chip, totalChip, freeChip);
 
-            DB_DrawInsetFrame(msg->rp, &barFrame);
-
-            w = (UWORD)((((totalChip - freeChip) * 100) / totalChip) * (barFrame.w - 2)) / 100;
-            SetAPen(msg->rp, drawInfo->dri_Pens[FILLPEN]);
-            RectFill(msg->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
-            
             if( totalFast > 0 ) {
 
-                barFrame.y = l2.TopEdge;
-
-                SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
-                RectFill(msg->rp, barFrame.x, barFrame.y, barFrame.w + barFrame.x, barFrame.h + barFrame.y);
-
-                DB_DrawInsetFrame(msg->rp, &barFrame);
-
-                w = (UWORD)((((totalFast - freeFast) * 100) / totalFast) * (barFrame.w - 2)) / 100;
-                SetAPen(msg->rp, drawInfo->dri_Pens[FILLPEN]);
-                RectFill(msg->rp, barFrame.x + 1, barFrame.y + 1, barFrame.x + 1 + w, barFrame.h + barFrame.y - 2);
+                draw_mem(msg->rp, drawInfo, &b, 1, (STRPTR)MSG_LBL_Fast, totalFast, freeFast);
             }
 
             FreeScreenDrawInfo(screen, drawInfo);
@@ -171,16 +173,26 @@ DB_METHOD_M(GETSIZE,DockMessageGetSize)
 
     struct IntuiText text;
     struct TextAttr ta;
-    UWORD rows;    
+    UWORD rows, w;    
+    BYTE buf[32];
+
+    sprintf((STRPTR)buf, MSG_LBL_Chip, 99);
 
     text.ITextFont = &ta;
+    text.IText = (STRPTR)buf;
+    text.LeftEdge = 0;
+    text.TopEdge = 0;
+    text.NextText = NULL;
+
     set_text_font(&text);
+
+    w = IntuiTextLength(&text) + 8;
 
     rows = (AvailMem(MEMF_CHIP|MEMF_TOTAL) > 0 ? 1 : 0)
             + (AvailMem(MEMF_FAST|MEMF_TOTAL) > 0 ? 1 : 0);
 
-    msg->w = DEFAULT_SIZE;
-    msg->h = rows * (2 + text.ITextFont->ta_YSize) + 4;
+    msg->w = w > DEFAULT_SIZE ? w : DEFAULT_SIZE;
+    msg->h = rows * (2 + text.ITextFont->ta_YSize) + 8;
  
     return 1;
 }

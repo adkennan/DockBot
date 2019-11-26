@@ -6,44 +6,19 @@
 **
 ************************************/
 
+#include "dock.h"
+
 #include <exec/memory.h>
 #include <exec/io.h>
 #include <exec/ports.h>
-#include <intuition/screens.h>
-#include <libraries/gadtools.h>
+#include <dos/dostags.h>
 #include <clib/exec_protos.h>
 #include <clib/dos_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
-#include <clib/wb_protos.h>
-#include <clib/gadtools_protos.h>
-#include <clib/commodities_protos.h>
 #include <devices/timer.h>
 
-#include <stdio.h>
-
-#include "dock.h"
-
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
-#include "dock_gadget.h"
 #include "dock_handle.h"
-
-struct NewMenu mainMenu[] = {
-    { NM_TITLE, "Project",     0, 0, 0, 0 },
-    {  NM_ITEM, "Settings...","S",0, 0, (APTR)MI_SETTINGS },
-    {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
-    {  NM_ITEM, "About...",   "?",0, 0, (APTR)MI_ABOUT },
-    {  NM_ITEM, "Help",        0, 0, 0, (APTR)MI_HELP },
-    {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
-    {  NM_ITEM, "Iconify",    "I",0, 0, (APTR)MI_HIDE },
-    {  NM_ITEM, NM_BARLABEL,   0, 0, 0, 0 }, 
-    {  NM_ITEM, "Quit",       "Q",0, 0, (APTR)MI_QUIT },
-
-    { NM_END,   NULL,          0, 0, 0, 0 }
-};
-
 
 VOID show_about(struct DockWindow *dock)
 {
@@ -59,12 +34,14 @@ VOID show_about(struct DockWindow *dock)
     struct EasyStruct es = {
             sizeof(struct EasyStruct),
             0,
-            "About " APP_NAME,
-            APP_NAME " Version " APP_VERSION "\n\n"
-            APP_DESCRIPTION "\n\n" APP_COPYRIGHT "\n\n%s",
-            "OK"
+            0 /* MSG_ABOUT_Title */,
+            0 /* MSG_ABOUT_Text */,
+            0 /* MSG_OK */
     };
 
+    es.es_Title = (STRPTR)MSG_ABOUT_Title;
+    es.es_TextFormat = (STRPTR)MSG_ABOUT_Text;
+    es.es_GadgetFormat = (STRPTR)MSG_OK;    
  
     msgLen = 0;
     FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
@@ -122,7 +99,7 @@ VOID show_about(struct DockWindow *dock)
         } 
         *p = '\0';
     
-        EasyRequest(NULL, &es, NULL, msg);
+        EasyRequest(NULL, &es, NULL, VERSION_STR, msg);
 
 
         DB_FreeMem(msg, msgLen);
@@ -146,185 +123,6 @@ VOID delete_port(struct MsgPort *port) {
 }
 
 
-BOOL create_cx_broker(struct DockWindow *dock)
-{
-    struct NewBroker nb = {
-        NB_VERSION,
-        APP_NAME,
-        APP_NAME,
-        APP_DESCRIPTION,
-        NBU_UNIQUE, COF_SHOW_HIDE, 0, 0, 0
-    };
-
-    if( dock->cxPort = CreateMsgPort() ) {
-
-        nb.nb_Port = dock->cxPort;
-
-        if( dock->cxBroker = CxBroker(&nb, NULL) ) {
-
-            return TRUE;   
-        }
-
-    }
-
-    return FALSE;
-}
-
-VOID free_cx_broker(struct DockWindow *dock) 
-{
-    if( dock->cxBroker ) {
-
-        DeleteCxObjAll(dock->cxBroker);
-        dock->cxBroker = NULL;
-    }
-
-    if( dock->cxPort ) {
-        delete_port(dock->cxPort);
-        dock->cxPort = NULL;
-    }
-}
-
-BOOL init_cx_broker(struct DockWindow *dock)
-{
-    struct DgNode *curr;
-    STRPTR hotKey;
-    CxObj *filter, *sender, *translate;
-    UWORD msgId;
-    
-    if( dock->cxBroker ) {
-        free_cx_broker(dock);
-    } 
-    
-    if( create_cx_broker(dock) ) {
-
-        msgId = 0;
-
-        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
-
-            dock_gadget_get_hotkey(curr->dg, &hotKey);
-            if( hotKey ) {
-                if( filter = CxFilter(hotKey) ) {
-                                    
-                    AttachCxObj(dock->cxBroker, filter);
-
-                    if( sender = CxSender(dock->cxPort, msgId) ) {
-
-                        AttachCxObj(filter, sender);
-
-                        if( translate = CxTranslate(NULL) ) {
-
-                            AttachCxObj(filter, translate);
-    
-                            if( CxObjError(filter) ) {
-                                return FALSE;
-                            }
-                        } else {
-                            return FALSE;
-                        }
-                    } else {
-                        return FALSE;
-                    }
-
-                } else {
-                    return FALSE;
-                }
-            }
-            msgId++;
-        }
-
-        ActivateCxObj(dock->cxBroker, 1L);
-
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-BOOL show_dock_window(struct DockWindow *dock)
-{
-	struct Screen *screen;
-    APTR* vi;
-    BOOL result = FALSE;
-    struct DrawInfo *di;
-
-	struct TagItem tags[] = {
-		{ WA_Left, 0 },
-		{ WA_Top, 0 },
-		{ WA_Width, 1 },
-		{ WA_Height, 1 },
-		{ WA_Borderless, TRUE },
-        { WA_SmartRefresh, TRUE },
-        { WA_NewLookMenus, TRUE },
-		{ WA_IDCMP, IDCMP_MOUSEBUTTONS | IDCMP_REFRESHWINDOW | IDCMP_CHANGEWINDOW | IDCMP_MENUPICK },
-		{ TAG_DONE, NULL }
-	};
-
-
-	if( screen = LockPubScreen(NULL) ) {
-
-        if( di = GetScreenDrawInfo(screen) ) {
-
-      		if( dock->win = OpenWindowTagList(NULL, tags) ) {
-	
-                if( vi = GetVisualInfo(dock->win->WScreen, TAG_END) ) {
-        
-                    if( dock->menu = CreateMenus(mainMenu, GTMN_FrontPen, di->dri_Pens[TEXTPEN], TAG_END) ) {           
-
-                        if( LayoutMenus(dock->menu, vi, TAG_END) ) {
-
-                            if( SetMenuStrip(dock->win, dock->menu) ) {
-
-                                if( dock->awPort = CreateMsgPort() ) {
-
-                                    if( dock->appWin = AddAppWindow(1, 0, dock->win, dock->awPort, NULL) ) {
-                    
-                                        result = TRUE;
-                                    
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    FreeVisualInfo(vi);  
-                }
-            }
-            FreeScreenDrawInfo(screen, di);   
-        }
-        UnlockPubScreen(NULL, screen);
-    }
-    
-    return result;     
-}
-
-VOID hide_dock_window(struct DockWindow *dock)
-{
-    if( dock->appWin ) {
-        RemoveAppWindow(dock->appWin);
-        dock->appWin = NULL;
-    }
-
-    delete_port(dock->awPort);
-    dock->awPort = NULL;
-
-    if( dock->hoverWin ) {
-        CloseWindow(dock->hoverWin);
-        dock->hoverWin = NULL;
-    }
-    
-    if( dock->win ) {
-
-        if( dock->menu ) {
-
-            ClearMenuStrip(dock->win);
-            FreeMenus(dock->menu);
-            dock->menu = NULL;
-        }
-
-    	CloseWindow(dock->win);
-        dock->win = NULL;
-    }
-}
-
 BOOL get_prog_path(struct DockWindow *dock)
 {
     BPTR lock;
@@ -345,6 +143,8 @@ struct DockWindow* create_dock(VOID)
 {
 	struct DockWindow *dock;
 
+    DEBUG(printf("create_dock\n"));
+
     if( dock = (struct DockWindow *)DB_AllocMem(sizeof(struct DockWindow), MEMF_CLEAR) ) {
 
         dock->runState = RS_STARTING;
@@ -363,9 +163,12 @@ struct DockWindow* create_dock(VOID)
                         
                         if( init_timer_notification(dock) ) {
 
-                            if( get_prog_path(dock) ) {
+                            if( init_screennotify(dock) ) {
 
-                                return dock;
+                                if( get_prog_path(dock) ) {
+
+                                    return dock;
+                                }
                             }
                         }
                     }        
@@ -382,6 +185,10 @@ struct DockWindow* create_dock(VOID)
 
 VOID free_dock(struct DockWindow* dock)
 {
+    DEBUG(printf("free_dock\n"));
+
+    free_screennotify(dock);
+
     free_cx_broker(dock);
 
     hide_dock_window(dock);
@@ -412,5 +219,91 @@ VOID free_dock(struct DockWindow* dock)
     delete_port(dock->pubPort);
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));
+
+    DEBUG(printf("Done\n"));
 }
 
+
+VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR console, BOOL wb)
+{
+    STRPTR cmd;
+    STRPTR pos;
+    STRPTR con;
+    BPTR fhIn;
+    BPTR fhOut;
+    UWORD len = 0, l;
+
+    struct TagItem shellTags[] = {
+        { SYS_UserShell, TRUE },
+        { SYS_Asynch, TRUE },
+        { SYS_Input, NULL },
+        { SYS_Output, NULL },
+        { TAG_DONE, 0 }
+    };
+
+
+    if( wb ) {
+        len = strlen((STRPTR)&dock->progPath) + 6;
+    }   
+    
+    len += strlen(path) + 1;
+    if( args ) {
+        len += strlen(args) + 1;
+    }
+
+    if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
+        
+        pos = cmd;
+        if( wb ) {
+            COPY_STRING((STRPTR)&dock->progPath, pos);
+            pos--;
+            COPY_STRING("/WBRUN ", pos);
+        }
+        
+        COPY_STRING(path, pos);
+                
+        if( args ) {
+            COPY_STRING(args, pos);
+        }
+
+        pos--;
+        *pos = '\0';
+
+        con = console;
+        if( con == NULL ) {
+            con = DEFAULT_CONSOLE;
+        }
+
+        if( fhOut = Open(con, MODE_OLDFILE) ) {
+            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
+
+                shellTags[2].ti_Data = fhIn;
+                shellTags[3].ti_Data = fhOut;
+                
+                if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
+                    Close(fhIn);
+                    Close(fhOut);
+                }
+
+            } else {
+                Close(fhOut);
+            }
+        }
+        DB_FreeMem(cmd, len);
+    }
+}
+
+VOID open_help(struct DockWindow *dock)
+{
+    UWORD l;
+    UBYTE arg[256];
+    STRPTR pos = (STRPTR)&arg;
+
+    COPY_STRING((STRPTR)dock->progPath, pos);
+    pos--;
+    COPY_STRING("/doc/DockBot.guide", pos);
+    pos--;
+    *pos = '\0';
+
+    execute_external(dock, "SYS:Utilities/Multiview", (STRPTR)&arg, NULL, TRUE);
+}

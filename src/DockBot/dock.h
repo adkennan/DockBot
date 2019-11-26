@@ -10,9 +10,6 @@
 #define __DOCK_H__
 
 #define APP_NAME        "DockBot"
-#define APP_VERSION     "1.0"
-#define APP_DESCRIPTION "A Dock For AmigaOS 3"
-#define APP_COPYRIGHT   "© 2019 Andrew Kennan"
 
 #include <exec/types.h>
 #include <exec/lists.h>
@@ -24,16 +21,47 @@
 #include <intuition/classes.h>
 #include <libraries/commodities.h>
 
+#include <stdio.h>
+
 #include "dockbot.h"
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
+#include "dockbot_cat.h"
+
+#include "dock_gadget.h"
+
+#include "debug.h"
+
+#define DEFAULT_CONSOLE "NIL:"
+
+#define COPY_STRING(src, dst) \
+    l = strlen(src);\
+    CopyMem(src, dst, l);\
+    dst += l;\
+    *dst = ' ';\
+    dst++; 
+
+#define COPY_STRING_QUOTED(src, dst) \
+    l = strlen(src);\
+    *dst = '"';\
+    dst++;\
+    CopyMem(src, dst, l);\
+    dst += l;\
+    *dst = '"';\
+    dst++;\
+    *dst = ' ';\
+    dst++;
 
 typedef enum {
     RS_STARTING = 1,
     RS_RUNNING = 2,
     RS_LOADING = 3,
-	RS_HIDING = 4,
-	RS_SHOWING = 5,
+	RS_ICONIFYING = 4,
+	RS_UNICONIFYING = 5,
     RS_QUITTING = 6,
-    RS_STOPPED = 7
+    RS_STOPPED = 7,
+    RS_HIDING = 8,
+    RS_SHOWING = 9
 } RunState;
 
 typedef enum {
@@ -83,6 +111,10 @@ struct DockWindow
 	struct MsgPort *cxPort;
 	CxObj *cxBroker;
 
+    // Screen Notifications
+    APTR screenNotifyHandle;
+    struct MsgPort *screenNotifyMsgPort;
+
     // Gadget name tooltips
     Object *hoverGad;
     struct Window *hoverWin;
@@ -98,51 +130,73 @@ struct DockWindow
 
 #define MIN_ICON "PROGDIR:" APP_NAME "Min"
 
+
+// debug.c - Debugging functions
+
 VOID log_memory(VOID);
 
-// Settings
+
+// dock.c - Startup/shutdown, general functions.
+
+struct DockWindow *create_dock(VOID);
+
+VOID free_dock(struct DockWindow *);
+
+VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR console, BOOL wb);
+
+VOID open_help(struct DockWindow *dock);
+
+VOID delete_port(struct MsgPort *port);
+
+VOID show_about(struct DockWindow *dock);
+
+
+// settings.c
 
 BOOL load_config(struct DockWindow *dock);
 
 BOOL init_config_notification(struct DockWindow *dock);
 
-// Window
+VOID handle_notify_message(struct DockWindow *dock);
 
-struct DockWindow* create_dock(VOID);
 
-VOID free_dock(struct DockWindow *dock);
+// window.c - Window functions
 
 VOID hide_dock_window(struct DockWindow* dock);
 
 BOOL show_dock_window(struct DockWindow* dock);
 
-VOID show_about(struct DockWindow *dock);
+VOID handle_drop_event(struct DockWindow* dock);
 
-VOID delete_port(struct MsgPort *port);
+VOID handle_window_event(struct DockWindow *dock);
 
-// Events
+VOID open_settings(struct DockWindow *dock);
+
+
+// events.c 
+
+VOID run_event_loop(struct DockWindow *);
+
+
+// timer.c
 
 BOOL init_timer_notification(struct DockWindow *dock);
 
 VOID set_timer(struct DockWindow *dock, ULONG milliseconds);
 
-VOID handle_drop_event(struct DockWindow* dock);
-
-VOID handle_window_event(struct DockWindow *dock);
-
-VOID handle_notify_message(struct DockWindow *dock);
-
 VOID handle_timer_message(struct DockWindow *dock);
 
-VOID handle_gadget_message(struct DockWindow *dock);
 
-VOID run_event_loop(struct DockWindow *dock);
+// appicon.c
 
 BOOL show_app_icon(struct DockWindow *dock);
 
 VOID free_app_icon(struct DockWindow *dock);
 
-// Gadgets
+VOID handle_icon_event(struct DockWindow *dock);
+
+
+// gadgets.c
 
 BOOL create_dock_handle(struct DockWindow *dock);
 
@@ -162,8 +216,10 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y);
 
 VOID update_hover_gadget(struct DockWindow *dock);
 
-// Layout
+VOID handle_gadget_message(struct DockWindow *dock);
 
+
+// layout.c
 
 ULONG get_window_top(struct Screen* screen, DockPosition pos, DockAlign align, UWORD height);
 
@@ -175,11 +231,23 @@ VOID disable_layout(struct DockWindow *dock);
 
 VOID enable_layout(struct DockWindow *dock);
 
-// Commodities
+
+// cx.c - Commodities Exchange handling
 
 BOOL init_cx_broker(struct DockWindow *dock);
 
 VOID free_cx_broker(struct DockWindow *dock);
+
+VOID handle_cx_message(struct DockWindow *dock);
+
+
+// screennotify.c - Handle screenmode changes
+
+BOOL init_screennotify(struct DockWindow *dock);
+
+BOOL free_screennotify(struct DockWindow *dock);
+
+VOID handle_screennotify(struct DockWindow *dock);
 
 #endif
 

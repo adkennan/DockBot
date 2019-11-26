@@ -1,0 +1,54 @@
+#language english
+#version 1
+;
+; DockBot application
+;
+;
+; Generic
+;
+MSG_OK (//)
+OK
+;
+; Errors
+;
+; Error returned when OpenLibrary fails.
+;
+MSG_ERR_OpenLibrary (//)
+Unable to open version %d of %s.
+; Menu Strings
+MSG_MENU_Project (//)
+Project
+;
+MSG_MENU_Settings (//)
+Settings...
+MSG_KEY_Settings (//)
+S
+;
+MSG_MENU_About (//)
+About...
+MSG_KEY_About (//)
+?
+;
+MSG_MENU_Help (//)
+Help
+;
+MSG_MENU_Iconify (//)
+Iconify
+MSG_KEY_Iconify (//)
+I
+;
+MSG_MENU_Quit (//)
+Quit
+MSG_KEY_Quit (//)
+Q
+; About Dialog
+MSG_ABOUT_Title (//)
+About DockBot
+;
+MSG_ABOUT_Text (//)
+DockBot Version %s\n\nA Dock For AmigaOS 3\n\n© Andrew Kennan\n\n%s
+;
+MSG_CX_Description (//)
+A Dock For AmigaOS 3
+; 
+;

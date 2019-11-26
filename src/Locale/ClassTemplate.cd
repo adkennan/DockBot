@@ -1,0 +1,16 @@
+#basename TEMPLATE
+#language english
+#version 0
+;
+; DockBot class template
+;
+;
+; Generic
+;
+MSG_Description
+Enter a description
+;
+MSG_Copyright
+Enter a copyright
+; 
+;

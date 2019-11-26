@@ -1,0 +1,35 @@
+##rem $Id$
+##stringtype C
+##shortstrings
+
+/****************************************************************
+
+   This file was created automatically by `%fv'
+   from "%f0".
+
+   Do NOT edit by hand!
+
+****************************************************************/
+
+#include <exec/memory.h>
+#include <libraries/iffparse.h>
+
+#include <proto/locale.h>
+
+#include "%b_cat.h"
+
+struct FC_String %b_Strings[%n] = {
+    { (STRPTR) %s, %d }%(,)
+};
+
+VOID InitCatalog(struct Catalog *catalog)
+{
+    struct FC_String *fc;
+	UWORD i;
+
+    for (i = 0, fc = %b_Strings;  i < %n;  i++, fc++) {
+	
+		fc->msg = GetCatalogStr(catalog, fc->id, (STRPTR) fc->msg);
+    }
+}
+

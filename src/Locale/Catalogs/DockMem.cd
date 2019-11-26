@@ -1,0 +1,15 @@
+#language english
+#version 1
+;
+; DockClock
+;
+;
+MSG_Description (//)
+A memory meter for DockBot
+;
+MSG_LBL_Chip (//)
+Chip %d%%
+;
+MSG_LBL_Fast (//)
+Fast %d%%
+;

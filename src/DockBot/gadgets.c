@@ -14,13 +14,7 @@
 #include <clib/layers_protos.h>
 #include <clib/graphics_protos.h>
 
-#include "dock_gadget.h"
 #include "dock_handle.h"
-
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
-#include <stdio.h>
 
 BOOL add_dock_gadget(struct DockWindow *dock, Object *dg)
 {
@@ -54,6 +48,8 @@ BOOL create_dock_handle(struct DockWindow *dock)
 
 BOOL init_gadget_classes(struct DockWindow *dock)
 {
+    DEBUG(printf("init_gadget_classes\n"));
+
     if( dock->gadgetPort = CreateMsgPort() ) {
         if( dock->handleClass = init_dock_handle_class() ) {
             return TRUE;
@@ -64,6 +60,8 @@ BOOL init_gadget_classes(struct DockWindow *dock)
 
 BOOL free_gadget_classes(struct DockWindow *dock)
 {
+    DEBUG(printf("free_gadget_classes\n"));
+
     if( dock->handleClass ) {
         if( ! free_dock_handle_class(dock->handleClass) ) {
             return FALSE;
@@ -79,6 +77,8 @@ BOOL free_gadget_classes(struct DockWindow *dock)
 
 BOOL init_gadgets(struct DockWindow *dock)
 {
+    DEBUG(printf("init_gadgets\n"));
+
     NewList(&dock->cfg.gadgets);
 
     if( create_dock_handle(dock) ) {
@@ -91,6 +91,8 @@ BOOL init_gadgets(struct DockWindow *dock)
 VOID remove_dock_gadgets(struct DockWindow *dock)
 {
     struct DgNode *dg;
+
+    DEBUG(printf("remove_dock_gadgets\n"));
 
     disable_layout(dock);
 
@@ -298,4 +300,60 @@ VOID update_hover_gadget(struct DockWindow *dock)
     }
 }
 
+
+VOID launch(struct DockWindow *dock, struct GadgetMessageLaunch *msg)
+{
+    execute_external(
+        dock,
+        msg->path,
+        msg->args, 
+        msg->console,
+        msg->wb
+    );
+
+    dock_gadget_launched(msg->m.sender,
+                         msg->path,
+                         msg->args,
+                         msg->console,
+                         msg->wb);
+}
+
+VOID handle_gadget_message(struct DockWindow *dock)
+{
+    struct DgNode *curr;
+    struct GadgetMessage *msg;
+    BOOL exists = FALSE;
+    
+    while( msg = (struct GadgetMessage *)GetMsg(dock->gadgetPort) ) {
+        if( dock->runState == RS_RUNNING ) {
+
+            FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+
+                if( msg->sender == curr->dg ) {
+                    exists = TRUE;
+                    break;
+                }
+            }
+
+            if( exists ) {
+
+                switch( msg->messageType ) {
+                    case GM_DRAW:
+                        draw_gadget(dock, msg->sender);
+                        break;
+
+                    case GM_QUIT:
+                        dock->runState = RS_QUITTING;
+                        break;    
+
+                    case GM_LAUNCH:
+                        launch(dock, (struct GadgetMessageLaunch *)msg);
+                        break;
+                }
+            }
+        }
+
+        DB_FreeMem(msg, sizeof(struct GadgetMessage));
+    }
+}
 

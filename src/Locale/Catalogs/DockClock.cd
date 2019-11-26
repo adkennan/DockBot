@@ -1,0 +1,13 @@
+#language english
+#version 1
+;
+; DockClock
+;
+;
+MSG_Description (//)
+A clock gadget for DockBot
+;
+;
+MSG_UI_Format (//)
+Format
+;

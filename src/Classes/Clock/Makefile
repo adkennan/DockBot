@@ -16,17 +16,19 @@ PRAGMA_FILE=	pragmas.h
 DEF_DEBUG=
 DEF_STRIP=
 DEF_OPT=
+DEF_DS=
+DEF_BV=
 
 C_COMPILER=	SC:c/sc
 
 CPU=		68030
-C_OPTS=		CPU=$(CPU) STREQ $(DEF_OPT) STRINGMERGE NOSTKCHK NOSTANDARDIO NOICONS $(INC) $(DEF_DEBUG)
+C_OPTS=		CPU=$(CPU) STREQ $(DEF_OPT) STRINGMERGE NOSTKCHK NOSTANDARDIO NOICONS $(INC) $(DEF_DEBUG) $(DEF_DS) $(DEF_BV)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c clock.c
+C_SOURCES=	lib.c clock.c dockclock_cat.c
 
-OBJECTS=	lib.o clock.o
+OBJECTS=	lib.o clock.o dockclock_cat.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib LIB:triton.lib
 
@@ -34,7 +36,7 @@ LIBS=		LIB:sc.lib LIB:amiga.lib LIB:triton.lib
 #
 # Build Library
 
-$(LIBFILE): $(OBJECTS) $(LIBS) $(PRAGMA_FILE)
+$(LIBFILE): catalog $(OBJECTS) $(LIBS) $(PRAGMA_FILE)
 	$(LINKER) WITH << 
 TO $(LIBDIR)$(LIBFILE)
 FROM $(OBJECTS)
@@ -69,3 +71,10 @@ reload:
 	@copy $(LIBDIR)$(LIBFILE) LIBS:
 	@version $(LIBFILE)
 	@flushlibs
+
+catalog: //Locale/Catalogs/DockClock.cd
+	@Execute << 
+		flexcat //Locale/Catalogs/DockClock.cd dockclock_cat.c=//Locale/Class_c.sd NOBEEP
+		flexcat //Locale/Catalogs/DockClock.cd dockclock_cat.h=//Locale/Class_h.sd NOBEEP
+		echo "Catalog Updated"
+	<

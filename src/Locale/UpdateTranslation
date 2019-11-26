@@ -1,0 +1,18 @@
+.key LANGUAGE/A
+
+ECHO Updating translation for <LANGUAGE>
+ECHO " "
+
+IF NOT EXISTS Catalogs
+	MAKEDIR Catalogs
+	IF NOT EXISTS Catalogs/<LANGUAGE>
+		MAKEDIR Catalogs/<LANGUAGE>
+	ENDIF
+ENDIF
+
+LIST Catalogs/#?.cd FILES LFORMAT "EXECUTE UpdateSingleTranslation <LANGUAGE> %M" >T:TransUpdateSingle
+
+EXECUTE T:TransUpdateSingle
+
+DELETE T:TransUpdateSingle
+

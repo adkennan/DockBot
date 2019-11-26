@@ -10,126 +10,51 @@
 
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
-#include <clib/utility_protos.h>
-#include <clib/dos_protos.h>
 
-#include <libraries/triton.h>
 #include <proto/triton.h>
 
-#include "dockbot.h"
-
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
-#include <stdio.h>
+const char __ver[40] = "$VER:" APP_NAME " " VERSION_STR;
 
 struct Library *DockBotBase;
 struct Library *UtilityBase;
 
-STRPTR positions[] = { "Left", "Right", "Top", "Bottom", NULL };
-STRPTR alignments[] = { "Top/Left", "Center", "Bottom/Right", NULL };
+STRPTR positions[] = { 0/*"Left"*/, 0/*"Right"*/, 0/*"Top"*/, 0/*"Bottom"*/, NULL };
+STRPTR alignments[] = { 0/*"Top/Left"*/, 0/*"Center"*/, 0/*"Bottom/Right"*/, NULL };
 
-enum {
-    OBJ_MENU_ABOUT  = 1001,
-    OBJ_MENU_QUIT   = 1002,
+TR_Project *open_main_window(VOID) {
 
-    OBJ_POSITION    = 1013,
-    OBJ_ALIGNMENT   = 1014,
-    OBJ_SHOW_LABELS = 1015,
-    
-    OBJ_GADGETS     = 1016,
+    DEBUG(printf("open_main_window\n"));
 
-    OBJ_BTN_NEW     = 1021,
-    OBJ_BTN_DELETE  = 1022,
-    OBJ_BTN_EDIT    = 1023,
-    OBJ_BTN_UP      = 1024,
-    OBJ_BTN_DOWN    = 1025,
+    positions[0] = (STRPTR)MSG_POS_Left;
+    positions[1] = (STRPTR)MSG_POS_Right;
+    positions[2] = (STRPTR)MSG_POS_Top;
+    positions[3] = (STRPTR)MSG_POS_Bottom;
 
-    OBJ_BTN_SAVE    = 1031,
-    OBJ_BTN_USE     = 1032,
-    OBJ_BTN_TEST    = 1033,
-    OBJ_BTN_CANCEL  = 1034,
+    alignments[0] = (STRPTR)MSG_ALIGN_TopLeft;
+    alignments[1] = (STRPTR)MSG_ALIGN_Center;
+    alignments[2] = (STRPTR)MSG_ALIGN_BottomRight;
 
-    OBJ_BTN_GAD_OK  = 1041,
-    OBJ_BTN_GAD_CAN = 1042,
+    return TR_OpenProjectTags(Application, 
 
-    OBJ_NEW_GADGET  = 1051,
-    OBJ_BTN_NEW_OK  = 1052,
-    OBJ_BTN_NEW_CAN = 1053,
-    OBJ_NEW_STR_NAME= 1054,
-    OBJ_NEW_STR_DESC= 1055
-};
-
-ProjectDefinition(newGadgetWindowTags)
-{
-    WindowID(2),
-    WindowTitle("New Dock Gadget"),
-    WindowPosition(TRWP_CENTERDISPLAY),
-    WindowFlags(TRWF_HELP),
-    QuickHelpOn(TRUE),
-    VertGroupEA,
-        Space,
-        HorizGroupA,
-            Space,
-            TextN("Choose Gadget"),
-            Space,    
-        EndGroup,
-        Space,
-        HorizGroupA,
-            Space,
-            ListSSN(NULL, OBJ_NEW_GADGET, 0, 0),
-            Space,
-        EndGroup,
-        HorizGroupEA,
-            Space,
-            NamedFrameBox("About"),
-                VertGroupA,
-                    Space,
-                    HorizGroupA,
-                        Space,
-                        TROB_Text, 0L, TRAT_ID, OBJ_NEW_STR_DESC,
-                            TRAT_Text, (ULONG)"\n\n\n\n\n", 
-                            TRAT_MinWidth, 30,
-                            TRAT_Flags, TRTX_MULTILINE | TRTX_NOUNDERSCORE,
-                        Space,
-                    EndGroup,
-                    Space,
-                EndGroup,
-            Space,
-        EndGroup,
-        Space,
-        HorizGroupEC,
-            Space,
-            Button("_Ok", OBJ_BTN_NEW_OK),
-            Space,
-            ButtonE("Cancel", OBJ_BTN_NEW_CAN),
-            Space,
-        EndGroup,
-        Space,
-    EndGroup
-};
-
-ProjectDefinition(mainWindowTags)
-{
     WindowID(1),
-    WindowTitle("DockBot Preferences"),
+    WindowTitle(MSG_MW_Title),
     WindowPosition(TRWP_CENTERDISPLAY),
     WindowFlags(TRWF_HELP|TRWF_APPWINDOW),
     QuickHelpOn(TRUE),
-    BeginMenu("Project"),
-        MenuItem("?_About...", OBJ_MENU_ABOUT),
+    BeginMenu(MSG_MENU_Project),
+        MenuItem(MSG_MENU_About, OBJ_MENU_ABOUT),
         ItemBarlabel,
-        MenuItem("Q_Quit", OBJ_MENU_QUIT),
+        MenuItem(MSG_MENU_Quit, OBJ_MENU_QUIT),
     HorizGroupA,
         Space,
         VertGroupA,
             Space,
-            NamedFrameBox("Dock Settings"),
+            NamedFrameBox(MSG_MW_DockSettings),
                 LineArray,
                     Space,
                     BeginLine,
                         Space,
-                        TextN("Position"),
+                        TextN(MSG_MW_Position),
                         Space,
                         CycleGadget(positions, 0, OBJ_POSITION),
                         Space,
@@ -137,7 +62,7 @@ ProjectDefinition(mainWindowTags)
                     Space,
                     BeginLine,
                         Space,
-                        TextN("Alignment"),
+                        TextN(MSG_MW_Alignment),
                         Space,
                         CycleGadget(alignments, 0, OBJ_ALIGNMENT),
                         Space,
@@ -145,7 +70,7 @@ ProjectDefinition(mainWindowTags)
                     Space,
                     BeginLine,
                         Space,
-                        TextN("Show Labels"),
+                        TextN(MSG_MW_ShowLabels),
                         Space,
                         HorizGroupSAC,
                             Space,
@@ -157,7 +82,7 @@ ProjectDefinition(mainWindowTags)
                     Space,
                 EndArray,
             Space,
-            NamedFrameBox("Gadgets"),
+            NamedFrameBox(MSG_MW_Gadgets),
                 HorizGroupA,
                     Space,
                     VertGroupA,
@@ -168,467 +93,33 @@ ProjectDefinition(mainWindowTags)
                     Space,
                     VertGroupA,
                         Space,
-                        Button("_New...", OBJ_BTN_NEW),
+                        Button(MSG_MW_NewGadget, OBJ_BTN_NEW),
                         Space,
-                        Button("_Edit...", OBJ_BTN_EDIT),
+                        Button(MSG_MW_EditGadget, OBJ_BTN_EDIT),
                         Space,
-                        Button("Delete", OBJ_BTN_DELETE),
+                        Button(MSG_MW_DeleteGadget, OBJ_BTN_DELETE),
                         Space,
-                        Button("_Up", OBJ_BTN_UP),
+                        Button(MSG_MW_GadgetUp, OBJ_BTN_UP),
                         Space,
-                        Button("_Down", OBJ_BTN_DOWN),
+                        Button(MSG_MW_GadgetDown, OBJ_BTN_DOWN),
                         Space,
                     EndGroup,
                     Space,
                 EndGroup,
             Space,
             HorizGroupEC,    
-                Button("_Save", OBJ_BTN_SAVE),
+                Button(MSG_MW_ConfigSave, OBJ_BTN_SAVE),
                 Space,
-                Button("_Use", OBJ_BTN_USE),
+                Button(MSG_MW_ConfigUse, OBJ_BTN_USE),
                 Space,
-                Button("_Test", OBJ_BTN_TEST),
+                Button(MSG_MW_ConfigTest, OBJ_BTN_TEST),
                 Space,
-                ButtonE("Cancel", OBJ_BTN_CANCEL),
+                ButtonE(MSG_Cancel, OBJ_BTN_CANCEL),
             EndGroup,
             Space,
         EndGroup,
         Space,
-    EndGroup
-    
-};
-
-struct TR_Project *mainWindow;
-
-
-struct TagItem *make_tag_list(ULONG data, ...)
-{
-    struct TagItem *tags = (struct TagItem *)&data;
-
-    return CloneTagItems(tags);
-}
-
-
-VOID gadget_selected(struct DockPrefs *prefs, ULONG index)
-{
-    struct DgNode *dg = NULL, *curr;
-    ULONG gadCount = 0;
-
-    FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
-        if( gadCount == index ) {
-            dg = curr;
-        }
-        gadCount++;
-    }
-         
-    if( gadCount == 0 ) 
-    {
-        TR_SetAttribute(mainWindow, OBJ_BTN_UP, TRAT_Disabled, TRUE);
-        TR_SetAttribute(mainWindow, OBJ_BTN_DOWN, TRAT_Disabled, TRUE);
-        TR_SetAttribute(mainWindow, OBJ_BTN_EDIT, TRAT_Disabled, TRUE);
-        TR_SetAttribute(mainWindow, OBJ_BTN_DELETE, TRAT_Disabled, TRUE);
-    } else {
-        TR_SetAttribute(mainWindow, OBJ_BTN_UP, TRAT_Disabled, index == 0);
-        TR_SetAttribute(mainWindow, OBJ_BTN_DOWN, TRAT_Disabled, index == gadCount - 1);
-        TR_SetAttribute(mainWindow, OBJ_BTN_EDIT, TRAT_Disabled, !dock_gadget_can_edit(dg->dg));
-        TR_SetAttribute(mainWindow, OBJ_BTN_DELETE, TRAT_Disabled, FALSE);
-    }
-}
-
-VOID free_gadget_list(struct DockPrefs *prefs)
-{
-    struct Node *ln;
-
-    while( ! IsListEmpty(&prefs->gadLabels) ) {
-        if( ln = RemTail(&prefs->gadLabels) ) {
-            DB_FreeMem(ln, sizeof(struct Node) + strlen(ln->ln_Name) + 1);
-        }        
-    }
-}
-
-VOID update_gadget_list(struct DockPrefs *prefs)
-{
-    struct DgNode *curr;
-    struct Node *ln;
-    STRPTR label;
-    UWORD len;
-
-    free_gadget_list(prefs);
-
-    FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
-        dock_gadget_get_label(curr->dg, &label);
-        if( ! label ) {
-            label = curr->n.ln_Name;
-        }
-        len = strlen(label) + 1;
-
-        if( ln = (struct Node *)DB_AllocMem(sizeof(struct Node) + len + 1, MEMF_ANY) ) {
-            ln->ln_Name = (STRPTR)(ln + 1);
-            CopyMem(label, (VOID *)(ln + 1), len);
-            AddTail(&prefs->gadLabels, ln);
-        }
-    }
-
-    TR_SetAttribute(mainWindow, OBJ_GADGETS, 0L, (ULONG)&(prefs->gadLabels));
-}
-
-struct DgNode *get_selected_gadget(struct DockPrefs *prefs)
-{
-    struct DgNode *curr;
-    ULONG gadCount = 0, index;
-    
-    index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value);
-
-    FOR_EACH_GADGET(&prefs->cfg.gadgets, curr) {
-
-        if( gadCount == index ) {
-            return curr;
-        }
-        gadCount++;
-    }
-
-    return NULL;
-}
-
-VOID move_gadget_up(struct DockPrefs *prefs)
-{
-    struct DgNode* dg;
-    struct Node *newPred;
-    ULONG index;
-
-    if( (dg = get_selected_gadget(prefs)) && dg->n.ln_Pred ) {
-
-        newPred = dg->n.ln_Pred->ln_Pred;
-        Remove((struct Node *)dg);
-        Insert(&(prefs->cfg.gadgets), (struct Node *)dg, newPred);
-
-        update_gadget_list(prefs);
-
-        index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value) - 1;
-        TR_SetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value, index);
-        gadget_selected(prefs, index);
-    }
-}
-
-VOID move_gadget_down(struct DockPrefs *prefs)
-{
-    struct DgNode* dg;
-    struct Node *newPred;
-    ULONG index;
-
-    if( (dg = get_selected_gadget(prefs)) && dg->n.ln_Succ ) {
-
-        newPred = dg->n.ln_Succ;
-        Remove((struct Node *)dg);
-        Insert(&(prefs->cfg.gadgets), (struct Node *)dg, newPred);
-
-        update_gadget_list(prefs);
-
-        index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value) + 1;
-        TR_SetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value, index);
-        gadget_selected(prefs, index);
-
-    }
-}
-
-VOID delete_gadget(struct DockPrefs *prefs)
-{
-    struct DgNode *dg;
-    ULONG index;
-
-    if( dg = get_selected_gadget(prefs) ) {
-
-        if( TR_EasyRequestTags(Application, 
-            "Are you sure you want to remove this gadget?", "_Ok|Cancel", 
-            TREZ_LockProject, mainWindow,
-            TREZ_Title, "Delete Gadget",
-            TREZ_Activate, TRUE,
-            TAG_END) == 1 ) {
-
-            remove_dock_gadget(dg);
-
-            update_gadget_list(prefs);
-
-            index = TR_GetAttribute(mainWindow, OBJ_GADGETS, TRAT_Value);
-            gadget_selected(prefs, index);
-        }
-    }
-}
-
-ULONG count_tags(struct TagItem *list)
-{
-    ULONG c = 0;
-    struct TagItem *tstate, *tag;
-
-    if( list == NULL ) {
-        return 0;
-    }
-
-    tstate = list;
-    while( tag = NextTagItem(&tstate) ) {
-        c++;
-    }
-    return c;
-}
-
-struct TagItem *copy_tags(struct TagItem *dest, struct TagItem *src)
-{
-    struct TagItem *tstate, *tag;
-
-    tstate = src;
-    while( tag = NextTagItem(&tstate) ) {
-        dest->ti_Tag = tag->ti_Tag;
-        dest->ti_Data = tag->ti_Data;
-        dest++;
-    }
-    return dest;
-}
-
-struct TagItem *merge_tag_lists(struct TagItem *head, struct TagItem *middle, struct TagItem *tail)
-{
-    struct TagItem *newTags, *dest;
-    ULONG tagCount = count_tags(head) + count_tags(middle) + count_tags(tail);
-
-    if( newTags = AllocateTagItems(tagCount) ) {
-
-        dest = newTags;
-        dest = copy_tags(dest, head);
-        if( middle != NULL ) {
-            dest = copy_tags(dest, middle);
-        }
-        dest = copy_tags(dest, tail);
-
-        dest->ti_Tag = TAG_END;
-    }
-
-    return newTags;
-}
-
-VOID edit_gadget(struct DockPrefs *prefs, struct DgNode *dg)
-{    
-    struct TagItem *gadTags, *headTags, *windowTags, *tailTags;
-
-    prefs->editGadgetIsNew = FALSE;
-
-    if( dg ) {
-
-        prefs->editGadget = dg;
-
-        if( gadTags = dock_gadget_get_editor(dg->dg) ) {
-
-            if( headTags = make_tag_list(
-                    WindowID(2),
-                    WindowTitle(dg->n.ln_Name),
-                    WindowPosition(TRWP_CENTERDISPLAY),
-                    WindowFlags(TRWF_HELP),
-                    QuickHelpOn(TRUE),
-                    HorizGroupA,
-                        VertGroupA,
-                            Space,
-                            TAG_END
-                ) ) {
-
-                if( tailTags = make_tag_list(
-                            Space,
-                            HorizGroupEC,
-                                Space,
-                                ButtonR("Ok", OBJ_BTN_GAD_OK),
-                                Space,
-                                ButtonE("Cancel", OBJ_BTN_GAD_CAN),
-                                Space,
-                            EndGroup, 
-                            Space,                       
-                        EndGroup,
-                    EndGroup,
-                    TAG_END
-                ) ) {
-
-                    if( windowTags = merge_tag_lists(headTags, gadTags, tailTags) ) {
-
-                        TR_LockProject(mainWindow);
-
-                        if( !(prefs->editDialog = TR_OpenProject(Application, windowTags) ) ) {
-    
-                            DB_ShowError("Unable to display editor dialogue.");
-                            TR_UnlockProject(mainWindow);
-                        }
-
-                        FreeTagItems(windowTags);
-                    }
-                    FreeTagItems(tailTags);
-                }
-                FreeTagItems(headTags);
-            }
-
-            FreeTagItems(gadTags);
-        }
-    }
-}
-
-VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
-{
-    STRPTR path;
-    STRPTR gadName;
-    BPTR lock;
-    struct FileInfoBlock *fib;
-    Object *btn;
-    UWORD len;
-    struct DgNode *dg;
-
-    if( path = (STRPTR)DB_AllocMem(MAX_PATH_LENGTH, MEMF_ANY) ) {
-
-        path[0] = 0;
-        NameFromLock(msg->am_ArgList->wa_Lock, path, MAX_PATH_LENGTH);
-        AddPart(path, msg->am_ArgList->wa_Name, MAX_PATH_LENGTH);
-        
-        if( lock = Lock(path, ACCESS_READ) ) {
-            
-            if( fib = AllocDosObjectTags(DOS_FIB, TAG_DONE) ) {
-
-                if( Examine(lock, fib) ) {
-    
-                   if( fib->fib_DirEntryType < 0 ) {
-    
-                        // A file was dropped. Create a new DockButton.
-
-                        len = strlen(DB_BUTTON_CLASS) + 1;
-
-                        if( btn = DB_CreateDockGadget(DB_BUTTON_CLASS) ) {                 
-
-                            dock_gadget_init_button(btn, msg->am_ArgList->wa_Name, path);
-
-                            if( gadName = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) {                
-
-                                CopyMem(DB_BUTTON_CLASS, gadName, len);
-
-                                if( dg = add_dock_gadget(prefs, btn, gadName) ) {
-
-                                    update_gadget_list(prefs);
-
-                                    edit_gadget(prefs, dg);                                    
-
-                                    prefs->editGadgetIsNew = TRUE;
-
-                                } else {
-                                    DB_FreeMem(gadName, len);
-                                    DisposeObject(btn);
-                                }                
-                            } else {
-                                DisposeObject(btn);
-                            }
-                        }
-                        
-                    } else {
-                        TR_EasyRequestTags(Application,
-                            "Sorry, directories cannot be added to the dock.", "_Ok",
-                            TREZ_LockProject, mainWindow,
-                            TREZ_Title, "Add Gadget",
-                            TREZ_Activate, TRUE, TAG_END);
-                    }
-                }
-
-                FreeDosObject(DOS_FIB, fib);
-            }
-            UnLock(lock);
-        }
-
-        DB_FreeMem(path, MAX_PATH_LENGTH);
-    }
-}
-
-VOID create_new_gadget(struct DockPrefs *prefs)
-{
-    struct Node *curr;
-    ULONG gadCount = 0, index;
-    Object *g;
-    struct DgNode *dg;
-    STRPTR gadName;
-    UWORD len;
-
-    index = TR_GetAttribute(prefs->newGadgetDialog, OBJ_NEW_GADGET, TRAT_Value);
-
-    for( curr = prefs->classes.lh_Head; curr->ln_Succ; curr = curr->ln_Succ ) {
-        if( gadCount == index ) {
-
-            len = strlen(curr->ln_Name) + 1;
-            if( gadName = DB_AllocMem(len, MEMF_CLEAR) ) {
-                CopyMem(curr->ln_Name, gadName, len);
-
-                if( g = DB_CreateDockGadget(gadName) ) {
-                    if( dg = add_dock_gadget(prefs, g, gadName) ) {
-
-                        update_gadget_list(prefs);
-    
-                        if( dock_gadget_can_edit(g) ) {
-
-                            edit_gadget(prefs, dg);
-    
-                            prefs->editGadgetIsNew = TRUE;
-                        }
-
-                        break;
-                    }
-                    DisposeObject(g);
-                }
-                DB_FreeMem(gadName, len);
-            }
-
-            break;
-        }
-        gadCount++;
-    }
-}
-
-VOID class_selected(struct DockPrefs *prefs)
-{
-    STRPTR name;
-    STRPTR desc;
-    STRPTR copy;
-    STRPTR vers;
-    STRPTR text;
-    Object *g;
-    struct Node *curr;
-    ULONG gadCount = 0, index, len;
-
-    index = TR_GetAttribute(prefs->newGadgetDialog, OBJ_NEW_GADGET, TRAT_Value);
-
-    for( curr = prefs->classes.lh_Head; curr->ln_Succ; curr = curr->ln_Succ ) {
-        if( gadCount == index ) {
-
-            if( g = DB_CreateDockGadget(curr->ln_Name) ) {
-
-                dock_gadget_get_info(g, &name, &vers, &desc, &copy);
-
-                len = strlen(name) + strlen(vers) + strlen(desc) + strlen(copy) + 8;
-                if( text = DB_AllocMem(len, MEMF_CLEAR) ) {
-
-                    sprintf(text, "%s %s\n\n%s\n\n%s\n", name, vers, desc, copy);    
-
-                    TR_SetAttribute(prefs->newGadgetDialog, OBJ_NEW_STR_DESC, TRAT_Text, (ULONG)text);
-
-                    DB_FreeMem(text, len);
-                }
-                DisposeObject(g);
-            }
-
-            break;
-        }
-        gadCount++;
-    }
-}
-
-VOID open_new_gadget_dialog(struct DockPrefs *prefs)
-{
-    if( ! (prefs->newGadgetDialog = TR_OpenProject(Application, newGadgetWindowTags) ) ) {
-    
-        return;
-    }
-
-    TR_LockProject(mainWindow);
-
-    TR_SetAttribute(prefs->newGadgetDialog, OBJ_NEW_GADGET, 0, (ULONG)&prefs->classes);
-
-    class_selected(prefs);
+    EndGroup);    
 }
 
 VOID run_event_loop(struct DockPrefs *prefs) 
@@ -639,6 +130,8 @@ VOID run_event_loop(struct DockPrefs *prefs)
     ULONG msgClass, msgID, msgData;
     UWORD openWindowCount = 0;
 
+    DEBUG(printf("run_event_loop\n"));
+
     while( ! done || openWindowCount > 0 ) {
         TR_Wait(Application, NULL);
 
@@ -648,7 +141,7 @@ VOID run_event_loop(struct DockPrefs *prefs)
             msgID = msg->trm_ID;
             msgData = msg->trm_Data;
 
-            if( msgProj == mainWindow ) {
+            if( msgProj == prefs->mainWindow ) {
                 switch( msgClass ) {
                     case TRMS_CLOSEWINDOW:
                         done = TRUE;
@@ -806,38 +299,48 @@ VOID run_event_loop(struct DockPrefs *prefs)
             if( closeMsgProj ) {
                 TR_CloseProject(msgProj);
                 closeMsgProj = FALSE;
-                TR_UnlockProject(mainWindow);
+                TR_UnlockProject(prefs->mainWindow);
             }
         }
     }
+
+    DEBUG(printf("run_event_loop: Done.\n"));
 }
 
 
-const char __libErr[33] = "Unable to open version %d of %s.";
-
-VOID ShowOpenLibError(STRPTR name, UWORD version) {
+VOID show_open_lib_err(STRPTR name, UWORD version) {
     STRPTR msg;
     UWORD l;
   
-    l = strlen(name) + strlen(__libErr);
+    l = strlen(name) + strlen(MSG_ERR_OpenLibrary);
     if( msg = DB_AllocMem(l, MEMF_ANY) ) {
-        sprintf(msg, __libErr, version, name);
+        sprintf(msg, MSG_ERR_OpenLibrary, version, name);
+        DEBUG(printf(msg));
         DB_ShowError(msg);
         DB_FreeMem(msg, l);
     }
 }
 
-struct Library *OpenLib(STRPTR name, UWORD version) {
+struct Library *open_lib(STRPTR name, UWORD version) {
 
     struct Library *lib;
 
+    DEBUG(printf("open_lib: %s V %d\n", name, version));
+
     if( !(lib = OpenLibrary(name, version) ) ) {
-        ShowOpenLibError(name, version);
+        show_open_lib_err(name, version);
     }
 
     return lib;
 }
 
+VOID close_lib(STRPTR name, struct Library *lib) {
+
+    if( lib ) {
+        DEBUG(printf("close_lib: %s\n", name));
+        CloseLibrary(lib);
+    }
+}  
 
 int main(char **argv, int argc)
 {
@@ -847,25 +350,25 @@ int main(char **argv, int argc)
 
         if( TR_OpenTriton(TRITON11VERSION,
             TRCA_Name,      "DockBotPrefs",
-            TRCA_LongName,  "DockBot Preferences",
-            TRCA_Info,      "Preferences editor for DockBot",
+            TRCA_LongName,  MSG_APP_Title,
+            TRCA_Info,      MSG_APP_Info,
             TAG_END) ) {
 
-            if( UtilityBase = OpenLib("utility.library", 37) ) {
+            if( UtilityBase = open_lib("utility.library", 37) ) {
 
                 NewList(&prefs.cfg.gadgets);
                 NewList(&prefs.gadLabels);
                 NewList(&prefs.classes);
 
-                if( mainWindow = TR_OpenProject(Application, mainWindowTags) ) {
+                if( prefs.mainWindow = open_main_window() ) {
 
                     if( load_config(&prefs) ) {
 
                         if( DB_ListClasses(&prefs.classes) ) {
 
-                            TR_SetAttribute(mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
-                            TR_SetAttribute(mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
-                            TR_SetAttribute(mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
+                            TR_SetAttribute(prefs.mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
+                            TR_SetAttribute(prefs.mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
+                            TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
         
                             update_gadget_list(&prefs);
 
@@ -878,24 +381,24 @@ int main(char **argv, int argc)
 
                             free_plugins(&prefs);
                         } else {
-                            DB_ShowError("Couldn't load class list.");
+                            DB_ShowError((STRPTR)MSG_ERR_ClassList);
                         }
 
                     } else {
-                        DB_ShowError("Couldn't load config.");
+                        DB_ShowError((STRPTR)MSG_ERR_LoadConfig);
                     }
-                    TR_CloseProject(mainWindow);            
+                    TR_CloseProject(prefs.mainWindow);            
                 } else { 
-                    DB_ShowError("Couldn't open window.");
+                    DB_ShowError((STRPTR)MSG_ERR_OpenWindow);
                 }
-                CloseLibrary(UtilityBase);
+                close_lib("utility.library", UtilityBase);
             }
             TR_CloseTriton();
         } else {
-            ShowOpenLibError("triton.library", TRITON11VERSION);
+            show_open_lib_err("triton.library", TRITON11VERSION);
         }
             
-        CloseLibrary(DockBotBase);
+        close_lib("PROGDIR:dockbot.library", DockBotBase);
     }
 }
 

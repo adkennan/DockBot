@@ -6,20 +6,16 @@
 **
 ************************************/
 
+#include "dock.h"
+
 #include <exec/memory.h>
 #include <exec/libraries.h>
 
 #include <clib/exec_protos.h>
 
-#include <stdio.h>
 #include <string.h>
 
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
-#include "debug.h"
-
-const char __ver[40] = "$VER:DockBot 1.0 (03.06.2019)";
+const char __ver[40] = "$VER:" APP_NAME " " VERSION_STR;
 
 struct Library *DosBase;
 struct Library *LayersBase;
@@ -29,39 +25,52 @@ struct Library *WorkbenchBase;
 struct Library *DockBotBase;
 struct Library *GadToolsBase;
 struct Library *CxBase;
-
-struct DockWindow;
-
-struct DockWindow *create_dock(VOID);
-VOID run_event_loop(struct DockWindow *);
-VOID free_dock(struct DockWindow *);
+struct Library *ScreenNotifyBase;
+struct Library *LocaleBase;
 
 BOOL already_running(VOID)
 {
-    if( FindPort("DockBot") ) {
+    if( FindPort(APP_NAME) ) {
         return TRUE;
     }
     return FALSE;
 }
 
-const char __libErr[33] = "Unable to open version %d of %s.";
-
-struct Library *OpenLib(STRPTR name, UWORD version) {
-
+struct Library *open_lib(STRPTR name, UWORD version, BOOL optional) 
+{
     struct Library *lib;
     STRPTR msg;
     UWORD l;
 
+    DEBUG(printf("Opening %s V %d...", name, version));
+
     if( !(lib = OpenLibrary(name, version) ) ) {
-        l = strlen(name) + strlen(__libErr);
+
+        DEBUG(printf("Failed\n"));
+
+        if( optional ) {
+            return NULL;
+        }
+
+        l = strlen(name) + strlen(MSG_ERR_OpenLibrary);
         if( msg = DB_AllocMem(l, MEMF_ANY) ) {
-            sprintf(msg, __libErr, version, name);
+            sprintf(msg, MSG_ERR_OpenLibrary, version, name);
             DB_ShowError(msg);
             DB_FreeMem(msg, l);
         }
+    } else {
+        DEBUG(printf("OK\n"));
     }
 
     return lib;
+}
+
+VOID close_lib(STRPTR name, struct Library *lib) 
+{
+    if( lib ) {
+        DEBUG(printf("Closing %s\n", name));
+        CloseLibrary(lib);
+    }
 }
 
 int main(int argc, char** argv)
@@ -74,44 +83,54 @@ int main(int argc, char** argv)
 
     if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
    
-        if( DosBase = OpenLib("dos.library", 39) ) {
+        if( DosBase = open_lib("dos.library", 39, FALSE) ) {
 
-            if( GfxBase = OpenLib("graphics.library", 39) ) {
+            if( GfxBase = open_lib("graphics.library", 39, FALSE) ) {
 
-                if( LayersBase = OpenLib("layers.library", 39) ) {
+                if( LayersBase = open_lib("layers.library", 39, FALSE) ) {
 
-                    if( IntuitionBase = OpenLib("intuition.library", 39) ) {
+                    if( IntuitionBase = open_lib("intuition.library", 39, FALSE) ) {
     
-                        if( GadToolsBase = OpenLib("gadtools.library", 39) ) {
+                        if( GadToolsBase = open_lib("gadtools.library", 39, FALSE) ) {
         
-                            if( WorkbenchBase = OpenLib("workbench.library", 39) ) {
+                            if( WorkbenchBase = open_lib("workbench.library", 39, FALSE) ) {
 
-                                if( CxBase = OpenLib("commodities.library", 39) ) {
+                                if( CxBase = open_lib("commodities.library", 39, FALSE) ) {
+
+                                    if( LocaleBase = open_lib("locale.library", 39, FALSE) ) {
     
-                                    if( dock = create_dock() ) {
+                                        ScreenNotifyBase = open_lib("screennotify.library", 1, TRUE);
+
+                                        open_catalog();
+
+                                        if( dock = create_dock() ) {
+                                                                   
+                                            run_event_loop(dock);                     
+
+                                            free_dock(dock);   
                 
-                                        run_event_loop(dock);                     
-        
-                                        free_dock(dock);   
-                  
-                                        LOG_MEMORY
+                                            LOG_MEMORY
+                                        }
+    
+                                        close_catalog();
+                                            
+                                        close_lib("screennotify.library", ScreenNotifyBase);
+                                        close_lib("locale.library", LocaleBase);
                                     }
-                                    CloseLibrary(CxBase);
+                                    close_lib("commodities.library", CxBase);
                                 }
-                                CloseLibrary(WorkbenchBase);
+                                close_lib("workbench.library", WorkbenchBase);
                             }
-                            CloseLibrary(GadToolsBase);
+                            close_lib("gadtools.library", GadToolsBase);
                         }        
-                        CloseLibrary(IntuitionBase);
+                        close_lib("intuition.library", IntuitionBase);
                     }
-                    CloseLibrary(LayersBase);
+                    close_lib("layers.library", LayersBase);
                 }
-                CloseLibrary(GfxBase);
+                close_lib("graphics.library", GfxBase);
             }
-            CloseLibrary(DosBase);
+            close_lib("dos.library", DosBase);
         }  
-        CloseLibrary(DockBotBase);
-    } else {
-        printf("ERROR: DockBot.library not found.");
+        close_lib("dockbot.library", DockBotBase);
     }
 }

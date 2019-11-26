@@ -1,0 +1,10 @@
+.key LANGUAGE/A,APP/A
+
+ECHO Updating translation of <APP> for <LANGUAGE>
+ECHO " "
+
+IF EXISTS Catalogs/<LANGUAGE>/<APP>.ct
+	flexcat Catalogs/<APP>.cd Catalogs/<LANGUAGE>/<APP>.ct NEWCTFILE Catalogs/<LANGUAGE>/<APP>.ct NOBEEP
+ELSE
+	flexcat Catalogs/<APP>.cd NEWCTFILE Catalogs/<LANGUAGE>/<APP>.ct NOBEEP
+ENDIF

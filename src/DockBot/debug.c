@@ -6,15 +6,7 @@
 **
 ************************************/
 
-#include <stdio.h>
-
-#include "debug.h"
-
 #include "dock.h"
-
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
 
 struct MemoryControl
 {

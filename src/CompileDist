@@ -1,5 +1,9 @@
 .key CLEAN/S
 
+CD Locale
+EXECUTE CompileAllCatalogs
+CD /
+
 EXECUTE Compile CLEANOBJ
 
 EXECUTE Compile <CLEAN> STRIP OPT CPU=68000 DIR=/bin/68000

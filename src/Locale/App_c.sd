@@ -1,0 +1,66 @@
+##rem $Id$
+##stringtype C
+##shortstrings
+
+/****************************************************************
+
+   This file was created automatically by `%fv'
+   from "%f0".
+
+   Do NOT edit by hand!
+
+****************************************************************/
+
+#include <exec/memory.h>
+#include <libraries/iffparse.h>
+
+#include <proto/locale.h>
+
+#include "dockbot.h"
+
+#include "%b_cat.h"
+
+#include <stdio.h>
+
+struct FC_String %b_Strings[%n] = {
+    { (STRPTR) %s, %d }%(,)
+};
+
+STATIC struct Catalog *%bCatalog = NULL;
+
+VOID open_catalog(VOID)
+{	
+    struct FC_String *fc;
+	UWORD i;
+
+	DEBUG(printf("open_catalog: %b.catalog\\n"));
+	if( ! LocaleBase ) {
+		DEBUG(printf("  Locale library not found.\\n"));
+		return;
+	}
+
+	if( !(%bCatalog = OpenCatalog(NULL, (STRPTR) "%b.catalog",
+			 			 		     OC_BuiltInLanguage, %l,
+								     OC_Version, %v,
+								     TAG_DONE))) {
+		DEBUG(printf("  Unable to open catalog.\\n"));
+		return;
+	}
+
+    for (i = 0, fc = %b_Strings;  i < %n;  i++, fc++) {
+	
+		fc->msg = GetCatalogStr(%bCatalog, fc->id, (STRPTR) fc->msg);
+    }
+}
+
+VOID close_catalog(VOID) 
+{
+	DEBUG(printf("close_catalog: %b.catalog\\n"));
+	if( ! %bCatalog ) {
+		DEBUG(printf(" Catalog not open.\\n"));
+		return;
+	}
+
+	CloseCatalog(%bCatalog);
+}
+

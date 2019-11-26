@@ -30,6 +30,8 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
 {
     struct DgNode *dg;
 
+    DEBUG(printf("add_dock_gadget: %s\n", name));
+
     if( dg = (struct DgNode *)DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
         dg->n.ln_Name = name;
         dg->dg = obj;
@@ -46,6 +48,8 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
 
 VOID remove_dock_gadget(struct DgNode *dg)
 {
+    DEBUG(printf("remove_dock_gadget: %s\n", dg->n.ln_Name));
+
     Remove((struct Node *)dg);
 
     FREE_STRING(dg->n.ln_Name);
@@ -58,6 +62,8 @@ VOID remove_dock_gadget(struct DgNode *dg)
 VOID remove_dock_gadgets(struct DockPrefs *prefs)
 {
     struct DgNode *dg;
+
+    DEBUG(printf("remove_dock_gadgets\n"));
 
     while( ! IsListEmpty((struct List *)&prefs->cfg.gadgets) ) {
         if( dg = (struct DgNode *)RemTail((struct List *)&prefs->cfg.gadgets) ) {
@@ -72,6 +78,8 @@ VOID free_plugins(struct DockPrefs *prefs)
 {
     struct Node *node;
     UWORD len;
+
+    DEBUG(printf("free_plugins\n"));
 
     while( ! IsListEmpty(&prefs->classes) ) {
         if( node = RemTail(&prefs->classes) ) {
@@ -88,6 +96,8 @@ BOOL load_config(struct DockPrefs *prefs)
     struct DockSettings *s;
     BOOL r = FALSE;
     struct DgNode *curr;
+
+    DEBUG(printf("load_config\n"));
 
     if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 
@@ -110,6 +120,8 @@ BOOL save_config(struct DockPrefs *prefs, BOOL permanent)
     struct DockSettings *s;
     BOOL r = FALSE;
 
+    DEBUG(printf("save_config: %s\n", permanent ? CONFIG_FILE_PERM : CONFIG_FILE));
+
     if( s = DB_OpenSettingsWrite(permanent ? CONFIG_FILE_PERM : CONFIG_FILE) ) {
 
         if( DB_WriteConfig(&prefs->cfg, s) ) {
@@ -129,6 +141,8 @@ VOID revert_config(VOID) {
     BPTR fh2;
     struct FileInfoBlock *fib;
     BYTE *buf;
+
+    DEBUG(printf("revert_config\n"));
 
     if( fib = AllocDosObjectTags(DOS_FIB, TAG_DONE) ) {
            

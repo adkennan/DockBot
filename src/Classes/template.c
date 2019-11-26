@@ -18,8 +18,11 @@
 #include <exec/resident.h>
 #include <exec/initializers.h>
 
+#include <libraries/locale.h>
+
 #include <proto/exec.h>
 #include <proto/intuition.h>
+#include <proto/locale.h>
 
 #include "dockbot.h"
 
@@ -39,6 +42,8 @@ struct ClassLibrary {
     struct Library          *cl_IntuitionBase;
     struct Library          *cl_DockBotBase;
     struct Library          *cl_TritonBase;
+    struct Library          *cl_LocaleBase;
+    struct Catalog          *cl_Catalog;
 #ifdef GADGET_LIB_DATA
     struct GADGET_LIB_DATA  cl_Data;
 #endif
@@ -69,9 +74,12 @@ BPTR __saveds __asm _LibExpunge(
 ULONG __saveds __asm ExtFuncLib(
     register __a6 struct ClassLibrary *ClassLibraryBase);
 
-Class * __saveds __asm _GetEngine(
+Class * __saveds __asm GetEngine(
     register __a6 struct ClassLibrary *ClassLibraryBase);
 
+VOID __saveds __asm SetCatalog(
+    register __a6 struct ClassLibrary *ClassLibraryBase,
+    register __a0 struct Catalog *catalog);
 
 /**** Utility Functions ****/
 
@@ -82,6 +90,8 @@ VOID __saveds FreeLib(struct ClassLibrary *cb);
 Class* __saveds InitClass(VOID);
 
 VOID __saveds CleanUpClass(struct ClassLibrary *cb);
+
+VOID InitCatalog(struct Catalog *catalog);
 
 /**** Class library constructor/destructor ****/
 #ifdef GADGET_LIB_INIT
@@ -169,7 +179,7 @@ APTR FuncTable[] = {
     _LibExpunge,
     ExtFuncLib,
 
-    _GetEngine,
+    GetEngine,
     (APTR)-1
 };
 
@@ -178,6 +188,7 @@ struct IntuitionBase *IntuitionBase;
 struct Library *DockBotBase;
 extern struct Library *TritonBase;
 struct ClassLibrary *ClassLib;
+struct Library *LocaleBase;
 
 struct ClassLibrary * __saveds __asm InitLib(
     register __a6 struct Library *sysBase,
@@ -190,24 +201,35 @@ struct ClassLibrary * __saveds __asm InitLib(
     cb->cl_SegList = segList;
 
     if( IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39) ) {
-        if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
-            if( cb->cl_GadgetClass = InitClass() ) {
+        if( LocaleBase = OpenLibrary("locale.library", 37) ) {
+            if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+                if( cb->cl_GadgetClass = InitClass() ) {
+
+                    if( cb->cl_Catalog = OpenCatalog(NULL, CLASS_NAME ".catalog"
+                                            , OC_BuiltInLanguage, "english"
+              	    					    , OC_Version, 0
+								            , TAG_DONE) ) {
+
+                        InitCatalog(cb->cl_Catalog);            
+                    }
 
 #ifdef GADGET_LIB_INIT
-                if( GADGET_LIB_INIT(&cb->cl_Data) ) {
+                    if( GADGET_LIB_INIT(&cb->cl_Data) ) {
 #endif
-                    cb->cl_IntuitionBase = (struct Library *)IntuitionBase;
-                    cb->cl_DockBotBase = DockBotBase;
-                    cb->cl_TritonBase = NULL;
-                    TritonBase = NULL;
-    
-                    ClassLib = cb;
+                        cb->cl_IntuitionBase = (struct Library *)IntuitionBase;
+                        cb->cl_DockBotBase = DockBotBase;
+                        cb->cl_TritonBase = NULL;
+                        cb->cl_LocaleBase = LocaleBase;
+                        TritonBase = NULL;
+        
+                        ClassLib = cb;
 
-                    return cb;
-
+                        return cb;
+                        
 #ifdef GADGET_LIB_INIT
+                    }
+#endif
                 }
-#endif
             }
         }
     }
@@ -274,7 +296,7 @@ ULONG __saveds __asm ExtFuncLib(
 }
 
 
-Class* __saveds __asm _GetEngine(
+Class* __saveds __asm GetEngine(
     register __a6 struct ClassLibrary *ClassLibraryBase) 
 {
     return ClassLibraryBase->cl_GadgetClass;
@@ -379,7 +401,7 @@ ULONG __saveds GetGadgetInfo(Class *c, Object *o, Msg msg)
     struct DockMessageGetInfo *i = (struct DockMessageGetInfo *)msg;
     
     i->name = CLASS_NAME;
-    i->description = CLASS_DESC;
+    i->description = (STRPTR)MSG_Description;
     i->version = CLASS_VER_STR;
     i->copyright = CLASS_COPYRIGHT;
 
@@ -559,6 +581,10 @@ VOID __saveds CleanUpClass(struct ClassLibrary *cb)
         RemoveClass(cb->cl_GadgetClass);
         FreeClass(cb->cl_GadgetClass);
     }
+
+    if( cb->cl_Catalog ) {
+        CloseCatalog(cb->cl_Catalog);   
+    }
 }
 
 
@@ -574,6 +600,10 @@ VOID __saveds CloseLibs(VOID)
 
     if( IntuitionBase ) {
         CloseLibrary((struct Library *)IntuitionBase);
+    }
+
+    if( LocaleBase ) {
+        CloseLibrary(LocaleBase);
     }
 }
 

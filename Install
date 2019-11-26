@@ -58,23 +58,25 @@
 		(if (> @user-level 1)
 			(
 				(if (= #cpu-type "68000") (set #cpu-selection 0))
-				(if (= #cpu-type "68020") (set #cpu-selection 1))
-				(if (= #cpu-type "68030") (set #cpu-selection 2))
-				(if (= #cpu-type "68040") (set #cpu-selection 3))
-				(if (= #cpu-type "68060") (set #cpu-selection 4))
+				(if (= #cpu-type "68010") (set #cpu-selection 1))
+				(if (= #cpu-type "68020") (set #cpu-selection 2))
+				(if (= #cpu-type "68030") (set #cpu-selection 3))
+				(if (= #cpu-type "68040") (set #cpu-selection 4))
+				(if (= #cpu-type "68060") (set #cpu-selection 5))
 				(set #cpu-selection
 					(askchoice
 						(prompt #cpu-type-prompt)
-						(choices "68000" "68020" "68030" "68040" "68060")
+						(choices "68000" "68010" "68020" "68030" "68040" "68060")
 						(default #cpu-selection)
 						(help #cpu-type-help )
 					)
 				)
 				(if (= #cpu-selection 0) (set #cpu-type "68000"))
-				(if (= #cpu-selection 1) (set #cpu-type "68020"))
-				(if (= #cpu-selection 2) (set #cpu-type "68030"))
-				(if (= #cpu-selection 3) (set #cpu-type "68040"))
-				(if (= #cpu-selection 4) (set #cpu-type "68060"))
+				(if (= #cpu-selection 1) (set #cpu-type "68010"))
+				(if (= #cpu-selection 2) (set #cpu-type "68020"))
+				(if (= #cpu-selection 3) (set #cpu-type "68030"))
+				(if (= #cpu-selection 4) (set #cpu-type "68040"))
+				(if (= #cpu-selection 5) (set #cpu-type "68060"))
 
 			)
 		)
@@ -174,6 +176,10 @@
            (infos)
 )
 (complete 75)
+; 
+; TODO: Copy translations when we have some.
+;
+(complete 85)
 (if (= #run-on-start 0 )
 	(
 	    (set #launcher-dir #app-dir)

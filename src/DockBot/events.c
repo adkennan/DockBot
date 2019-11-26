@@ -6,542 +6,34 @@
 **
 ************************************/
 
-#include <exec/io.h>
-#include <workbench/startup.h>
-#include <workbench/workbench.h>
-#include <dos/dostags.h>
-#include <libraries/gadtools.h>
-#include <clib/exec_protos.h>
-#include <clib/dos_protos.h>
-#include <clib/alib_protos.h>
-#include <clib/intuition_protos.h>
-#include <clib/wb_protos.h>
-#include <clib/icon_protos.h>
-#include <clib/commodities_protos.h>
-#include <devices/timer.h>
-
-#include <stdio.h>
-
 #include "dock.h"
 
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
+#include <clib/exec_protos.h>
 
-#include "dock_gadget.h"
+#define SIG(port) (port ? (1 << port->mp_SigBit) : 0)
 
-#include "debug.h"
-
-#define DOCK_SIG(dw) (dw->awPort ? (1 << dw->awPort->mp_SigBit) : 0)
-#define ICON_SIG(dw) (dw->aiPort ? (1 << dw->aiPort->mp_SigBit) : 0)
+#define DOCK_SIG(dw) SIG(dw->awPort)
+#define ICON_SIG(dw) SIG(dw->aiPort)
 #define WIN_SIG(dw) (dw->win ? (1 << dw->win->UserPort->mp_SigBit) : 0)
-#define NOTIFY_SIG(dw) (dw->notifyPort ? (1 << dw->notifyPort->mp_SigBit) : 0)
-#define TIMER_SIG(dw) (dw->timerPort ? (1 << dw->timerPort->mp_SigBit) : 0)
-#define GADGET_SIG(dw) (dw->gadgetPort ? (1 << dw->gadgetPort->mp_SigBit) : 0)
-#define CX_SIG(dw) (dw->cxPort ? (1 << dw->cxPort->mp_SigBit) : 0)
+#define NOTIFY_SIG(dw) SIG(dw->notifyPort)
+#define TIMER_SIG(dw) SIG(dw->timerPort)
+#define GADGET_SIG(dw) SIG(dw->gadgetPort)
+#define CX_SIG(dw) SIG(dw->cxPort)
+#define SCREENNOTIFY_SIG(dw) SIG(dw->screenNotifyMsgPort)
 
-#define DEFAULT_CONSOLE "NIL:"
-
-#define COPY_STRING(src, dst) \
-    l = strlen(src);\
-    CopyMem(src, dst, l);\
-    dst += l;\
-    *dst = ' ';\
-    dst++; 
-
-#define COPY_STRING_QUOTED(src, dst) \
-    l = strlen(src);\
-    *dst = '"';\
-    dst++;\
-    CopyMem(src, dst, l);\
-    dst += l;\
-    *dst = '"';\
-    dst++;\
-    *dst = ' ';\
-    dst++;
-
-
-BOOL init_timer_notification(struct DockWindow *dock)
-{
-    if( dock->timerPort = CreateMsgPort() ) {
-
-        if( dock->timerReq = (struct timerequest *)CreateExtIO(dock->timerPort, sizeof(struct timerequest) ) ) {
-            
-            if( OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)dock->timerReq, 0L) == 0 ) {
-
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
-}
-
-VOID set_timer(struct DockWindow *dock, ULONG milliseconds) 
-{
-    dock->timerReq->tr_node.io_Command = TR_ADDREQUEST;
-    dock->timerReq->tr_time.tv_secs = milliseconds / 1000;
-    dock->timerReq->tr_time.tv_micro = (milliseconds % 1000) * 1000;
-
-    SendIO((struct IORequest *)dock->timerReq);
-}
-
-BOOL show_app_icon(struct DockWindow *dock)
-{
-    if( dock->iconObj = GetDiskObjectNew(MIN_ICON) ) {
-        dock->iconObj->do_Type = NULL;
-
-        if( dock->aiPort = CreateMsgPort() ) {
-
-            if( dock->appIcon = AddAppIcon(
-                0L, 0L, "DockBot", dock->aiPort, NULL, dock->iconObj, NULL) ) {
-
-                return TRUE;                
-            }
-            delete_port(dock->aiPort);
-        }
-
-        FreeDiskObject(dock->iconObj);
-    }
-    dock->appIcon = NULL;
-    dock->iconObj = NULL;
-    dock->aiPort = NULL;
-    return FALSE;
-}
-
-VOID free_app_icon(struct DockWindow *dock)
-{
-    if( dock->appIcon ) {
-        RemoveAppIcon(dock->appIcon);
-        dock->appIcon = NULL;
-    }
-
-    delete_port(dock->aiPort);
-    dock->aiPort = NULL;
-
-    if( dock->iconObj ) {
-        FreeDiskObject(dock->iconObj);
-        dock->iconObj = NULL;
-    }
-}
-
-VOID handle_drop_event(struct DockWindow* dock)
-{
-    struct AppMessage *msg;
-    struct WBArg *arg;
-    UWORD i, len;
-    STRPTR tmpBuf = NULL;
-    STRPTR* buffers;
-    Object *gadget;
-
-    while( msg = (struct AppMessage *)GetMsg(dock->awPort)) {
-        switch( msg->am_Type ) {
-          case AMTYPE_APPWINDOW:
-            if( msg->am_NumArgs > 0 && 
-                (gadget = get_gadget_at(dock, msg->am_MouseX, msg->am_MouseY)) ) {
-
-                arg = msg->am_ArgList;
-
-                if( tmpBuf == NULL ) {
-                    tmpBuf = DB_AllocMem(2048, MEMF_CLEAR);
-                }
-
-                buffers = DB_AllocMem(msg->am_NumArgs * sizeof(STRPTR), MEMF_ANY);
-                for( i = 0; i < msg->am_NumArgs; i++ ) {
-
-                    NameFromLock(arg->wa_Lock, tmpBuf, 2048);
-                    AddPart(tmpBuf, arg->wa_Name, 2048);
-                    len = strlen(tmpBuf);
-
-                    buffers[i] = DB_AllocMem(len + 1, MEMF_ANY);
-                    CopyMem(tmpBuf, buffers[i], len + 1);
-
-                    arg++;
-                }
-
-                dock_gadget_drop(gadget, buffers, msg->am_NumArgs);
-
-                for( i = 0; i < msg->am_NumArgs; i++ ) {
-                    DB_FreeMem(buffers[i], strlen(buffers[i]) + 1);
-                }
-                DB_FreeMem(buffers, msg->am_NumArgs * sizeof(STRPTR));
-            }
-            break;
-
-          case AMTYPE_APPICON:
-            dock->runState = RS_SHOWING;
-            break;
-        }
-
-        ReplyMsg((struct Message*)msg);
-    }
-
-    if( tmpBuf != NULL ) {
-        DB_FreeMem(tmpBuf, 2048);
-    }
-}
-
-
-VOID handle_icon_event(struct DockWindow* dock)
-{
-    struct AppMessage *msg;
-
-    while( msg = (struct AppMessage *)GetMsg(dock->aiPort)) {
-        switch( msg->am_Type ) {
-
-          case AMTYPE_APPICON:
-            dock->runState = RS_SHOWING;
-            break;
-        }
-
-        ReplyMsg((struct Message*)msg);
-    }
-}
-
-VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR console, BOOL wb)
-{
-    STRPTR cmd;
-    STRPTR pos;
-    STRPTR con;
-    BPTR fhIn;
-    BPTR fhOut;
-    UWORD len = 0, l;
-
-    struct TagItem shellTags[] = {
-        { SYS_UserShell, TRUE },
-        { SYS_Asynch, TRUE },
-        { SYS_Input, NULL },
-        { SYS_Output, NULL },
-        { TAG_DONE, 0 }
-    };
-
-
-    if( wb ) {
-        len = strlen((STRPTR)&dock->progPath) + 6;
-    }   
-    
-    len += strlen(path) + 1;
-    if( args ) {
-        len += strlen(args) + 1;
-    }
-
-    if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
-        
-        pos = cmd;
-        if( wb ) {
-            COPY_STRING((STRPTR)&dock->progPath, pos);
-            pos--;
-            COPY_STRING("/WBRUN ", pos);
-        }
-        
-        COPY_STRING(path, pos);
-                
-        if( args ) {
-            COPY_STRING(args, pos);
-        }
-
-        pos--;
-        *pos = '\0';
-
-        con = console;
-        if( con == NULL ) {
-            con = DEFAULT_CONSOLE;
-        }
-
-        if( fhOut = Open(con, MODE_OLDFILE) ) {
-            if( fhIn = Open(DEFAULT_CONSOLE, MODE_OLDFILE) ) {
-
-                shellTags[2].ti_Data = fhIn;
-                shellTags[3].ti_Data = fhOut;
-                
-                if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
-                    Close(fhIn);
-                    Close(fhOut);
-                }
-
-            } else {
-                Close(fhOut);
-            }
-        }
-        DB_FreeMem(cmd, len);
-    }
-}
-
-VOID launch(struct DockWindow *dock, struct GadgetMessageLaunch *msg)
-{
-    execute_external(
-        dock,
-        msg->path,
-        msg->args, 
-        msg->console,
-        msg->wb
-    );
-
-    dock_gadget_launched(msg->m.sender,
-                         msg->path,
-                         msg->args,
-                         msg->console,
-                         msg->wb);
-}
-
-VOID open_settings(struct DockWindow *dock)
-{
-    UWORD l;
-    UBYTE path[256];
-    STRPTR pos = (STRPTR)&path;
-
-    COPY_STRING((STRPTR)dock->progPath, pos);
-    pos--;
-    COPY_STRING("/DockBotPrefs", pos);
-    pos--;
-    *pos = '\0';
-
-    execute_external(dock, (STRPTR)&path, NULL, NULL, TRUE);
-}
-
-
-VOID open_help(struct DockWindow *dock)
-{
-    UWORD l;
-    UBYTE arg[256];
-    STRPTR pos = (STRPTR)&arg;
-
-    COPY_STRING((STRPTR)dock->progPath, pos);
-    pos--;
-    COPY_STRING("/doc/DockBot.guide", pos);
-    pos--;
-    *pos = '\0';
-
-    execute_external(dock, "SYS:Utilities/Multiview", (STRPTR)&arg, NULL, TRUE);
-}
-
-VOID handle_window_event(struct DockWindow *dock)
-{
-    struct IntuiMessage *msg;
-    Object *gadget;
-    MenuIndex menuItem;
-    UWORD mouseX, mouseY, msgClass, msgCode, menuNum;
-    struct MenuItem *item;
-
-    while( msg = (struct IntuiMessage *)GetMsg(dock->win->UserPort) ) {
-    
-        msgClass = msg->Class;
-        msgCode = msg->Code;
-        mouseX = msg->MouseX;
-        mouseY = msg->MouseY;
-
-        ReplyMsg((struct Message *)msg);
-        
-        switch( msgClass )
-        {
-            case IDCMP_MOUSEBUTTONS: 
-                if( msgCode == SELECTUP ) {
-                    if( gadget = get_gadget_at(dock, mouseX, mouseY) ) {
-      
-                        dock_gadget_click(gadget, mouseX, mouseY);
-                    }
-                }
-                break;
-    
-            case IDCMP_CHANGEWINDOW:
-            case IDCMP_REFRESHWINDOW:
-                BeginRefresh(dock->win);
-                draw_gadgets(dock);
-                EndRefresh(dock->win, TRUE);
-                break;
-        
-            case IDCMP_MENUPICK:
-                menuNum = msgCode;
-                while( menuNum != MENUNULL ) {
-                    item = ItemAddress(dock->menu, menuNum);
-                    menuItem = (MenuIndex)GTMENUITEM_USERDATA(item);
-                    switch( menuItem ){
-                       case MI_QUIT:
-                            dock->runState = RS_QUITTING;
-                            break;
-
-                       case MI_ABOUT:
-                            show_about(dock);
-                            break;
-
-                       case MI_HIDE:
-                            dock->runState = RS_HIDING;
-                            break;
-
-                       case MI_SETTINGS:
-                            open_settings(dock);
-                            break;
-
-                       case MI_HELP:
-                            open_help(dock);
-                            break;
-
-                       default:
-                            break;
-                    }
-                    menuNum = item->NextSelect;
-                }
-                break;
-        }
-        
-    }
-}
-
-VOID handle_notify_message(struct DockWindow *dock)
-{
-    struct Message *msg;
-
-    while( msg = GetMsg(dock->notifyPort) ) {
-        ReplyMsg(msg);
-    }
-
-    dock->runState = RS_LOADING;
-}
-
-VOID handle_timer_message(struct DockWindow *dock)
-{
-    struct DgNode *curr;
-    struct Message *msg;
-
-    while( msg = GetMsg(dock->timerPort) ) {
-    }
-
-    if( dock->runState == RS_RUNNING ) {
-
-        FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
-
-            dock_gadget_tick(curr->dg);
-        }
-    }
-
-    switch( dock->runState ) {
-
-        case RS_QUITTING:
-            dock->runState = RS_STOPPED;
-            break;
-
-        case RS_RUNNING:
-            update_hover_gadget(dock);
-
-            set_timer(dock, TIMER_INTERVAL);
-            break;
-        
-        default:
-            break;
-    }
-
-    LOG_MEMORY_TIMED
-}
-
-VOID handle_gadget_message(struct DockWindow *dock)
-{
-    struct DgNode *curr;
-    struct GadgetMessage *msg;
-    BOOL exists = FALSE;
-    
-    while( msg = (struct GadgetMessage *)GetMsg(dock->gadgetPort) ) {
-        if( dock->runState == RS_RUNNING ) {
-
-            FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
-
-                if( msg->sender == curr->dg ) {
-                    exists = TRUE;
-                    break;
-                }
-            }
-
-            if( exists ) {
-
-                switch( msg->messageType ) {
-                    case GM_DRAW:
-                        draw_gadget(dock, msg->sender);
-                        break;
-
-                    case GM_QUIT:
-                        dock->runState = RS_QUITTING;
-                        break;    
-
-                    case GM_LAUNCH:
-                        launch(dock, (struct GadgetMessageLaunch *)msg);
-                        break;
-                }
-            }
-        }
-
-        DB_FreeMem(msg, sizeof(struct GadgetMessage));
-    }
-}
-
-VOID handle_cx_message(struct DockWindow *dock)
-{
-    CxMsg *msg;
-    ULONG msgType, msgId, ix;
-    struct DgNode *curr;
-
-    while( msg = (CxMsg*)GetMsg(dock->cxPort) ) {
-
-        msgType = CxMsgType(msg);
-        msgId = CxMsgID(msg);
-
-        ReplyMsg((struct Message *)msg);
-
-        switch(msgType) {
-            
-            case CXM_COMMAND:
-                switch( msgId ) {
-                    case CXCMD_DISABLE:
-                        if( dock->cxBroker ) {
-                            ActivateCxObj(dock->cxBroker, 0L);
-                        }
-                        break;
-            
-                    case CXCMD_ENABLE:
-                        if( dock->cxBroker ) {
-                            ActivateCxObj(dock->cxBroker, 1L);    
-                        }
-                        break;
-
-                    case CXCMD_KILL:
-                        dock->runState = RS_QUITTING;
-                        break;
-
-                    case CXCMD_APPEAR:
-                        if( ! dock->win ) {
-                            dock->runState = RS_SHOWING;
-                        }
-                        break;
-
-                    case CXCMD_DISAPPEAR:
-                        if( dock->win ) {
-                            dock->runState = RS_HIDING;
-                        }
-                        break;
-                }
-                break;
-
-            case CXM_IEVENT:
-                ix = 0;
-
-                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
-
-                    if( ix == msgId ) {
-                        dock_gadget_hotkey(curr->dg);
-                        break;
-                    }
-                    ix++;
-                }
-                break;
-        }
-    }
-}
 
 VOID run_event_loop(struct DockWindow *dock)
 {
-    ULONG signals, winsig, iconsig, docksig, notifysig, timersig, gadgetsig, cxsig, totsig;
+    ULONG signals, winsig, iconsig, docksig, notifysig, 
+          timersig, gadgetsig, cxsig, totsig, screensig;
 
     while( dock->runState != RS_STOPPED ) {
 
         switch( dock->runState ) {
 
             case RS_STARTING:
+                DEBUG(printf("runState = RS_STARTING\n"));
+
                 if( ! load_config(dock) ) {
                     return;
                 }
@@ -557,6 +49,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 break;
 
             case RS_LOADING:
+                DEBUG(printf("runState = RS_LOADING\n"));
                 disable_layout(dock);
                 hide_dock_window(dock);
                 remove_dock_gadgets(dock);
@@ -576,7 +69,8 @@ VOID run_event_loop(struct DockWindow *dock)
                 dock->runState = RS_RUNNING;
                 break;
 
-            case RS_HIDING:
+            case RS_ICONIFYING:
+                DEBUG(printf("runState = RS_ICONIFYING\n"));
                 disable_layout(dock);
                 hide_dock_window(dock);
                 if( ! show_app_icon(dock) ) {
@@ -585,7 +79,8 @@ VOID run_event_loop(struct DockWindow *dock)
                 dock->runState = RS_RUNNING;
                 break;
 
-            case RS_SHOWING:
+            case RS_UNICONIFYING:
+                DEBUG(printf("runState = RS_UNICONIFYING\n"));
                 if( ! show_dock_window(dock) ) {
                     return;
                 }
@@ -594,20 +89,37 @@ VOID run_event_loop(struct DockWindow *dock)
                 dock->runState = RS_RUNNING;
                 break;
 
+            case RS_HIDING:
+                DEBUG(printf("runState = RS_HIDING\n"));
+                disable_layout(dock);
+                hide_dock_window(dock);
+                dock->runState = RS_RUNNING;
+                break;
+
+            case RS_SHOWING:
+                DEBUG(printf("runState = RS_SHOWING\n"));
+                if( ! show_dock_window(dock) ) {
+                    return;
+                }
+                enable_layout(dock);
+                dock->runState = RS_RUNNING;
+                break;
+
             case RS_RUNNING:
             case RS_QUITTING:
+                winsig      = WIN_SIG(dock);
+                docksig     = DOCK_SIG(dock);
+                iconsig     = ICON_SIG(dock);
+                notifysig   = NOTIFY_SIG(dock);
+                timersig    = TIMER_SIG(dock);
+                gadgetsig   = GADGET_SIG(dock);
+                cxsig       = CX_SIG(dock);
+                screensig   = SCREENNOTIFY_SIG(dock);
 
-                winsig = WIN_SIG(dock);
-                docksig = DOCK_SIG(dock);
-                iconsig = ICON_SIG(dock);
-                notifysig = NOTIFY_SIG(dock);
-                timersig = TIMER_SIG(dock);
-                gadgetsig = GADGET_SIG(dock);
-                cxsig = CX_SIG(dock);
+                totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | cxsig | screensig | SIGBREAKF_CTRL_C;
 
-                totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | cxsig | SIGBREAKF_CTRL_C;
-
-                while( dock->runState == RS_RUNNING || dock->runState == RS_QUITTING ) {
+                while( dock->runState == RS_RUNNING || 
+                        dock->runState == RS_QUITTING ) {
 
                     signals = Wait( totsig );
 
@@ -643,10 +155,16 @@ VOID run_event_loop(struct DockWindow *dock)
                     if( signals & cxsig ) {
                         handle_cx_message(dock);
                     }
+
+                    if( signals & screensig ) {
+                        handle_screennotify(dock);
+                    }
                 }
                 break;
         }
     }
+
+    DEBUG(printf("Exiting event loop.\n"));
 }
 
 

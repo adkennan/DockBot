@@ -16,17 +16,19 @@ PRAGMA_FILE=	pragmas.h
 DEF_DEBUG=
 DEF_STRIP=
 DEF_OPT=
+DEF_DS=
+DEF_BV=
 
 C_COMPILER=	SC:c/sc
 
 CPU=		68030
-C_OPTS=		CPU=$(CPU) STREQ $(DEF_OPT) STRINGMERGE NOSTKCHK NOSTANDARDIO NOICONS $(INC) $(DEF_DEBUG)
+C_OPTS=		CPU=$(CPU) STREQ $(DEF_OPT) STRINGMERGE NOSTKCHK NOSTANDARDIO NOICONS $(INC) $(DEF_DEBUG) $(DEF_DS) $(DEF_BV)
 
 LINKER=		SC:c/slink
 
-C_SOURCES=	lib.c mem.c
+C_SOURCES=	lib.c mem.c dockmem_cat.c
 
-OBJECTS=	lib.o mem.o
+OBJECTS=	lib.o mem.o dockmem_cat.o
 
 LIBS=		LIB:sc.lib LIB:amiga.lib LIB:triton.lib
 
@@ -34,7 +36,7 @@ LIBS=		LIB:sc.lib LIB:amiga.lib LIB:triton.lib
 #
 # Build Library
 
-$(LIBFILE): $(OBJECTS) $(LIBS) $(PRAGMA_FILE)
+$(LIBFILE): catalog $(OBJECTS) $(LIBS) $(PRAGMA_FILE)
 	$(LINKER) WITH << 
 TO $(LIBDIR)$(LIBFILE)
 FROM $(OBJECTS)
@@ -60,3 +62,9 @@ clean:
 	@Delete $(LIBDIR)$(LIBFILE)(|.info)
 	@Delete $(PRAGMA_FILE)
 
+catalog: //Locale/Catalogs/DockMem.cd
+	@Execute << 
+		flexcat //Locale/Catalogs/DockMem.cd dockmem_cat.c=//Locale/Class_c.sd NOBEEP
+		flexcat //Locale/Catalogs/DockMem.cd dockmem_cat.h=//Locale/Class_h.sd NOBEEP
+		echo "Catalog Updated"
+	<

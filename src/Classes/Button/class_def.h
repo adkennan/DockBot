@@ -10,12 +10,12 @@
 #define __CLASS_DEF_H__
 
 #include "gadget_class.h"
+#include "dockbutton_cat.h"
 
 #define CLASS_NAME      "DockButton"
 #define CLASS_VERSION   1
-#define CLASS_REVISION  0
-#define CLASS_VER_STR   "1.0 (0/06/2019)"
-#define CLASS_DESC		"A button for DockBot"
+#define CLASS_REVISION  2
+#define CLASS_VER_STR   "1.2 (" DS ")"
 #define CLASS_COPYRIGHT "© 2019 Andrew Kennan"
 #define PRIVATE_DATA    ButtonGadgetData
 #define PARENT_CLASS    DB_ROOT_CLASS

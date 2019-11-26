@@ -6,6 +6,8 @@
 **
 ************************************/
 
+#include "dock.h"
+
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
 
@@ -13,11 +15,6 @@
 #include <clib/alib_protos.h>
 #include <clib/graphics_protos.h>
 
-#include "dockbot.h"
-#include "dockbot_protos.h"
-#include "dockbot_pragmas.h"
-
-#include "dock_gadget.h"
 #include "dock_handle.h"
 
 #define HANDLE_SIZE 6

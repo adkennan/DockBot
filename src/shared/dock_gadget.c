@@ -23,23 +23,31 @@
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 
+#include <stdio.h>
 
 VOID dock_gadget_added(Object *obj, struct MsgPort *dockPort)
 {
     struct DockMessageAdded msg = {
         DM_ADDED
     };
+
+    DEBUG(printf("dock_gadget_added: %8x\n", obj));
+
     msg.dockPort = dockPort;
     DoMethodA(obj, (Msg)&msg);
 }
 
 VOID dock_gadget_removed(Object *obj)
 {
+    DEBUG(printf("dock_gadget_removed: %8x\n", obj));
+
     DoMethod(obj, DM_REMOVED);
 }
 
 VOID dock_gadget_tick(Object *obj)
 {
+//    DEBUG(printf("dock_gadget_tick: %8x\n", obj));
+
 	DoMethod(obj, DM_TICK);
 }
 
@@ -48,6 +56,9 @@ VOID dock_gadget_click(Object *obj, UWORD x, UWORD y)
 	struct DockMessageClick msg = {
 		DM_CLICK
 	};
+
+    DEBUG(printf("dock_gadget_click: %8x\n", obj));
+
 	msg.x = x;
 	msg.y = y;
 
@@ -59,6 +70,9 @@ VOID dock_gadget_drop(Object *obj, STRPTR* paths, UWORD count)
 	struct DockMessageDrop msg = {
 		DM_DROP
 	};
+
+    DEBUG(printf("dock_gadget_drop: %8x\n", obj));
+
 	msg.paths = paths;
     msg.pathCount = count;
 	
@@ -70,6 +84,9 @@ VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds)
 	struct DockMessageSetBounds msg = {
 		DM_SETBOUNDS
 	};
+
+    DEBUG(printf("dock_gadget_set_bounds: %8x\n", obj));
+
 	msg.b = bounds;
 
 	DoMethodA(obj, (Msg)&msg);
@@ -80,6 +97,9 @@ BOOL dock_gadget_hit_test(Object *obj, UWORD x, UWORD y)
     struct DockMessageHitTest msg = {
         DM_HITTEST
     };
+
+    DEBUG(printf("dock_gadget_hit_test: %8x\n", obj));
+
     msg.x = x;
     msg.y = y;
 
@@ -93,6 +113,9 @@ VOID dock_gadget_get_size(Object *obj
 	struct DockMessageGetSize msg = {
 		DM_GETSIZE
 	};
+
+    DEBUG(printf("dock_gadget_get_size: %8x\n", obj));
+
 	msg.position = position;
 	msg.align = align;
 
@@ -107,6 +130,9 @@ VOID dock_gadget_draw(Object *obj, struct RastPort *rp)
     struct DockMessageDraw msg = {
         DM_DRAW       
     };
+
+    DEBUG(printf("dock_gadget_draw: %8x\n", obj));
+
     msg.rp = rp;
 
     DoMethodA(obj, (Msg)&msg);
@@ -117,6 +143,9 @@ VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings)
     struct DockMessageConfig msg = {
         DM_READCONFIG
     };
+
+    DEBUG(printf("dock_gadget_read_settings: %8x\n", obj));
+
     msg.settings = settings;
 
     DoMethodA(obj, (Msg)&msg);
@@ -124,7 +153,8 @@ VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings)
 
 BOOL dock_gadget_builtin(Object *obj) 
 {
-    
+    DEBUG(printf("dock_gadget_builtin: %8x\n", obj));
+
     return (BOOL)DoMethod(obj, DM_BUILTIN);
 }
 
@@ -135,6 +165,8 @@ VOID dock_gadget_get_info(Object *obj
     struct DockMessageGetInfo msg = {
         DM_GETINFO
     };
+
+    DEBUG(printf("dock_gadget_get_info: %8x\n", obj));
 
     DoMethodA(obj, (Msg)&msg);
 
@@ -152,6 +184,8 @@ VOID dock_gadget_get_hotkey(Object *obj
         NULL
     };
 
+    DEBUG(printf("dock_gadget_get_hotkey: %8x\n", obj));
+
     DoMethodA(obj, (Msg)&msg);
 
     *hotKey = msg.hotKey;
@@ -159,6 +193,8 @@ VOID dock_gadget_get_hotkey(Object *obj
 
 VOID dock_gadget_hotkey(Object *obj)
 {
+    DEBUG(printf("dock_gadget_hotkey: %8x\n", obj));
+
     DoMethod(obj, DM_HOTKEY);
 }
 
@@ -169,6 +205,8 @@ VOID dock_gadget_get_label(Object *obj
         DM_GETLABEL,
         NULL
     };
+
+    DEBUG(printf("dock_gadget_get_label: %8x\n", obj));
 
     DoMethodA(obj, (Msg)&msg);
 
@@ -181,6 +219,8 @@ BOOL dock_gadget_can_edit(Object *obj)
         DM_CANEDIT
     };
 
+    DEBUG(printf("dock_gadget_can_edit: %8x\n", obj));
+
     DoMethodA(obj, (Msg)&msg);
 
     return msg.canEdit;
@@ -191,6 +231,9 @@ VOID dock_gadget_init_button(Object *obj, STRPTR name, STRPTR path)
     struct DockMessageInitButton msg = {
         DM_INITBUTTON
     };
+
+    DEBUG(printf("dock_gadget_init_button: %8x\n", obj));
+
     msg.name = name;
     msg.path = path;
 
@@ -203,6 +246,8 @@ struct TagItem * dock_gadget_get_editor(Object *obj)
         DM_GETEDITOR
     };
     
+    DEBUG(printf("dock_gadget_get_editor: %8x\n", obj));
+
     DoMethodA(obj, (Msg)&msg);
 
     return msg.uiTags;
@@ -213,6 +258,9 @@ VOID dock_gadget_editor_event(Object *obj, struct TR_Project *window, struct TR_
     struct DockMessageEditorEvent msg = {
         DM_EDITOREVENT
     };
+
+    DEBUG(printf("dock_gadget_editor_event: %8x\n", obj));
+
     msg.window = window;
     msg.message = message;
 
@@ -224,6 +272,9 @@ VOID dock_gadget_editor_update(Object *obj, struct TR_Project *window)
     struct DockMessageEditorUpdate msg = {
         DM_EDITORUPDATE
     };
+
+    DEBUG(printf("dock_gadget_editor_update: %8x\n", obj));
+
     msg.window = window;
 
     DoMethodA(obj, (Msg)&msg);
@@ -234,6 +285,9 @@ VOID dock_gadget_init_edit(Object *obj, struct TR_App *app)
     struct DockMessageEditorInit msg = {
         DM_INITEDIT
     };
+
+    DEBUG(printf("dock_gadget_init_edit: %8x\n", obj));
+
     msg.app = app;
 
     DoMethodA(obj, (Msg)&msg);
@@ -244,6 +298,9 @@ VOID dock_gadget_launched(Object *obj, STRPTR path, STRPTR args, STRPTR console,
     struct DockMessageLaunch msg = {
         DM_LAUNCHED
     };
+
+    DEBUG(printf("dock_gadget_launched: %8x\n", obj));
+
     msg.path = path;
     msg.args = args;
     msg.console = console;

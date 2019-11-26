@@ -10,12 +10,12 @@
 #define __CLASS_DEF_H__
 
 #include "gadget_class.h"
+#include "dockclock_cat.h"
 
 #define CLASS_NAME      "DockClock"
 #define CLASS_VERSION   1
-#define CLASS_REVISION  0
-#define CLASS_VER_STR   "1.0 (03/06/2019)"
-#define CLASS_DESC		"A clock for DockBot"
+#define CLASS_REVISION  2
+#define CLASS_VER_STR   "1.2 (" DS ")"
 #define CLASS_COPYRIGHT "© 2019 Andrew Kennan"
 #define PRIVATE_DATA    ClockGadgetData
 
@@ -44,20 +44,18 @@
 
 struct ClockLibData
 {
-  struct Library *localeBase;
   struct Library *dosBase;
   struct Library *utilityBase;
+  struct Library *gfxBase;
 };
 
 struct ClockGadgetData 
 {
-  struct Locale *locale;
-  STRPTR format;
-  ULONG counter;
-  UWORD minutes;
-  UWORD pos;  
-  UWORD formatLen;
-  char time[MAX_DISPLAY_LENGTH];
+    struct Locale *locale;
+    struct MinList lines; 
+    STRPTR format;
+    STRPTR splitFormat;   
+    ULONG counter;
 };
 
 #endif

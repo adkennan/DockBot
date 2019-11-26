@@ -25,6 +25,7 @@
 #include "class_def.h"
 
 #include "button.h"
+#include "dockbutton_cat.h"
 
 #define S_NAME      "name"
 #define S_PATH      "path"
@@ -43,7 +44,7 @@ struct Values StartValues[] = {
     { NULL, 0 }
 };
 
-STRPTR startTypes[] = { "Workbench", "Shell", NULL };
+STRPTR startTypes[] = { NULL /*"Workbench"*/, NULL /*"Shell"*/, NULL };
 
 #define DEFAULT_PATH "SYS:"
 
@@ -157,12 +158,16 @@ VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
     struct FileRequester *fr;
     ULONG len;
     struct TagItem tags[] = {
-        { ASL_Hail, (ULONG)"Choose an application" },
-        { ASL_OKText, (ULONG)"Select" },
-        { ASL_CancelText, (ULONG)"Cancel" },
+        { ASL_Hail, NULL /*"Choose an application"*/ },
+        { ASL_OKText, NULL /*"Select"*/ },
+        { ASL_CancelText, NULL /*"Cancel"*/ },
         { ASL_File, NULL },
         { ASL_Dir, NULL }
     };        
+    
+    tags[0].ti_Data = (ULONG)MSG_FR_ChooseApplication;
+    tags[1].ti_Data = (ULONG)MSG_FR_OkText;
+    tags[2].ti_Data = (ULONG)MSG_FR_CancelText;
 
     if( data->path ) {
 
@@ -249,6 +254,7 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
     cld->iconBase = NULL;
     cld->dosBase = NULL;
     cld->aslBase = NULL;
+
     return 0;
 }
 
@@ -299,11 +305,12 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
 
     if( data->diskObj ) {
 
-        DrawIconStateA(msg->rp, data->diskObj, 
+        DrawIconState(msg->rp, data->diskObj, 
                 NULL, 
                 bounds.x + (bounds.w - data->imageW) / 2, 
                 bounds.y + (bounds.h - data->imageH) / 2,
-                data->iconState, NULL); 
+                data->iconState,
+                ICONDRAWA_Borderless, TRUE, TAG_END); 
     }
 
     if( data->iconState == 0 ) {
@@ -358,7 +365,8 @@ DB_METHOD_DM(GETSIZE,DockMessageGetSize)
     msg->h = DEFAULT_SIZE;
 
     if( data->diskObj ) {
-        if( GetIconRectangleA(NULL, data->diskObj, NULL, &r, NULL) ) {
+        if( GetIconRectangle(NULL, data->diskObj, NULL, &r,
+                ICONDRAWA_Borderless, TRUE, TAG_END) ) {
             msg->w = data->imageW = r.MaxX - r.MinX + 1;
             msg->h = data->imageH = r.MaxY - r.MinY + 1;
         }
@@ -443,6 +451,10 @@ DB_METHOD_M(CANEDIT, DockMessageCanEdit)
 
 DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
 
+
+    startTypes[0] = (STRPTR)MSG_ST_Workbench;
+    startTypes[1] = (STRPTR)MSG_ST_Shell;
+
     msg->uiTags = make_tag_list(   
         VertGroupA,
             Space,
@@ -462,7 +474,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                 Space,
                 BeginLine,
                     Space,
-                    TextN("Name"),
+                    TextN(MSG_UI_Name),
                     Space,
                     HorizGroup,
                         StringGadget(data->name, OBJ_STR_NAME),                
@@ -473,7 +485,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                 Space,
                 BeginLine,
                     Space,
-                    TextN("Arguments"),
+                    TextN(MSG_UI_Args),
                     Space,
                     StringGadget(data->args, OBJ_STR_ARGS),
                     Space,
@@ -481,7 +493,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                 Space,
                 BeginLine,
                     Space,
-                    TextN("Key"),
+                    TextN(MSG_UI_Key),
                     Space,
                     StringGadget(data->hotKey, OBJ_STR_HOTKEY),
                     Space,
@@ -489,7 +501,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                 Space,
                 BeginLine,
                     Space,
-                    TextN("Start Type"),
+                    TextN(MSG_UI_StartType),
                     Space,
                     CycleGadget(startTypes, data->startType, OBJ_CYC_START),
                     Space,  
@@ -497,7 +509,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                 Space,
                 BeginLine,
                     Space,
-                    TextN("Console"),
+                    TextN(MSG_UI_Console),
                     Space,
                     StringGadget(data->con, OBJ_STR_CON),
                         TRAT_Disabled, (data->startType == ST_WB),
