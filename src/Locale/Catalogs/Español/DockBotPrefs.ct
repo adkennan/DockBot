@@ -1,0 +1,138 @@
+## rcsid $Date: 2019-11-26 11:00:00 $ $Revision: 40.000 $
+## codeset 0 
+## language español
+;
+; DockBot Preferences application
+;
+; Application Info
+;
+MSG_APP_Title  
+Preferencias de DockBot
+;
+MSG_APP_Info  
+Editor de preferencias de DockBot
+;
+; Generic
+;
+MSG_OK  
+_OK
+MSG_Cancel  
+Cancelar
+;
+; Errors
+;
+MSG_ERR_ClassList  
+No es posible cargar listas de clases.
+;
+MSG_ERR_LoadConfig  
+No es posible cargar configuración.
+;
+MSG_ERR_OpenWindow  
+No es posible abrir ventana.
+;
+MSG_ERR_OpenLibrary  
+No es posible abrir version %d de %s.
+;
+MSG_ERR_EditorFailure  
+No es posible mostrar editor de diálogo.
+;
+MSG_ERR_CantAddDirectory  
+Disculpe, los directorios no pueden ser agregados a la barra.
+;
+; Positions
+;
+MSG_POS_Left  
+Izquierda
+MSG_POS_Right  
+derecha
+MSG_POS_Top  
+Arriba
+MSG_POS_Bottom  
+Abajo
+;
+; Alignments
+;
+MSG_ALIGN_TopLeft  
+Arriba/Izquierda
+MSG_ALIGN_Center  
+Centro
+MSG_ALIGN_BottomRight  
+Abajo/Derecha
+;
+; New Gadget Dialog
+;
+MSG_NGD_Title  
+Nuevo gadget de barra
+;
+MSG_NGD_ChooseGadget  
+Escoja gadget
+;
+MSG_NGD_About  
+Acerca de
+;
+; Main Window Menu
+;
+MSG_MENU_Project  
+Proyecto
+;
+MSG_MENU_About  
+?_Acerca de
+;
+MSG_MENU_Quit  
+S_Salir
+;
+; Main Window
+;
+MSG_MW_Title  
+Preferencias de DockBot 
+;
+MSG_MW_DockSettings  
+Configuraciones de Barra
+;
+MSG_MW_Position  
+Posición
+;
+MSG_MW_Alignment  
+Alineación
+;
+MSG_MW_ShowLabels  
+Mostrar etiquetas
+;
+MSG_MW_Gadgets  
+Gadgets
+;
+MSG_MW_NewGadget  
+_Nuevo...
+;
+MSG_MW_EditGadget  
+_Editar...
+;
+MSG_MW_DeleteGadget  
+Borrar
+;
+MSG_MW_GadgetUp  
+_Arriba
+;
+MSG_MW_GadgetDown  
+_Abajo
+;
+MSG_MW_ConfigSave  
+Guardar
+;
+MSG_MW_ConfigTest  
+Probar
+;
+MSG_MW_ConfigUse  
+Usar
+;
+; Delete Gadget Dialog
+;
+MSG_DEL_Title  
+Borrar gadget
+;
+MSG_DEL_Text  
+¿Está seguro/a de que desea borrar este gadget?
+;
+MSG_DEL_Buttons  
+_OK|Cancelar
+;

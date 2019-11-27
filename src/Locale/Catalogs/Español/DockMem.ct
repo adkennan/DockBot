@@ -1,0 +1,16 @@
+## rcsid $Date: 2019-11-26 11:00:00 $ $Revision: 40.000 $
+## codeset 0 
+## language español
+;
+; DockClock
+;
+;
+MSG_Description
+Un medidor de memoria para DockBot
+;
+MSG_LBL_Chip 
+Chip %d%%
+;
+MSG_LBL_Fast
+Rápida %d%%
+;

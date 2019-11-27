@@ -1,0 +1,14 @@
+## rcsid $Date: 2019-11-26 11:00:00 $ $Revision: 40.000 $
+## codeset 0 
+## language español
+;
+; DockClock
+;
+;
+MSG_Description 
+Un gadget de reloj para DockBot
+;
+;
+MSG_UI_Format 
+Formato
+;

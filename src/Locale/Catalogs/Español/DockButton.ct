@@ -1,0 +1,48 @@
+## rcsid $Date: 2019-11-26 11:00:00 $ $Revision: 40.000 $
+## codeset 0 
+## language español
+;
+; DockButton
+;
+;
+MSG_Description  
+Un botón para DockBot
+;
+;
+; Start Types
+;
+MSG_ST_Workbench  
+Workbench
+;
+MSG_ST_Shell  
+Shell
+;
+; File Requester
+;
+MSG_FR_ChooseApplication  
+Escoge una aplicación
+;
+MSG_FR_OkText  
+Seleccionar
+;
+MSG_FR_CancelText  
+Cancelar
+;
+;
+; Editor UI
+;
+MSG_UI_Name  
+Nombre
+;
+MSG_UI_Args  
+Argumentos
+;
+MSG_UI_Key  
+llave
+;
+MSG_UI_StartType  
+Tipo de inicio
+;
+MSG_UI_Console  
+Consola
+;

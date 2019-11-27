@@ -1,0 +1,55 @@
+## rcsid $Date: 2019-11-26 11:00:00 $ $Revision: 40.000 $
+## codeset 0 
+## language español
+;
+; DockBot application
+;
+;
+; Generic
+;
+MSG_OK  
+OK
+;
+; Errors
+;
+; Error returned when OpenLibrary fails.
+;
+MSG_ERR_OpenLibrary  
+No es posible abrir version %d de %s.
+; Menu Strings
+MSG_MENU_Project  
+Proyecto
+;
+MSG_MENU_Settings  
+Configuraciones...
+MSG_KEY_Settings  
+C
+;
+MSG_MENU_About  
+Acerca de...
+MSG_KEY_About  
+?
+;
+MSG_MENU_Help  
+Ayuda
+;
+MSG_MENU_Iconify  
+Iconificar
+MSG_KEY_Iconify  
+I
+;
+MSG_MENU_Quit  
+Salir
+MSG_KEY_Quit  
+S
+; About Dialog
+MSG_ABOUT_Title  
+Acerca de DockBot
+;
+MSG_ABOUT_Text  
+DockBot Version %s\n\nUna barra para AmigaOS 3\n\n© Andrew Kennan\n\n%s
+;
+MSG_CX_Description  
+Una barra para AmigaOS 3
+; 
+;
