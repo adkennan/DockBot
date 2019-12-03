@@ -175,10 +175,16 @@
            (help copyfiles-help)
            (infos)
 )
+
 (complete 75)
-; 
-; TODO: Copy translations when we have some.
-;
+(makedir (tackon #app-dir "Catalogs"))
+(makedir (tackon #app-dir "Catalogs/Español"))
+(copyfiles (source "src/Locale/Catalogs/Spanish")
+		   (dest (tackon #app-dir "Catalogs/Español"))
+		   (pattern "#?.catalog")
+		   (help copyfiles-help)
+)
+
 (complete 85)
 (if (= #run-on-start 0 )
 	(
@@ -199,6 +205,5 @@
 	(dest #launcher)
     (append (cat "CD " #app-dir "\n"))
 	(append "WBRUN DockBot")
-	(safe)
 )
 (complete 100)

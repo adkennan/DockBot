@@ -101,6 +101,7 @@ typedef enum {
     // Rendering.
 	DM_GETSIZE 		    = 1400,
 	DM_DRAW			    = 1401,
+    DM_REMAP            = 1402,
 
     // Configuration.
 	DM_READCONFIG	    = 1500,

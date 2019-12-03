@@ -32,6 +32,8 @@ VOID dock_gadget_get_size(Object *obj
 
 VOID dock_gadget_draw(Object *obj, struct RastPort *rp);
 
+VOID dock_gadget_remap(Object *obj);
+
 BOOL dock_gadget_hit_test(Object *obj, UWORD x, UWORD y);
 
 VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings);

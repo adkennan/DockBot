@@ -322,6 +322,20 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
     return 1;
 }
 
+DB_METHOD_D(REMAP)
+
+    struct Screen *screen;
+    
+    if( screen = LockPubScreen(NULL) ) {
+
+        LayoutIconA(data->diskObj, screen, NULL);
+
+        UnlockPubScreen(NULL, screen);
+    }
+
+    return 1;
+}
+
 DB_METHOD_D(TICK)
 
     if( data->counter > 0 ) {

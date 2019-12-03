@@ -138,6 +138,13 @@ VOID dock_gadget_draw(Object *obj, struct RastPort *rp)
     DoMethodA(obj, (Msg)&msg);
 }
 
+VOID dock_gadget_remap(Object *obj) 
+{
+    DEBUG(printf("dock_gadget_remap: %8x\n", obj));
+
+    DoMethod(obj, DM_REMAP);
+}
+
 VOID dock_gadget_read_settings(Object *obj, struct DockSettings *settings)
 {
     struct DockMessageConfig msg = {

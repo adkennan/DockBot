@@ -47,12 +47,12 @@
 
 struct MemLibData
 {
-  struct Library *graphicsLib;
+    struct Library *graphicsLib;
 };
 
 struct MemGadgetData 
 {
-  ULONG counter;
+    ULONG counter;
 };
 
 #endif

@@ -175,18 +175,32 @@ DB_METHOD_M(GETSIZE,DockMessageGetSize)
     struct TextAttr ta;
     UWORD rows, w;    
     BYTE buf[32];
+    struct Screen *screen;
+    struct DrawInfo *di;
 
-    sprintf((STRPTR)buf, MSG_LBL_Chip, 99);
+    sprintf((STRPTR)buf, strlen(MSG_LBL_Chip) > strlen(MSG_LBL_Fast) ? MSG_LBL_Chip : MSG_LBL_Fast, 99);
+    
+    if( screen = LockPubScreen(NULL) ) {
+    
+        if( di = GetScreenDrawInfo(screen) ) {
 
-    text.ITextFont = &ta;
-    text.IText = (STRPTR)buf;
-    text.LeftEdge = 0;
-    text.TopEdge = 0;
-    text.NextText = NULL;
+            text.ITextFont = &ta;
+            text.ITextFont->ta_Name = di->dri_Font->tf_Message.mn_Node.ln_Name;
+            text.ITextFont->ta_YSize = di->dri_Font->tf_YSize;
+            text.ITextFont->ta_Style = di->dri_Font->tf_Style;
+            text.ITextFont->ta_Flags = di->dri_Font->tf_Flags;
+            text.IText = (STRPTR)buf;
+            text.LeftEdge = 0;
+            text.TopEdge = 0;
+            text.NextText = NULL;
 
-    set_text_font(&text);
+            w = IntuiTextLength(&text) + 10;
 
-    w = IntuiTextLength(&text) + 8;
+            FreeScreenDrawInfo(screen, di);
+        }
+
+        UnlockPubScreen(NULL, screen);
+    }     
 
     rows = (AvailMem(MEMF_CHIP|MEMF_TOTAL) > 0 ? 1 : 0)
             + (AvailMem(MEMF_FAST|MEMF_TOTAL) > 0 ? 1 : 0);

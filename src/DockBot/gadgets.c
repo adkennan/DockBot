@@ -357,3 +357,11 @@ VOID handle_gadget_message(struct DockWindow *dock)
     }
 }
 
+VOID remap_gadgets(struct DockWindow *dock)
+{
+    struct DgNode *curr;
+
+    FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+        dock_gadget_remap(curr->dg);
+    }
+}

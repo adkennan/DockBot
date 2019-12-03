@@ -6,4 +6,4 @@
 /*                                  */
 /************************************/
 /* */
-#pragma libcall DockGadgetBase _GetEngine 1e 0
+#pragma libcall DockGadgetBase GetEngine 1e 0

@@ -36,6 +36,7 @@
 
 #define METHOD_GETSIZE      button_get_size
 #define METHOD_DRAW         button_draw
+#define METHOD_REMAP        button_remap
 
 #define METHOD_READCONFIG   button_read_config
 #define METHOD_WRITECONFIG  button_write_config

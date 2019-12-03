@@ -368,6 +368,10 @@ Class* __saveds __asm GetEngine(
     METHOD_DEF(INITBUTTON)
 #endif
 
+#ifdef METHOD_REMAP
+    METHOD_DEF(REMAP)
+#endif
+
 #ifdef METHOD_GETLABEL
     METHOD_DEF(GETLABEL)
 #else
@@ -543,6 +547,10 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
 
 #ifdef METHOD_INITBUTTON
         METHOD_DIS(INITBUTTON)
+#endif
+
+#ifdef METHOD_REMAP
+        METHOD_DIS(REMAP)
 #endif
 
         case DM_INITEDIT:

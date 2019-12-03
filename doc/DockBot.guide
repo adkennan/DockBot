@@ -16,6 +16,7 @@ The main DockBot window is called the Dock. It contains a number of "gadgets" th
 @{"Developers" link developers}
 @{"TODO" link todo}
 @{"Contact Me" link contact}
+@{"Thanks" link thanks}
 
 DockBot is free software released under the @{"MIT licence" link licence}.
 
@@ -136,6 +137,7 @@ The DockClock gadget uses the date and time formats accepted by the Amiga OS.
 - %j - julian date
 - %m - month number with leading zeros
 - %M - the number of minutes with leading zeros
+- %n - insert a linefeed
 - %p - AM or PM strings
 - %q - hour using 24-hour style
 - %Q - hour using 12-hour style
@@ -224,6 +226,7 @@ The Compile script has the following options:
 - NOPREFS/S    Do not compile the preferences application.
 - DEBUGMEM/S   Output memory debugging information.
 - DEBUG/S      Compile with debug symbols.
+- DEBUGOUT/S   Enable debugging output.
 - STRIP/S      Strip all debug information.
 - OPT/S        Optimize the compiler output.
 - DIR/K        Set the output directory. Defaults to /bin/<CPU>.
@@ -305,7 +308,7 @@ These macros are used to provide implementations of the above methods:
 
 Here is an incomplete list of things that could be done to improve DockBot:
 
-- Localization. All strings are hard coded in English.
+- More translations.
 - Support multiple dock windows.
 - Docks on different public screens.
 - Change the Button class to allow choosing any image instead of always using an icon.
@@ -323,3 +326,16 @@ If you're actually trying to use DockBot and have run into a bug, please report 
 
 @endnode
 
+@node thanks "Thanks - The DockBot Manual"
+
+It's a great thrill to receive positive feedback about DockBot but what is best in life is to receive contributions to your open source project. 
+
+I'd like to thank the following people for their contributions to DockBot:
+
+- flype for submitting the code to support screennotify.library.
+- Gulliver for submitting language catalogs.
+- shanshe for a bugfix to the gadget layout.
+
+Your suggestions and contributions make me want to keep developing DockBot.
+
+@endnode

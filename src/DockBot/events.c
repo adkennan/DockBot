@@ -43,6 +43,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 if( ! show_dock_window(dock) ) {
                     return;
                 }
+                remap_gadgets(dock);
                 enable_layout(dock);
                 set_timer(dock, TIMER_INTERVAL);
                 dock->runState = RS_RUNNING;
@@ -65,6 +66,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 if( ! show_dock_window(dock) ) {
                     return;
                 }
+                remap_gadgets(dock);
                 enable_layout(dock);
                 dock->runState = RS_RUNNING;
                 break;
@@ -85,6 +87,7 @@ VOID run_event_loop(struct DockWindow *dock)
                     return;
                 }
                 free_app_icon(dock);
+                remap_gadgets(dock);
                 enable_layout(dock);
                 dock->runState = RS_RUNNING;
                 break;
@@ -101,6 +104,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 if( ! show_dock_window(dock) ) {
                     return;
                 }
+                remap_gadgets(dock);
                 enable_layout(dock);
                 dock->runState = RS_RUNNING;
                 break;
