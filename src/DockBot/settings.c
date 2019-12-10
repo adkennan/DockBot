@@ -18,7 +18,7 @@ BOOL load_config(struct DockWindow *dock)
     struct DgNode *curr;
     BOOL r = FALSE;
 
-    DEBUG(printf("load_config\n"));
+    DEBUG(printf("load_config: %s\n", CONFIG_FILE));
 
     if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 
@@ -51,23 +51,38 @@ BOOL init_config_notification(struct DockWindow *dock)
         dock->notifyReq.nr_stuff.nr_Msg.nr_Port = dock->notifyPort;
     
         if( ! StartNotify(&dock->notifyReq) ) {
+            DEBUG(printf("init_config_notification: FS does not support notification.\n"));
             return FALSE;
         }
+
+        dock->notifyEnabled = TRUE;
     }
 
     return TRUE; 
 }
 
+VOID free_config_notification(struct DockWindow *dock)
+{
+    DEBUG(printf("free_config_notification\n"));
+
+    if( dock->notifyPort ) {
+
+        if( dock->notifyEnabled ) {
+            EndNotify(&dock->notifyReq);
+        }
+        delete_port(dock->notifyPort);
+    }
+}
 
 VOID handle_notify_message(struct DockWindow *dock)
 {
     struct Message *msg;
 
+    DEBUG(printf("handle_notify_message\n"));
+
     while( msg = GetMsg(dock->notifyPort) ) {
 
-        if( msg == (struct Message *)&dock->notifyReq ) {
-            dock->runState = RS_LOADING;
-        } 
+        dock->runState = RS_LOADING;
 
         ReplyMsg(msg);
     }
@@ -84,6 +99,8 @@ VOID open_settings(struct DockWindow *dock)
     COPY_STRING("/DockBotPrefs", pos);
     pos--;
     *pos = '\0';
+
+    DEBUG(printf("open_settings: %s\n", path));
 
     execute_external(dock, (STRPTR)&path, NULL, NULL, TRUE);
 }

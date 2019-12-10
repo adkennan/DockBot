@@ -1,9 +1,13 @@
+EXECUTE /VERSION
+
 CD //
 
-IF EXISTS DockBot.lha
-  DELETE DockBot.lha
+SET FN Dockbot-$DOCKBOT_VERSION.lha
+
+IF EXISTS $FN
+  DELETE $FN
 ENDIF
 
-LHA a -r DockBot.lha DockBot DockBot.info
+LHA a -r $FN DockBot DockBot.info
 
 CD DockBot/src

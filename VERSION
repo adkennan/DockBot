@@ -1,0 +1,7 @@
+; VERSION 1.5
+
+SETENV DOCKBOT_VERSION 1.5
+
+; Compiler Constants
+RX 'SAY "define=BUILDVER="""1.5""""' > ENV:BV
+RX 'SAY "define=DS="""DATE("european")""""' > ENV:DS

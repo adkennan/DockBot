@@ -1,6 +1,6 @@
 @DATABASE "dockbot.h"
 @MASTER   "Stuff:Andrew/DockBot/include/dockbot.h"
-@REMARK   This file was created by ADtoHT 2.1 on 17-Aug-19 16:16:01
+@REMARK   This file was created by ADtoHT 2.1 on 03-Dec-19 21:18:58
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 
@@ -11,29 +11,29 @@
 
 @{b}Structures@{ub}
 
-@{"DgNode" LINK "dockbot.h/File" 53}                   @{"DockConfig" LINK "dockbot.h/File" 45}            @{"DockMessageAdded" LINK "dockbot.h/File" 123}
-@{"DockMessageCanEdit" LINK "dockbot.h/File" 195}       @{"DockMessageClick" LINK "dockbot.h/File" 129}      @{"DockMessageConfig" LINK "dockbot.h/File" 180}
-@{"DockMessageDraw" LINK "dockbot.h/File" 156}          @{"DockMessageDrop" LINK "dockbot.h/File" 135}       @{"DockMessageEditorEvent" LINK "dockbot.h/File" 229}
-@{"DockMessageEditorUpdate" LINK "dockbot.h/File" 235}  @{"DockMessageGetBounds" LINK "dockbot.h/File" 167}  @{"DockMessageGetEditor" LINK "dockbot.h/File" 206}
-@{"DockMessageGetHotKey" LINK "dockbot.h/File" 185}     @{"DockMessageGetInfo" LINK "dockbot.h/File" 172}    @{"DockMessageGetLabel" LINK "dockbot.h/File" 190}
-@{"DockMessageGetSize" LINK "dockbot.h/File" 148}       @{"DockMessageHitTest" LINK "dockbot.h/File" 162}    @{"DockMessageInitButton" LINK "dockbot.h/File" 200}
-@{"DockMessageLaunch" LINK "dockbot.h/File" 211}        @{"DockMessageSetBounds" LINK "dockbot.h/File" 142}  @{"DockSettingValue" LINK "dockbot.h/File" 305}
-@{"GadgetMessage" LINK "dockbot.h/File" 248}            @{"GadgetMessageLaunch" LINK "dockbot.h/File" 255}   @{"Rect" LINK "dockbot.h/File" 63}
-@{"Values" LINK "dockbot.h/File" 266}                   
+@{"DgNode" LINK "dockbot.h/File" 58}                   @{"DockConfig" LINK "dockbot.h/File" 50}            @{"DockMessageAdded" LINK "dockbot.h/File" 129}
+@{"DockMessageCanEdit" LINK "dockbot.h/File" 201}       @{"DockMessageClick" LINK "dockbot.h/File" 135}      @{"DockMessageConfig" LINK "dockbot.h/File" 186}
+@{"DockMessageDraw" LINK "dockbot.h/File" 162}          @{"DockMessageDrop" LINK "dockbot.h/File" 141}       @{"DockMessageEditorEvent" LINK "dockbot.h/File" 235}
+@{"DockMessageEditorUpdate" LINK "dockbot.h/File" 241}  @{"DockMessageGetBounds" LINK "dockbot.h/File" 173}  @{"DockMessageGetEditor" LINK "dockbot.h/File" 212}
+@{"DockMessageGetHotKey" LINK "dockbot.h/File" 191}     @{"DockMessageGetInfo" LINK "dockbot.h/File" 178}    @{"DockMessageGetLabel" LINK "dockbot.h/File" 196}
+@{"DockMessageGetSize" LINK "dockbot.h/File" 154}       @{"DockMessageHitTest" LINK "dockbot.h/File" 168}    @{"DockMessageInitButton" LINK "dockbot.h/File" 206}
+@{"DockMessageLaunch" LINK "dockbot.h/File" 217}        @{"DockMessageSetBounds" LINK "dockbot.h/File" 148}  @{"DockSettingValue" LINK "dockbot.h/File" 311}
+@{"GadgetMessage" LINK "dockbot.h/File" 254}            @{"GadgetMessageLaunch" LINK "dockbot.h/File" 261}   @{"Rect" LINK "dockbot.h/File" 68}
+@{"Values" LINK "dockbot.h/File" 272}                   
 
 
 @{b}Typedefs@{ub}
 
-@{"DockAlign" LINK "dockbot.h/File" 30}  @{"DockMessage" LINK "dockbot.h/File" 76}  @{"DockPosition" LINK "dockbot.h/File" 37}  @{"GadgetMessageType" LINK "dockbot.h/File" 242}
+@{"DockAlign" LINK "dockbot.h/File" 35}  @{"DockMessage" LINK "dockbot.h/File" 81}  @{"DockPosition" LINK "dockbot.h/File" 42}  @{"GadgetMessageType" LINK "dockbot.h/File" 248}
 
 
 @{b}#defines@{ub}
 
-@{"CONFIG_FILE" LINK "dockbot.h/File" 297}        @{"CONFIG_FILE_PERM" LINK "dockbot.h/File" 298}  @{"DB_ROOT_CLASS" LINK "dockbot.h/File" 68}  @{"DEFAULT_SIZE" LINK "dockbot.h/File" 70}
-@{"FOR_EACH_GADGET()" LINK "dockbot.h/File" 59}  @{"FREE_STRING()" LINK "dockbot.h/File" 290}     @{"GET_STRING()" LINK "dockbot.h/File" 274}   @{"GET_VALUE()" LINK "dockbot.h/File" 279}
-@{"IS_KEY()" LINK "dockbot.h/File" 272}           @{"MAX_PATH_LENGTH" LINK "dockbot.h/File" 72}   @{"REVISION" LINK "dockbot.h/File" 25}       @{"S_ALIGN" LINK "dockbot.h/File" 300}
-@{"S_GADGET" LINK "dockbot.h/File" 303}           @{"S_LABELS" LINK "dockbot.h/File" 302}          @{"S_POSITION" LINK "dockbot.h/File" 301}     @{"VERSION" LINK "dockbot.h/File" 24}
-@{"VERSION_STR" LINK "dockbot.h/File" 27}        
+@{"CONFIG_FILE" LINK "dockbot.h/File" 303}   @{"CONFIG_FILE_PERM" LINK "dockbot.h/File" 304}   @{"DB_ROOT_CLASS" LINK "dockbot.h/File" 73}    @{"DEBUG()" LINK "dockbot.h/File" 30}
+@{"DEFAULT_SIZE" LINK "dockbot.h/File" 75}  @{"FOR_EACH_GADGET()" LINK "dockbot.h/File" 64}  @{"FREE_STRING()" LINK "dockbot.h/File" 296}    @{"GET_STRING()" LINK "dockbot.h/File" 280}
+@{"GET_VALUE()" LINK "dockbot.h/File" 285}   @{"IS_KEY()" LINK "dockbot.h/File" 278}           @{"MAX_PATH_LENGTH" LINK "dockbot.h/File" 77}  @{"REVISION" LINK "dockbot.h/File" 25}
+@{"S_ALIGN" LINK "dockbot.h/File" 306}       @{"S_GADGET" LINK "dockbot.h/File" 309}           @{"S_LABELS" LINK "dockbot.h/File" 308}         @{"S_POSITION" LINK "dockbot.h/File" 307}
+@{"VERSION" LINK "dockbot.h/File" 24}       @{"VERSION_STR" LINK "dockbot.h/File" 27}        
 
 @ENDNODE
 @NODE File "dockbot.h"
@@ -61,10 +61,15 @@
 
 
 #define VERSION 1
-#define REVISION 0
+#define REVISION 3
 
-#define VERSION_STR "1.0 (03/06/2019)"
+#define VERSION_STR BUILDVER " (" DS ")"
 
+#ifdef DEBUG_OUT
+#define @{"DEBUG" LINK "File" 32}(x) x
+#else
+#define @{"DEBUG" LINK "File" 30}(x)
+#endif
 
 typedef enum
 {
@@ -83,8 +88,8 @@ typedef enum
 
 struct DockConfig
 {
-        @{"DockPosition" LINK File 37} pos;
-        @{"DockAlign" LINK File 30} align;
+        @{"DockPosition" LINK File 42} pos;
+        @{"DockAlign" LINK File 35} align;
     BOOL showGadgetLabels;
         struct List gadgets;
 };
@@ -95,9 +100,9 @@ struct DgNode
     Object *dg;
 };
 
-#define FOR_EACH_GADGET(list, curr) for( curr = (@{"struct DgNode" LINK File 53} *)(list)->lh_Head; \\
+#define FOR_EACH_GADGET(list, curr) for( curr = (@{"struct DgNode" LINK File 58} *)(list)->lh_Head; \\
                                          curr->n.ln_Succ; \\
-                                         curr = (@{"struct DgNode" LINK File 53} *)curr->n.ln_Succ )
+                                         curr = (@{"struct DgNode" LINK File 58} *)curr->n.ln_Succ )
 
 struct Rect
 {
@@ -135,6 +140,7 @@ typedef enum {
     // Rendering.
         DM_GETSIZE                  = 1400,
         DM_DRAW                     = 1401,
+    DM_REMAP            = 1402,
 
     // Configuration.
         DM_READCONFIG       = 1500,
@@ -181,14 +187,14 @@ struct DockMessageDrop
 struct DockMessageSetBounds
 {
         ULONG MethodID;
-        @{"struct Rect" LINK File 63} *b;
+        @{"struct Rect" LINK File 68} *b;
 };
 
 struct DockMessageGetSize
 {
         ULONG MethodID;
-        @{"DockPosition" LINK File 37} position;
-        @{"DockAlign" LINK File 30} align;
+        @{"DockPosition" LINK File 42} position;
+        @{"DockAlign" LINK File 35} align;
         UWORD w, h;
 };
 
@@ -205,7 +211,7 @@ struct DockMessageHitTest {
 
 struct DockMessageGetBounds {
     ULONG MethodID;
-    @{"struct Rect" LINK File 63} *b;
+    @{"struct Rect" LINK File 68} *b;
 };
 
 struct DockMessageGetInfo {
@@ -286,13 +292,13 @@ typedef enum {
 
 struct GadgetMessage {
     struct Message m;
-    @{"GadgetMessageType" LINK File 242} messageType;
+    @{"GadgetMessageType" LINK File 248} messageType;
     Object* sender;
 };
 
 
 struct GadgetMessageLaunch {
-    @{"struct GadgetMessage" LINK File 248} m;
+    @{"struct GadgetMessage" LINK File 254} m;
     STRPTR path;
     STRPTR args;
     STRPTR console;

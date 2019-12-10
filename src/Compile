@@ -108,10 +108,7 @@ ENDIF
 
 .def DIR /bin/<CPU>
 
-ECHO Build version 1.5
-ECHO " "
-RX 'SAY "define=BUILDVER="""1.5""""' > ENV:BV
-RX 'SAY "define=DS="""DATE("european")""""' > ENV:DS
+EXECUTE /VERSION
 
 ECHO "Output to <DIR>"
 ECHO " "

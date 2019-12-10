@@ -1,6 +1,6 @@
 @DATABASE "dockbot_pragmas.h"
 @MASTER   "Stuff:Andrew/DockBot/include/dockbot_pragmas.h"
-@REMARK   This file was created by ADtoHT 2.1 on 17-Aug-19 16:16:02
+@REMARK   This file was created by ADtoHT 2.1 on 03-Dec-19 21:18:59
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 

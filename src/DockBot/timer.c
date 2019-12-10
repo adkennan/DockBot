@@ -33,6 +33,22 @@ BOOL init_timer_notification(struct DockWindow *dock)
     return FALSE;
 }
 
+VOID free_timer_notification(struct DockWindow *dock)
+{
+    DEBUG(printf("free_timer_notification\n"));
+
+    if( dock->timerPort ) {
+
+        if( dock->timerReq ) {
+
+            CloseDevice((struct IORequest *)dock->timerReq);    
+            DeleteExtIO((struct IORequest *)dock->timerReq);    
+        }    
+
+        delete_port(dock->timerPort);
+    }
+}
+
 VOID set_timer(struct DockWindow *dock, ULONG milliseconds) 
 {
     dock->timerReq->tr_node.io_Command = TR_ADDREQUEST;

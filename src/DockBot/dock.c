@@ -9,7 +9,7 @@
 #include "dock.h"
 
 #include <exec/memory.h>
-#include <exec/io.h>
+//#include <exec/io.h>
 #include <exec/ports.h>
 #include <dos/dostags.h>
 #include <clib/exec_protos.h>
@@ -195,24 +195,11 @@ VOID free_dock(struct DockWindow* dock)
 
     remove_dock_gadgets(dock);
 
-    if( dock->notifyPort ) {
-
-        EndNotify(&dock->notifyReq);
-        delete_port(dock->notifyPort);
-    }
+    free_config_notification(dock);
 
     free_gadget_classes(dock);
 
-    if( dock->timerPort ) {
-
-        if( dock->timerReq ) {
-
-            CloseDevice((struct IORequest *)dock->timerReq);    
-            DeleteExtIO((struct IORequest *)dock->timerReq);    
-        }    
-
-        delete_port(dock->timerPort);
-    }
+    free_timer_notification(dock);
 
     free_app_icon(dock);
 

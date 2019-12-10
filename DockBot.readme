@@ -2,11 +2,26 @@ Short:        A program launcher for OS 3.
 Uploader:     adkennan@gmail.com (Andrew Kennan)
 Author:       Andrew Kennan
 Type:         util/wb
-Version:      1.1
+Version:      1.5
 Architecture: m68k-amigaos >= 3.0
 Requires:     util/libs/IconLib_46.4.lha
 
 Changes:
+
+Version 1.5:
+
+* Added support for screennotify.library. Thanks flype!
+* Moved all strings to translatable catalogs. 
+* Added Spanish catalog. Thanks Gulliver!
+* Changed styling of Memory Meter gadget.
+* Reworked Clock Gadget to handle linefeeds in format string.
+
+Version 1.2:
+
+* Fixed bug in horizontal alignment of main window.
+* Cancel in Prefs window now reverts to last saved config.
+
+Version 1.1:
 
 * Fixed issues with the installer that prevented DockBot from running.
 

@@ -88,6 +88,7 @@ struct DockWindow
     // Prefs file change notification
     struct MsgPort* notifyPort;
     struct NotifyRequest notifyReq; 
+    BOOL notifyEnabled;
 
     // Timer
     struct timerequest *timerReq;
@@ -157,6 +158,8 @@ BOOL load_config(struct DockWindow *dock);
 
 BOOL init_config_notification(struct DockWindow *dock);
 
+VOID free_config_notification(struct DockWindow *dock);
+
 VOID handle_notify_message(struct DockWindow *dock);
 
 
@@ -181,6 +184,8 @@ VOID run_event_loop(struct DockWindow *);
 // timer.c
 
 BOOL init_timer_notification(struct DockWindow *dock);
+
+VOID free_timer_notification(struct DockWindow *dock);
 
 VOID set_timer(struct DockWindow *dock, ULONG milliseconds);
 
@@ -217,6 +222,8 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y);
 VOID update_hover_gadget(struct DockWindow *dock);
 
 VOID handle_gadget_message(struct DockWindow *dock);
+
+VOID remap_gadgets(struct DockWindow *dock);
 
 
 // layout.c
