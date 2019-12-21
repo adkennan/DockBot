@@ -34,8 +34,8 @@ IF WARN
 ENDIF
 ECHO OK
 
-ECHO NOLINE "  C:RX "
-IF NOT EXISTS C:RX
+ECHO NOLINE "  SYS:Rexxc/RX "
+IF NOT EXISTS SYS:Rexxc/RX
   ECHO Not Found
   QUIT
 ENDIF
@@ -109,6 +109,11 @@ ENDIF
 .def DIR /bin/<CPU>
 
 EXECUTE /VERSION
+ECHO "Version `getenv $DOCKBOT_VERSION`"
+ECHO " "
+
+SET BV "define=BUILDVER=""`getenv $DOCKBOT_VERSION`"
+SET DS "define=DS=""`RX 'SAY DATE("european")'`"
 
 ECHO "Output to <DIR>"
 ECHO " "
