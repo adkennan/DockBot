@@ -2,12 +2,16 @@ EXECUTE /VERSION
 
 CD //
 
-SET FN Dockbot-`getenv DOCKBOT_VERSION`.lha
+SET FN Dockbot-`getenv $DOCKBOT_VERSION`.lha
 
 IF EXISTS $FN
   DELETE $FN
 ENDIF
 
-LHA a -r $FN DockBot DockBot.info
+IF NOT EXISTS DockBot.info
+  COPY DockBot/src.Info DockBot.info
+ENDIF
+
+LHA a -r $FN @DockBot/filelist
 
 CD DockBot/src
