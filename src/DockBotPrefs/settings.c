@@ -32,9 +32,7 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
 
     DEBUG(printf("add_dock_gadget: %s\n", name));
 
-    if( dg = (struct DgNode *)DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
-        dg->n.ln_Name = name;
-        dg->dg = obj;
+    if( dg = DB_AllocGadget(name) ) {
 
         AddTail((struct List *)&prefs->cfg.gadgets, (struct Node *)dg);
 
@@ -52,26 +50,14 @@ VOID remove_dock_gadget(struct DgNode *dg)
 
     Remove((struct Node *)dg);
 
-    FREE_STRING(dg->n.ln_Name);
-
-    DisposeObject(dg->dg);
-            
-    DB_FreeMem(dg, sizeof(struct DgNode));
+    DB_FreeGadget(dg);
 }
 
 VOID remove_dock_gadgets(struct DockPrefs *prefs)
 {
-    struct DgNode *dg;
-
     DEBUG(printf("remove_dock_gadgets\n"));
 
-    while( ! IsListEmpty((struct List *)&prefs->cfg.gadgets) ) {
-        if( dg = (struct DgNode *)RemTail((struct List *)&prefs->cfg.gadgets) ) {
-
-            remove_dock_gadget(dg);
- 
-        }
-    }    
+    DB_DisposeConfig(&prefs->cfg);
 }
 
 VOID free_plugins(struct DockPrefs *prefs)

@@ -9,7 +9,7 @@
 *                                  
 ***********************************
 * Dock gadget functions
-DB_GetDockGadgetBounds(obj,bounds)(a0/a1)
+DB_GetDockGadgetBounds(obj,bounds,windowX,windowY)(a0/a1/a2/a3)
 DB_RequestDockQuit(obj)(a0)
 DB_RequestDockGadgetDraw(obj)(a0)
 DB_RequestLaunch(obj,path,args,console,wb)(a0/a1/a2/a3,d0)
@@ -37,4 +37,16 @@ DB_CreateDockGadget(name)(a0)
 DB_ListClasses(list)(a0)
 * User Messages
 DB_ShowError(message)(a0)
+* Gadget Message Ports
+DB_RegisterPort(obj,port) (a0/a1)
+DB_UnregisterPort(obj,port) (a0,a1)
+* Config cleanup
+DB_DisposeConfig(cfg) (a0)
+* More gadget stuff
+DB_DisposeDockGadget(obj) (a0)
+DB_FreeGadget(dg) (a0)
+DB_AllocGadget(name) (a0)
+* Debug Logging
+DB_RegisterDebugStream(fh) (a0)
+DB_DebugLog(fmt,argv) (a0/a1)
 ##end

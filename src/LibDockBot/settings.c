@@ -57,7 +57,7 @@ struct Values BooleanValues[] = {
 
 extern struct Library *DOSBase;
 extern struct Library *SysBase;
-extern struct DockBotLibrary *DockBotBase;
+extern struct DockBotLibrary *DockBotBaseFull;
 
 struct DockSettings
 {    
@@ -84,17 +84,17 @@ struct DockSettings * __asm __saveds DB_OpenSettingsRead(
 
             if( ExamineFH(fh, fib) ) {
     
-                if( s = (struct DockSettings *)AllocMemInternal(DockBotBase, sizeof(struct DockSettings), MEMF_CLEAR) ) {
+                if( s = (struct DockSettings *)AllocMemInternal(DockBotBaseFull, sizeof(struct DockSettings), MEMF_CLEAR) ) {
                     
                     s->size = fib->fib_Size;
-                    s->buffer = (STRPTR)AllocMemInternal(DockBotBase, s->size, MEMF_CLEAR);
+                    s->buffer = (STRPTR)AllocMemInternal(DockBotBaseFull, s->size, MEMF_CLEAR);
                     s->pos = 0;
                     s->depth = 0;
                     s->fh = 0;
                     if( ! Read(fh, s->buffer, s->size) ) {
         
-                        FreeMemInternal(DockBotBase, s->buffer, s->size);
-                        FreeMemInternal(DockBotBase, s, sizeof(struct DockSettings));
+                        FreeMemInternal(DockBotBaseFull, s->buffer, s->size);
+                        FreeMemInternal(DockBotBaseFull, s, sizeof(struct DockSettings));
                         s = NULL;
                     }
                 }
@@ -118,7 +118,7 @@ struct DockSettings * __asm __saveds DB_OpenSettingsWrite(
     
         SetFileSize(fh, 0, OFFSET_BEGINNING);
 
-        if( s = (struct DockSettings *)AllocMemInternal(DockBotBase, sizeof(struct DockSettings), MEMF_CLEAR) ) {
+        if( s = (struct DockSettings *)AllocMemInternal(DockBotBaseFull, sizeof(struct DockSettings), MEMF_CLEAR) ) {
             s->size = 0;
             s->buffer = NULL;
             s->pos = 0;
@@ -140,9 +140,9 @@ VOID __asm __saveds DB_CloseSettings(
     }
 
     if( settings->buffer ) {
-        FreeMemInternal(DockBotBase, settings->buffer, settings->size);
+        FreeMemInternal(DockBotBaseFull, settings->buffer, settings->size);
     }
-    FreeMemInternal(DockBotBase, settings, sizeof(struct DockSettings));
+    FreeMemInternal(DockBotBaseFull, settings, sizeof(struct DockSettings));
 }
 
 static BOOL WriteIndent(struct DockSettings *settings)
@@ -379,13 +379,14 @@ VOID dock_gadget_write_settings(Object *obj, struct DockSettings *settings)
     DoMethodA(obj, (Msg)&msg);
 }
 
-BOOL add_dock_gadget(struct DockConfig *cfg, Object *dg, STRPTR name)
+BOOL add_dock_gadget(struct DockConfig *cfg, struct DockSettings *settings, STRPTR name)
 {
     struct DgNode *n;
+   
+    if( n = DB_AllocGadget(name) ) {
+    
+        dock_gadget_read_settings(n->dg, settings);
 
-    if( n = AllocMemInternal(DockBotBase, sizeof(struct DgNode), MEMF_CLEAR) ) {
-        n->n.ln_Name = name;
-        n->dg = dg;
         AddTail(&cfg->gadgets, (struct Node *)n);
 
         return TRUE;
@@ -399,7 +400,6 @@ BOOL read_dock_gadget(
     struct DockSettings *settings)
 {
     struct DockSettingValue v;
-    Object *gad;
     STRPTR gadName;
     BOOL r = FALSE;
 
@@ -408,17 +408,10 @@ BOOL read_dock_gadget(
 
             GET_STRING(v, gadName);
                         
-            if( gad = DB_CreateDockGadget(gadName) ) {
-                dock_gadget_read_settings(gad, settings);
-                if( add_dock_gadget(cfg, gad, gadName) ) {
+            r = add_dock_gadget(cfg, settings, gadName);
 
-                    r = TRUE;                
-                }
-            }
+            FREE_STRING(gadName);
 
-            if( ! r ) {
-                FREE_STRING(gadName);
-            }
             break;
         }
     }
@@ -537,3 +530,72 @@ error:
 exit:
     return r;   
 }
+
+struct DgNode * __asm __saveds DB_AllocGadget(
+    register __a0 STRPTR name)
+{
+    Object *dg;
+    struct DgNode *n;
+    UWORD l;
+    STRPTR nc;
+
+    l = strlen(name) + 1;
+    if( nc = AllocMemInternal(DockBotBaseFull, l, MEMF_CLEAR) ) {
+
+        CopyMem(name, nc, l);
+    
+        if( dg = DB_CreateDockGadget(nc) ) {
+
+            if( n = AllocMemInternal(DockBotBaseFull, sizeof(struct DgNode), MEMF_CLEAR) ) {
+        
+                n->n.ln_Name = nc;
+                n->dg = dg;
+
+                NewList((struct List *)&n->ports);
+        
+                return n;
+            }
+
+            DB_DisposeDockGadget(dg);
+        }
+
+        FreeMemInternal(DockBotBaseFull, nc, l);
+    }
+
+    return NULL;
+}
+
+VOID __asm __saveds DB_FreeGadget(
+    register __a0 struct DgNode *dg)
+{
+    struct PortReg *pr;
+
+    FREE_STRING(dg->n.ln_Name);
+
+    DB_DisposeDockGadget(dg->dg);
+           
+    while( !IsListEmpty((struct List *)&dg->ports) ) {
+
+        if( pr = (struct PortReg *)RemTail((struct List *)&dg->ports) ) {
+
+            FreeMemInternal(DockBotBaseFull, pr, sizeof(struct PortReg));
+        }
+    }
+
+    FreeMemInternal(DockBotBaseFull, dg, sizeof(struct DgNode));    
+}
+
+VOID __asm __saveds DB_DisposeConfig(
+    register __a0 struct DockConfig *cfg)
+{
+    struct DgNode *dg;
+
+    while( ! IsListEmpty(&cfg->gadgets) ) {
+    
+        if( dg = (struct DgNode *)RemTail(&cfg->gadgets) ) {
+
+            DB_FreeGadget(dg);
+        }
+    }    
+}
+

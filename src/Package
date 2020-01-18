@@ -1,8 +1,6 @@
-EXECUTE /VERSION
-
 CD //
 
-SET FN Dockbot-`getenv $DOCKBOT_VERSION`.lha
+SET FN Dockbot.lha
 
 IF EXISTS $FN
   DELETE $FN

@@ -154,6 +154,19 @@ APTR FuncTable[] = {
 
     DB_ShowError,
 
+    DB_RegisterPort,
+    DB_UnregisterPort,
+
+    DB_DisposeConfig,
+
+    DB_DisposeDockGadget,
+
+    DB_FreeGadget,
+    DB_AllocGadget,
+
+    DB_RegisterDebugStream,
+    DB_DebugLog,
+
     (APTR)-1
 };
 
@@ -161,7 +174,8 @@ struct Library *SysBase = NULL;
 struct Library *DOSBase = NULL;
 struct Library *GfxBase = NULL;
 struct Library *IntuitionBase = NULL;
-struct DockBotLibrary *DockBotBase = NULL;
+struct Library *DockBotBase = NULL;
+struct DockBotLibrary *DockBotBaseFull = NULL;
 
 struct DockBotLibrary * __saveds __asm InitLib(
     register __a6 struct Library *sysBase,
@@ -170,33 +184,34 @@ struct DockBotLibrary * __saveds __asm InitLib(
 {
     SysBase = sysBase;
 
-    DockBotBase = dockBotBase;
-    DockBotBase->l_ExecBase = sysBase;
-    DockBotBase->l_SegList = segList;
+    DockBotBaseFull = dockBotBase;
+    DockBotBase = (struct Library *)dockBotBase;
+    dockBotBase->l_ExecBase = sysBase;
+    dockBotBase->l_SegList = segList;
 
     if( IntuitionBase = OpenLibrary("intuition.library", 39) ) {
 
-        DockBotBase->l_IntuitionBase = IntuitionBase;
+        dockBotBase->l_IntuitionBase = IntuitionBase;
 
         if( DOSBase = OpenLibrary("dos.library", 39) ) {
 
-            DockBotBase->l_DOSBase = DOSBase;
+            dockBotBase->l_DOSBase = DOSBase;
 
             if( GfxBase = OpenLibrary("graphics.library", 39) ) {
 
-                DockBotBase->l_GfxBase = GfxBase;
+                dockBotBase->l_GfxBase = GfxBase;
 
-                if( InitMem(DockBotBase) ) {
+                if( InitMem(dockBotBase) ) {
 
-                    if( InitClassLibs(DockBotBase) ) {
+                    if( InitClassLibs(dockBotBase) ) {
 
-                        if( InitGadgetClass(DockBotBase) ) {
+                        if( InitGadgetClass(dockBotBase) ) {
 
-                            return DockBotBase;
+                            return dockBotBase;
                         }
-                        FreeClassLibs(DockBotBase);
+                        FreeClassLibs(dockBotBase);
                     }
-                    CleanUpMem(DockBotBase);
+                    CleanUpMem(dockBotBase);
                 }
                 CloseLibrary(GfxBase);
             }
@@ -205,7 +220,7 @@ struct DockBotLibrary * __saveds __asm InitLib(
         CloseLibrary(IntuitionBase);
     }
 
-    FreeLib(DockBotBase);
+    FreeLib(dockBotBase);
     return NULL;
 }
 

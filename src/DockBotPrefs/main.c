@@ -8,6 +8,10 @@
 
 #include "prefs.h"
 
+#include <dos/dos.h>
+#include <dos/rdargs.h>
+
+#include <clib/dos_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 
@@ -20,6 +24,30 @@ struct Library *UtilityBase;
 
 STRPTR positions[] = { 0/*"Left"*/, 0/*"Right"*/, 0/*"Top"*/, 0/*"Bottom"*/, NULL };
 STRPTR alignments[] = { 0/*"Top/Left"*/, 0/*"Center"*/, 0/*"Bottom/Right"*/, NULL };
+
+#ifdef DEBUG_BUILD
+
+BOOL __DebugEnabled = FALSE;
+
+#define TEMPLATE "DEBUG/S"
+#define OPT_DEBUG 0
+
+VOID parse_args(VOID)
+{
+    struct RDArgs *rd;
+    LONG values[] = {
+        (LONG)FALSE
+    };
+
+    if( rd = ReadArgs(TEMPLATE, values, NULL ) ) {
+
+        __DebugEnabled = values[OPT_DEBUG];
+
+        FreeArgs(rd);
+    }        
+}
+
+#endif
 
 TR_Project *open_main_window(VOID) {
 
@@ -346,7 +374,15 @@ int main(char **argv, int argc)
 {
     struct DockPrefs prefs;
 
+#ifdef DEBUG_BUILD
+
+    parse_args();
+
+#endif
+
     if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
+
+        DEBUG(DB_RegisterDebugStream(Output()));
 
         if( TR_OpenTriton(TRITON11VERSION,
             TRCA_Name,      "DockBotPrefs",

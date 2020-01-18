@@ -1,4 +1,4 @@
-.key HELP/S,CLEAN/S,CLEANOBJ/S,CPU/K,NOEXE/S,NOLIB/S,NOCLASSES/S,NOPREFS/S,DEBUGMEM/S,DEBUG/S,DEBUGOUT/S,STRIP/S,OPT/S,DIR/K
+.key HELP/S,CLEAN/S,CLEANOBJ/S,CPU/K,ALL/S,EXE/S,LIB/S,PREFS/S,BUTTON/S,CLOCK/S,MEM/S,SWITCHER/S,DIR/K,RELEASE/S
 
 IF <HELP$NOHELP> EQ HELP
   ECHO "Options: "
@@ -6,19 +6,23 @@ IF <HELP$NOHELP> EQ HELP
   ECHO "  CLEAN/S      Remove object files and binaries."
   ECHO "  CLEANOBJ/S   Remove object files."
   ECHO "  CPU/K        Sets the CPU to target. Defaults to CPU of this machine."
-  ECHO "  NOEXE/S      Do not compile the DockBot executable."
-  ECHO "  NOLIB/S      Do not compile dockbot.library."
-  ECHO "  NOCLASSES/S  Do not compile loadable gadget modules."
-  ECHO "  NOPREFS/S    Do not compile the preferences application."
-  ECHO "  DEBUGMEM/S   Output memory debugging information."
-  ECHO "  DEBUG/S      Compile with debug symbols."
-  ECHO "  DEBUGOUT/S   Enable debugging output."
-  ECHO "  STRIP/S      Strip all debug information."
-  ECHO "  OPT/S        Optimize output."
-  ECHO "  DIR/K        Set the output directory. Defaults to /bin/<CPU>."
+  ECHO "  DIR/K        Set the output directory. Defaults to /bin/debug."
+  ECHO "  ALL/S        Compile all components."
+  ECHO "  RELEASE/S    Compile for release - optimize, no debug info."
+  ECHO "  EXE/S        Compile the DockBot executable only."
+  ECHO "  LIB/S        Compile dockbot.library only."
+  ECHO "  PREFS/S      Compile the preferences application only."
+  ECHO "  BUTTON/S     Compile the button class only."
+  ECHO "  CLOCK/S      Compile the clock class only."
+  ECHO "  MEM/S        Compile the mem class only."
+  ECHO "  SWITCHER/S   Compile the switcher class only."
   ECHO
   QUIT
 ENDIF
+
+RESIDENT sc:c/sc	PURE
+RESIDENT sc:c/slink PURE
+RESIDENT sc:c/smake PURE
 
 ECHO Checking Requirements
 
@@ -66,47 +70,63 @@ ENDIF
 ECHO Compiling for <CPU>
 ECHO " "
 
-IF <DEBUGMEM$NODEBUGMEM> EQ DEBUGMEM
-  ECHO Enabling Memory Debug Output
+IF <RELEASE$NORELEASE> EQ RELEASE
+  ECHO Compiling Release Build
   ECHO " "
-  SET DEFDEBUGMEM "define=DEBUG_MEM"
+  SET DEFFILE release.defs
+  SET OUTDIR /bin/<CPU>
 ELSE
-  SET DEFDEBUGMEM "define=NO_DEBUG_MEM"
+
+  ECHO Compiling Debug Build
+  ECHO " "
+  SET DEFFILE debug.defs
+  SET OUTDIR /bin/debug  
 ENDIF
 
-IF <DEBUG$NODEBUG> EQ DEBUG
-  ECHO Compiling With Debug Symbols
+SET COMPILELIB 		N
+SET COMPILEEXE 		N
+SET COMPILEPREFS 	N
+SET COMPILEBUTTON 	N		
+SET COMPILECLOCK 	N
+SET COMPILEMEM 		N
+SET COMPILESWITCHER	N
+
+IF <ALL$NOALL> EQ ALL
+
+  ECHO "Compiling All"
   ECHO " "
-  SET DEFDEBUG "debug=full"
+
+  SET COMPILELIB 		Y
+  SET COMPILEEXE 		Y
+  SET COMPILEPREFS 		Y
+  SET COMPILEBUTTON 	Y		
+  SET COMPILECLOCK 		Y
+  SET COMPILEMEM 		Y
+  SET COMPILESWITCHER	Y
 ELSE
-  SET DEFDEBUG "nodebug"
+  IF <LIB$NOLIB> EQ LIB
+    SET COMPILELIB		Y
+  ENDIF
+  IF <EXE$NOEXE> EQ EXE
+    SET COMPILEEXE 		Y
+  ENDIF
+  IF <PREFS$NOPREFS> EQ PREFS
+	SET COMPILEPREFS	Y 
+  ENDIF
+  IF <BUTTON$NOBUTTON> EQ BUTTON
+	SET COMPILEBUTTON	Y
+  ENDIF
+  IF <CLOCK$NOCLOCK> EQ CLOCK
+	SET COMPILECLOCK	Y
+  ENDIF
+  IF <MEM$NOMEM> EQ MEM
+	SET COMPILEMEM		Y
+  ENDIF
+  IF <SWITCHER$NOSWITCHER> EQ SWITCHER
+    SET COMPILESWITCHER	Y
+  ENDIF
 ENDIF
 
-IF <DEBUGOUT$NODEBUGOUT> EQ DEBUGOUT
-  ECHO Enabling Debug Output
-  ECHO " "
-  SET DEFDEBUGOUT "define=DEBUG_OUT"
-ELSE
-  SET DEFDEBUGOUT "define=NO_DEBUG_OUT"
-ENDIF
-
-IF <STRIP$NOSTRIP> EQ STRIP
-  ECHO Removing all Debug information
-  ECHO " "
-  SET DEFSTRIP "StripDebug"
-ELSE
-  SET DEFSTRIP ""
-ENDIF
-
-IF <OPT$NOOPT> EQ OPT
-  ECHO "Optimizing"
-  ECHO " "
-  SET DEFOPT "opt"
-ELSE
-  SET DEFOPT ""
-ENDIF
-
-.def DIR /bin/<CPU>
 
 EXECUTE /VERSION
 ECHO "Version `getenv $DOCKBOT_VERSION`"
@@ -115,61 +135,71 @@ ECHO " "
 SET BV "define=BUILDVER=""`getenv $DOCKBOT_VERSION`"
 SET DS "define=DS=""`RX 'SAY DATE("european")'`"
 
-ECHO "Output to <DIR>"
+ECHO "Output to $OUTDIR"
 ECHO " "
 
-IF NOT EXISTS <DIR>
-  MAKEDIR <DIR>
+IF <CLEAN$NOCLEAN> EQ NOCLEAN
+  IF NOT EXISTS $OUTDIR
+    MAKEDIR $OUTDIR
+  ENDIF
+  IF NOT EXISTS $OUTDIR/Gadgets
+    MAKEDIR $OUTDIR/Gadgets
+  ENDIF
 ENDIF
 
-IF <NOLIB$LIB> EQ LIB
+IF "$COMPILELIB" EQ "Y"
   ECHO Compiling dockbot.library
   ECHO " "
   cd LibDockBot
-  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT DEF_DS=$DS DEF_BV=$BV
+  smake -b /$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd /
 ENDIF
 
-IF <NOEXE$EXE> EQ EXE
+IF "$COMPILEEXE" EQ "Y"
   echo Compiling DockBot
   echo " "
   cd DockBot
-  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG_MEM=$DEFDEBUGMEM DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT DEF_DEBUG_OUT=$DEFDEBUGOUT DEF_DS=$DS DEF_BV=$BV
+  smake -b /$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd /
 ENDIF
 
-IF <NOPREFS$PREFS> EQ PREFS
+IF $COMPILEPREFS EQ Y
   echo Compiling DockBotPrefs
   echo " "
   cd DockBotPrefs
-  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT DEF_DEBUG_OUT=$DEFDEBUGOUT DEF_DS=$DS DEF_BV=$BV
+  smake -b /$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd /
 ENDIF
 
-IF <NOCLASSES$CLASSES> EQ CLASSES
-
-  IF <CLEAN$NOCLEAN> EQ NOCLEAN
-	IF NOT EXISTS <DIR>/Gadgets
-      MAKEDIR <DIR>/Gadgets
-    ENDIF
-  ENDIF
-
+IF $COMPILEBUTTON EQ Y
   echo Compiling Classes/Button
   echo " "
   cd Classes/Button
-  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT DEF_DS=$DS DEF_BV=$BV
+  smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd //
+ENDIF
 
+IF $COMPILECLOCK EQ Y
   echo Compiling Classes/Clock
   echo " "
   cd Classes/Clock
-  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT DEF_DS=$DS DEF_BV=$BV
+  smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd //
+ENDIF
 
+IF $COMPILEMEM EQ Y
   echo Compiling Classes/Mem
   echo " "
   cd Classes/Mem
-  smake <CLEAN> <CLEANOBJ> DIR=<DIR> CPU=<CPU> DEF_DEBUG=$DEFDEBUG DEF_STRIP=$DEFSTRIP DEF_OPT=$DEFOPT DEF_DS=$DS DEF_BV=$BV
+  smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
+  cd //
+ENDIF
+
+IF $COMPILESWITCHER EQ Y
+  echo Compiling Classes/Switcher
+  echo " "
+  cd Classes/Switcher
+  smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd //
 ENDIF
 

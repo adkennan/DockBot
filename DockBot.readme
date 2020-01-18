@@ -2,11 +2,26 @@ Short:        A program launcher for OS 3.
 Uploader:     adkennan@gmail.com (Andrew Kennan)
 Author:       Andrew Kennan
 Type:         util/wb
-Version:      1.5
+Version:      1.6
 Architecture: m68k-amigaos >= 3.0
 Requires:     util/libs/IconLib_46.4.lha
 
+DockBot is a program launcher for OS 3. It can display a list of icons in a 
+window on your Workbench screen. Programs can be started by clicking the icons,
+dropping files on them or using a hotkey.
+
+DockBot is extensible and can display gadgets other than icons. Included with
+it are clock, memory meter and window switcher gadgets.
+
+This archive includes source code and binaries compiled for 68000, 68020 and
+68040 CPUs.
+
 Changes:
+
+Version 1.6:
+
+* New Window Switcher gadget.
+* French translation from flype.
 
 Version 1.5:
 
@@ -25,14 +40,5 @@ Version 1.1:
 
 * Fixed issues with the installer that prevented DockBot from running.
 
-DockBot is a program launcher for OS 3. It can display a list of icons in a 
-window on your Workbench screen. Programs can be started by clicking the icons,
-dropping files on them or using a hotkey.
-
-DockBot is extensible and can display gadgets other than icons. Included with
-it are clock and memory meter gadgets.
-
-This archive includes source code and binaries compiled for 68000, 68020 and
-68040 CPUs.
 
 

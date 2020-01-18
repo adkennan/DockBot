@@ -132,11 +132,6 @@ struct DockWindow
 #define MIN_ICON "PROGDIR:" APP_NAME "Min"
 
 
-// debug.c - Debugging functions
-
-VOID log_memory(VOID);
-
-
 // dock.c - Startup/shutdown, general functions.
 
 struct DockWindow *create_dock(VOID);
@@ -225,6 +220,9 @@ VOID handle_gadget_message(struct DockWindow *dock);
 
 VOID remap_gadgets(struct DockWindow *dock);
 
+ULONG get_custom_sigs(struct DockWindow *dock);
+
+VOID handle_custom_message(struct DockWindow *dock, ULONG signal);
 
 // layout.c
 

@@ -61,6 +61,8 @@ VOID geta4(VOID);
 
 //#define METHOD_LAUNCHED
 
+//#define METHOD_MESSAGE
+
 // Method with data and message.
 
 #define DB_METHOD_DM(NAME,PARAM) ULONG __saveds METHOD_ ## NAME(Class *c, Object *o, Msg m) \
@@ -84,6 +86,14 @@ VOID geta4(VOID);
 
 #define DB_METHOD(NAME) ULONG __saveds METHOD_ ## NAME(Class *c, Object *o, Msg m) \
 { 
+
+#ifdef DEBUG_BUILD
+
+VOID DB_Printf(STRPTR fmt, ...);
+
+#define __METHOD__ CLASS_NAME "::" __FUNC__ ": "
+
+#endif
 
 #endif
 

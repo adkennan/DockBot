@@ -79,7 +79,7 @@ VOID dock_gadget_drop(Object *obj, STRPTR* paths, UWORD count)
 	DoMethodA(obj, (Msg)&msg);
 }
 
-VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds)
+VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds, UWORD windowX, UWORD windowY)
 {
 	struct DockMessageSetBounds msg = {
 		DM_SETBOUNDS
@@ -88,6 +88,8 @@ VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds)
     DEBUG(printf("dock_gadget_set_bounds: %8x\n", obj));
 
 	msg.b = bounds;
+    msg.windowX = windowX;
+    msg.windowY = windowY;
 
 	DoMethodA(obj, (Msg)&msg);
 }
@@ -98,7 +100,7 @@ BOOL dock_gadget_hit_test(Object *obj, UWORD x, UWORD y)
         DM_HITTEST
     };
 
-    DEBUG(printf("dock_gadget_hit_test: %8x\n", obj));
+//    DEBUG(printf("dock_gadget_hit_test: %8x\n", obj));
 
     msg.x = x;
     msg.y = y;
@@ -312,6 +314,19 @@ VOID dock_gadget_launched(Object *obj, STRPTR path, STRPTR args, STRPTR console,
     msg.args = args;
     msg.console = console;
     msg.wb = wb;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID dock_gadget_message(Object *obj, struct MsgPort *port)
+{
+    struct DockMessagePort msg = {
+        DM_MESSAGE
+    };
+
+    DEBUG(printf("dock_gadget_message: %8x\n", obj));
+
+    msg.port = port;
 
     DoMethodA(obj, (Msg)&msg);
 }

@@ -156,9 +156,9 @@ struct DockWindow* create_dock(VOID)
         if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 
             if( init_gadget_classes(dock) ) {
-                        
+
                 if( init_gadgets(dock) ) {    
-                
+
                     if( init_config_notification(dock) ) {
                         
                         if( init_timer_notification(dock) ) {

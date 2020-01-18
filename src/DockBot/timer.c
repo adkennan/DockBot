@@ -90,6 +90,4 @@ VOID handle_timer_message(struct DockWindow *dock)
         default:
             break;
     }
-
-    LOG_MEMORY_TIMED
 }

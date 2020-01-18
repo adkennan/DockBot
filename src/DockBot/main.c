@@ -11,6 +11,7 @@
 #include <exec/memory.h>
 #include <exec/libraries.h>
 
+#include <clib/dos_protos.h>
 #include <clib/exec_protos.h>
 
 #include <string.h>
@@ -81,8 +82,16 @@ int main(int argc, char** argv)
         return 0;
     }
 
+#ifdef DEBUG_BUILD
+
+    parse_args();
+
+#endif
+
     if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
-   
+
+        DEBUG(DB_RegisterDebugStream(Output()));
+
         if( DosBase = open_lib("dos.library", 39, FALSE) ) {
 
             if( GfxBase = open_lib("graphics.library", 39, FALSE) ) {
@@ -108,8 +117,6 @@ int main(int argc, char** argv)
                                             run_event_loop(dock);                     
 
                                             free_dock(dock);   
-                
-                                            LOG_MEMORY
                                         }
     
                                         close_catalog();

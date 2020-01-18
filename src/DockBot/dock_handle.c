@@ -14,6 +14,7 @@
 #include <clib/intuition_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/graphics_protos.h>
+#include <clib/dos_protos.h>
 
 #include "dock_handle.h"
 
@@ -28,10 +29,11 @@ VOID dock_handle_draw(Class *c, Object *o, struct RastPort *rp)
 {
     struct DockHandleData *dhd;
     struct Rect bounds;
+    UWORD winX, winY;
 
     dhd = INST_DATA(c,o);
 
-    DB_GetDockGadgetBounds(o, &bounds);
+    DB_GetDockGadgetBounds(o, &bounds, &winX, &winY);
 
     if( dhd->counter == 0 ) {
         DB_DrawOutsetFrame(rp, &bounds);
@@ -100,10 +102,17 @@ Class *init_dock_handle_class(VOID)
 {
     ULONG HookEntry();
     Class *c;
-    if( c = MakeClass(NULL, DB_ROOT_CLASS, NULL, sizeof(struct DockHandleData), 0) )
+
+    DEBUG(printf("init_dock_handle_class\n"));
+
+    if( c = MakeClass(HANDLE_CLASS_NAME, DB_ROOT_CLASS, NULL, sizeof(struct DockHandleData), 0) )
     {
+        DEBUG(printf("Class %s registered\n", HANDLE_CLASS_NAME));
+
         c->cl_Dispatcher.h_Entry = HookEntry;
         c->cl_Dispatcher.h_SubEntry = dock_handle_dispatch;
+
+        AddClass(c);
     }
 
     return c;

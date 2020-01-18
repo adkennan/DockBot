@@ -37,7 +37,6 @@
 #define ST_WB 0
 #define ST_SH 1
 
-
 struct Values StartValues[] = {
     { "wb", ST_WB },
     { "sh", ST_SH },
@@ -123,7 +122,6 @@ VOID dock_button_launch(Object *o, struct ButtonGadgetData *dbd, Msg msg, STRPTR
     DB_RequestLaunch(o, dbd->path, args, dbd->con, dbd->startType == ST_WB ? TRUE : FALSE);
 }
 
-
 VOID load_icon(struct ButtonGadgetData *data)
 {
     struct Screen *screen;
@@ -148,8 +146,6 @@ STRPTR get_start_type(struct Values *values, UWORD val) {
     }
     return NULL;
 }
-
-
 
 VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
 {
@@ -234,7 +230,7 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
     AslBase = NULL;
 
     if( cld->dosBase = OpenLibrary("dos.library", 37) ) {
-        DOSBase = (struct DosLibrary *)cld->dosBase;
+        DOSBase = cld->dosBase;
         if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
             IconBase = cld->iconBase;
             if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
@@ -296,8 +292,9 @@ DB_METHOD_D(DISPOSE)
 DB_METHOD_DM(DRAW, DockMessageDraw)
 
     struct Rect bounds;
+    UWORD winX, winY;
     
-    DB_GetDockGadgetBounds(o, &bounds);  
+    DB_GetDockGadgetBounds(o, &bounds, &winX, &winY);  
 
     if( bounds.w == 0 || bounds.h == 0 ) {
         return 1;

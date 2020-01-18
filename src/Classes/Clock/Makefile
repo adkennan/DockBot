@@ -9,22 +9,10 @@ DIR=		/bin
 LIBFILE=	$(LIBNAME).class
 LIBDIR=		//$(DIR)/Gadgets/
 
-FD_CONV=	SC:c/fd2pragma
 FD_FILE=	/template.fd
 PRAGMA_FILE=	pragmas.h
 
-DEF_DEBUG=
-DEF_STRIP=
-DEF_OPT=
-DEF_DS=
-DEF_BV=
-
-C_COMPILER=	SC:c/sc
-
-CPU=		68030
-C_OPTS=		CPU=$(CPU) STREQ $(DEF_OPT) STRINGMERGE NOSTKCHK NOSTANDARDIO NOICONS $(INC) $(DEF_DEBUG) $(DEF_DS) $(DEF_BV)
-
-LINKER=		SC:c/slink
+C_OPTS=		CPU=$(CPU) $(SC_OPTS) NOSTANDARDIO $(INC) $(DEF_DS) $(DEF_BV)
 
 C_SOURCES=	lib.c clock.c dockclock_cat.c
 
@@ -40,21 +28,16 @@ $(LIBFILE): catalog $(OBJECTS) $(LIBS) $(PRAGMA_FILE)
 	$(LINKER) WITH << 
 TO $(LIBDIR)$(LIBFILE)
 FROM $(OBJECTS)
-LIB $(LIBS) NOICONS $(DEF_STRIP) SMALLDATA
+LIB $(LIBS) $(LD_OPTS)
 <
-
-#LIBFD $(FD_FILE)
-#LIBVERSION $(VERSION)
-#LIBREVISION $(REVISION)
-
 
 $(PRAGMA_FILE): $(FD_FILE).h
 
 .c.o:
-	$(C_COMPILER) $(C_OPTS) $*.c
+	$(COMPILER) $(C_OPTS) $*.c
 
 lib.c: /template.c
-	$(C_COMPILER) $(C_OPTS) $*.c
+	$(COMPILER) $(C_OPTS) $*.c
 
 $(FD_FILE).h:
 	$(FD_CONV) $(FD_FILE) $(PRAGMA_FILE)

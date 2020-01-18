@@ -49,6 +49,7 @@ VOID free_gadget_list(struct DockPrefs *prefs)
 
     while( ! IsListEmpty(&prefs->gadLabels) ) {
         if( ln = RemTail(&prefs->gadLabels) ) {
+            DEBUG(printf("  %s\n", ln->ln_Name));
             DB_FreeMem(ln, sizeof(struct Node) + strlen(ln->ln_Name) + 1);
         }        
     }
@@ -72,7 +73,7 @@ VOID update_gadget_list(struct DockPrefs *prefs)
         }
         len = strlen(label) + 1;
 
-        if( ln = (struct Node *)DB_AllocMem(sizeof(struct Node) + len + 1, MEMF_ANY) ) {
+        if( ln = (struct Node *)DB_AllocMem(sizeof(struct Node) + len, MEMF_ANY) ) {
             ln->ln_Name = (STRPTR)(ln + 1);
             CopyMem(label, (VOID *)(ln + 1), len);
             AddTail(&prefs->gadLabels, ln);

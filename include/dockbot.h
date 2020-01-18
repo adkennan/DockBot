@@ -26,10 +26,16 @@
 
 #define VERSION_STR BUILDVER " (" DS ")"
 
-#ifdef DEBUG_OUT
-#define DEBUG(x) x
+#ifdef DEBUG_BUILD
+
+extern BOOL __DebugEnabled;
+
+#define DEBUG(x) if( __DebugEnabled ) { x; }
+
 #else 
+
 #define DEBUG(x) 
+
 #endif
 
 typedef enum
@@ -59,11 +65,22 @@ struct DgNode
 {
     struct Node n;
     Object *dg;
+	struct MinList ports;
 };
 
-#define FOR_EACH_GADGET(list, curr) for( curr = (struct DgNode *)(list)->lh_Head; \
-                                         curr->n.ln_Succ; \
-                                         curr = (struct DgNode *)curr->n.ln_Succ )
+#define FOR_EACH(type,list,curr) for( curr = (type *)((struct List *)(list))->lh_Head; \
+                                      ((struct Node *)curr)->ln_Succ; \
+                                      curr = (type *)((struct Node *)curr)->ln_Succ )
+
+
+#define FOR_EACH_GADGET(list, curr) FOR_EACH(struct DgNode, list, curr)
+
+struct PortReg {
+    struct MinNode n;
+    struct MsgPort *port;
+};
+
+#define FOR_EACH_PORTREG(list, curr) FOR_EACH(struct PortReg, list, curr)
 
 struct Rect
 {
@@ -90,6 +107,8 @@ typedef enum {
     DM_GETBOUNDS        = 1207,
 	DM_HITTEST		    = 1208,
     DM_REQ_LAUNCH       = 1209,
+    DM_REG_PORT         = 1210,
+    DM_UNREG_PORT       = 1211,
 
     // Event Handlers.
 	DM_TICK 		    = 1302,
@@ -97,6 +116,7 @@ typedef enum {
 	DM_DROP 		    = 1304,
 	DM_HOTKEY			= 1305,
     DM_LAUNCHED         = 1306,
+    DM_MESSAGE          = 1307,
 
     // Rendering.
 	DM_GETSIZE 		    = 1400,
@@ -149,6 +169,7 @@ struct DockMessageSetBounds
 {
 	ULONG MethodID;
 	struct Rect *b;
+    UWORD windowX, windowY;
 };
 
 struct DockMessageGetSize
@@ -173,6 +194,7 @@ struct DockMessageHitTest {
 struct DockMessageGetBounds {
     ULONG MethodID;
     struct Rect *b;
+    UWORD windowX, windowY;
 };
 
 struct DockMessageGetInfo {
@@ -222,6 +244,10 @@ struct DockMessageLaunch {
     BOOL wb;
 };
 
+struct DockMessagePort {
+    ULONG MethodID;
+    struct MsgPort *port;
+};
 
 struct TR_App;
 struct TR_Project;
@@ -246,9 +272,12 @@ struct DockMessageEditorUpdate {
 // Messages from Gadget to Dock.
 
 typedef enum {
-    GM_DRAW         = 1700,
-    GM_QUIT         = 1701,
-    GM_LAUNCH       = 1702
+    GM_DRAW             = 1700,
+    GM_QUIT             = 1701,
+    GM_LAUNCH           = 1702,
+    GM_REGISTER_PORT    = 1703,
+    GM_UNREGISTER_PORT  = 1704,
+    GM_GET_DOCK_INFO    = 1705
 } GadgetMessageType;
 
 struct GadgetMessage {
@@ -256,7 +285,6 @@ struct GadgetMessage {
     GadgetMessageType messageType;
     Object* sender;
 };
-
 
 struct GadgetMessageLaunch {
     struct GadgetMessage m;
@@ -266,6 +294,11 @@ struct GadgetMessageLaunch {
     BOOL wb;
 };
 
+// Used by GM_REGISTER_PORT and GM_UNREGISTER_PORT
+struct GadgetMessagePort {
+    struct GadgetMessage m;
+    struct MsgPort *port;
+};
 
 // Settings
 
@@ -315,7 +348,5 @@ struct DockSettingValue
 	UWORD KeyLength;
 	UWORD ValueLength;
 };
-
-
 
 #endif

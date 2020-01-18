@@ -11,6 +11,8 @@
 
 #include <intuition/classes.h>
 
+#define HANDLE_CLASS_NAME "DockHandle"
+
 Class *init_dock_handle_class(VOID);
 
 BOOL free_dock_handle_class(Class *c);

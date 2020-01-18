@@ -25,11 +25,12 @@
 #include <proto/locale.h>
 
 #include "dockbot.h"
+#include "dockbot_protos.h"
+#include "dockbot_pragmas.h"
 
 #include "class_def.h"
 
 #include <libraries/triton.h>
-
 
 /**** Main Library Structure ****/
 
@@ -372,6 +373,10 @@ Class* __saveds __asm GetEngine(
     METHOD_DEF(REMAP)
 #endif
 
+#ifdef METHOD_MESSAGE
+    METHOD_DEF(MESSAGE)
+#endif
+
 #ifdef METHOD_GETLABEL
     METHOD_DEF(GETLABEL)
 #else
@@ -553,6 +558,10 @@ ULONG __saveds GadgetDispatch(Class *c, Object *o, Msg msg)
         METHOD_DIS(REMAP)
 #endif
 
+#ifdef METHOD_MESSAGE
+        METHOD_DIS(MESSAGE)
+#endif
+
         case DM_INITEDIT:
             return InitEditor(c, o, msg);
 
@@ -628,6 +637,16 @@ VOID __saveds FreeLib(struct ClassLibrary *cb)
     FreeMem(negPtr, full);
 }
 
+#ifdef DEBUG_BUILD
+
+BOOL __DebugEnabled = TRUE;
+
+VOID DB_Printf(STRPTR fmt, ...)
+{
+    DB_DebugLog(fmt, (LONG *)(&fmt + 1));
+}
+
+#endif
 
 VOID *_XCEXIT = NULL;
 

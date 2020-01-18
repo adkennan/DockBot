@@ -1,0 +1,18 @@
+#basename switcher
+#language english
+#version 0
+;
+; DockBot Window Switcher
+;
+;
+MSG_Description (//)
+Window and screen switcher for DockBot
+;
+MSG_POS_Dock (//)
+Dock Window
+MSG_POS_Screen (//)
+Screen Centre
+MSG_UI_Position (//)
+Position
+MSG_UI_Key (//)
+Key

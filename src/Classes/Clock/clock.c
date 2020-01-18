@@ -251,7 +251,7 @@ DB_METHOD_D(DISPOSE)
     }
 
     if( data->splitFormat ) {
-        DB_FreeMem(data->splitFormat, strlen(data->format));
+        DB_FreeMem(data->splitFormat, strlen(data->format) + 1);
     }
 
     FREE_STRING(data->format);
@@ -263,11 +263,11 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
 
     struct TextLine *line;
     struct Rect b;
-    UWORD textW, textH, yPos;
+    UWORD textW, textH, yPos, winX, winY;
     struct Screen *screen;
     struct DrawInfo *drawInfo;
 
-    DB_GetDockGadgetBounds(o, &b);
+    DB_GetDockGadgetBounds(o, &b, &winX, &winY);
 
     if( screen = LockPubScreen(NULL) ) {
     

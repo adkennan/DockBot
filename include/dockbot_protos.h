@@ -12,6 +12,7 @@
 #include <exec/types.h>
 #include <intuition/intuition.h>
 #include <intuition/classes.h>
+#include <dos/dos.h>
 
 #include "dockbot.h"
 
@@ -21,9 +22,9 @@
 *	DB_GetDockGadgetBounds -- Get the bounding box of a dock gadget.
 *
 *   SYNOPSIS
-*	DB_GetDockGadgetBounds(obj, bounds)
-*	                       A0     A1
-*	VOID DB_GetDockGadgetBounds(Object *, struct Rect *);
+*	DB_GetDockGadgetBounds(obj, bounds, windowX, windowY)
+*	                       A0     A1      A2       A3
+*	VOID DB_GetDockGadgetBounds(Object *, struct Rect *, UWORD *, UWORD *);
 *
 *   FUNCTION
 *	Queries a dock gadget for it's position and size.
@@ -31,19 +32,24 @@
 *   INPUTS
 *	obj    - The dock gadget to query.
 *	bounds - A pointer to a Rect to be filled in by the gadget.
+*   windowX - A pointer to a UWORD to be filled with the Window X position.
+*   windowY - A pointer to a UWORD to be filled with the Window Y position.
 *
 *   RESULT
-*	The parameter bounds will be filled contain the bounds of the gadget.
+*	The parameter bounds will be filled contain the bounds of the gadget and
+*   the position of the Dock window will be in windowX and windowY.
 *
 *   EXAMPLE
 *	struct Rect bounds;
-*	DB_GetDockGadgetBounds(obj, &bounds);
+*   UWORD winX, winY;
+*	DB_GetDockGadgetBounds(obj, &bounds, &winX, &winY);
 *
 ***************************************************************************/
 VOID __asm __saveds DB_GetDockGadgetBounds(
 	register __a0 Object *obj, 
-	register __a1 struct Rect *bounds);
-
+	register __a1 struct Rect *bounds,
+    register __a2 UWORD *windowX,
+    register __a3 UWORD *windowY);
 
 /****** dockbot.library/DB_DrawOutsetFrame *********************************
 *
@@ -215,6 +221,34 @@ struct DockSettings * __asm __saveds DB_OpenSettingsWrite(
 ***************************************************************************/
 VOID __asm __saveds DB_CloseSettings(
     register __a0 struct DockSettings *settings);
+
+
+/****** dockbot.library/DB_DisposeConfig ***********************************
+*
+*   NAME
+*	DB_DisposeConfig - Cleans up the gadgets on a DockConfig structure.
+*
+*   SYNOPSIS
+*	DB_DisposeConfig(cfg)
+*	                 A0
+*	VOID DB_DisposeConfig(struct DockConfig *);
+*
+*   FUNCTION
+*   Disposes of gadget objects and cleans up associated memory allocated 
+*   by the DockConfig structure.
+*
+*   INPUTS
+*	cfg - The DockConfig structure containing references to gadgets.
+*
+*   RESULT
+*	The gadgets allocated by DB_ReadConfig will be cleaned up.
+*
+*   SEE ALSO
+*	DB_ReadConfig()
+*
+***************************************************************************/
+VOID __asm __saveds DB_DisposeConfig(
+    register __a0 struct DockConfig *cfg);
 
 
 /****** dockbot.library/DB_ReadBeginBlock *********************************
@@ -686,6 +720,15 @@ VOID* __asm __saveds DB_GetMemInfo(VOID);
 Object * __asm __saveds DB_CreateDockGadget(
     register __a0 STRPTR name);
 
+VOID __asm __saveds DB_DisposeDockGadget(
+    register __a0 Object *o);
+
+VOID __asm __saveds DB_FreeGadget(
+    register __a0 struct DgNode *dg);
+
+struct DgNode * __asm __saveds DB_AllocGadget(
+    register __a0 STRPTR name);
+
 /****** dockbot.library/DB_ListClasses *************************************
 *
 *   NAME
@@ -732,5 +775,112 @@ BOOL __asm __saveds DB_ListClasses(
 ***************************************************************************/
 VOID __asm __saveds DB_ShowError(
     register __a0 STRPTR message);
+
+/****** dockbot.library/DB_RegisterPort ************************************
+*
+*   NAME
+*	DB_RegisterPort - Registers a message port with the Dock so that gadgets
+*                     can receive messages.
+*
+*   SYNOPSIS
+*	DB_RegisterPort(obj, port);
+*	                 A0   A1
+*	DB_RegisterPort(Object *, struct MsgPort *);
+*
+*   FUNCTION
+*   Registers a gadget-owned port with the Dock so that the gadget can receive
+*   custom messages. For example, if the gadget causes a window to be opened
+*   this function allows messages received by the window's port to be routed
+*   back to the gadget.
+*
+*   INPUTS
+*   obj - The gadget object registering the port.
+*   port - The port to be registered.
+*
+*   SEE ALSO
+*   DB_UnregisterPort
+*
+***************************************************************************/
+VOID __asm __saveds DB_RegisterPort(
+    register __a0 Object *obj,
+    register __a1 struct MsgPort *port);
+
+
+/****** dockbot.library/DB_UnregisterPort ************************************
+*
+*   NAME
+*	DB_UnregisterPort - Removes a previously registered port from the Dock.
+*
+*   SYNOPSIS
+*	DB_UnregisterPort(obj, port);
+*	                   A0   A1
+*	DB_UnregisterPort(Object *, struct MsgPort *);
+*
+*   FUNCTION
+*   Removes a port registration from the Dock when the gadget is finished with
+*   it.
+*
+*   INPUTS
+*   obj - The gadget object that registered the port.
+*   port - The port to be un-registered.
+*
+*   SEE ALSO
+*   DB_RegisterPort
+*
+***************************************************************************/
+VOID __asm __saveds DB_UnregisterPort(
+    register __a0 Object *obj,
+    register __a1 struct MsgPort *port);
+
+/****** dockbot.library/DB_RegisterDebugStream *****************************
+*
+*   NAME
+*	DB_RegisterDebugStream - Registers an output stream with dockbot.library.
+*
+*   SYNOPSIS
+*	DB_RegisterDebugStream(fh);
+*	                       A0
+*	DB_RegisterDebugStream(BPTR);
+*
+*   FUNCTION
+*   Used for debug builds only. Registers an output stream for the library
+*   and gadget classes to send debug output to.
+*
+*   INPUTS
+*   fh - The output stream.
+*
+*   SEE ALSO
+*   DB_DebugLog
+*
+***************************************************************************/
+VOID __asm __saveds DB_RegisterDebugStream(
+	register __a0 BPTR fh);
+
+/****** dockbot.library/DB_DebugLog ***************************************
+*
+*   NAME
+*	DB_DebugLog - Writes a message to the debug logging stream.
+*
+*   SYNOPSIS
+*	DB_DebugLog(fmt,    argv);
+*	            A0      A1
+*	DB_DebugLog(STRPTR, LONG *);
+*
+*   FUNCTION
+*   Used for debug builds only. Writes a log message to the debug output 
+*   stream if one has been registered.
+*
+*   INPUTS
+*   fmt - A printf style format string.
+*   argv - Pointer to the first arg value.
+*
+*   SEE ALSO
+*   DB_RegisterDebugStream, VFPrintf
+
+*
+***************************************************************************/
+VOID __asm __saveds DB_DebugLog(
+	register __a0 STRPTR fmt,
+	register __a1 LONG *argv);
 
 #endif

@@ -12,9 +12,7 @@
 #include <clib/exec_protos.h>
 #include <clib/intuition_protos.h>
 
-
-VOID __asm __saveds DB_ShowError(
-    register __a0 STRPTR message) 
+VOID ShowErrorInternal(STRPTR message)
 {
 
     struct EasyStruct req = {
@@ -27,5 +25,11 @@ VOID __asm __saveds DB_ShowError(
 
 
     EasyRequest(NULL, &req, NULL, message);
+}
+
+VOID __asm __saveds DB_ShowError(
+    register __a0 STRPTR message) 
+{
+    ShowErrorInternal(message);
 }
 

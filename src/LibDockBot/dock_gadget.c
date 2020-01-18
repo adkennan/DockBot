@@ -30,6 +30,7 @@ extern struct IntuitionBase *IntuitionBase;
 struct DockGadgetData {
 	struct Rect bounds;
     struct MsgPort *dockPort;
+    UWORD windowX, windowY;
 };
 
 
@@ -95,6 +96,33 @@ VOID send_launch_msg_to_dock(Class *c, Object *o, struct DockMessageLaunch *dml)
     }
 }
 
+VOID send_port_msg_to_dock(Class *c, Object *o, struct DockMessagePort *dmp, ULONG msgID)
+{
+	struct DockGadgetData *dgd = INST_DATA(c,o);
+    struct GadgetMessagePort *msg;
+
+    if( dgd->dockPort ) {
+        if( msg = DB_AllocMem(sizeof(struct GadgetMessagePort), MEMF_CLEAR) ) {
+
+            msg->m.m.mn_Length = sizeof(struct GadgetMessagePort);
+
+            msg->port = dmp->port;
+
+            send_message_to_dock(c, o, msgID, (struct GadgetMessage *)msg);
+        }
+    }
+}
+
+VOID send_register_port_msg_to_dock(Class *c, Object *o, struct DockMessagePort *dmp)
+{
+    send_port_msg_to_dock(c, o, dmp, GM_REGISTER_PORT);
+}
+
+VOID send_unregister_port_msg_to_dock(Class *c, Object *o, struct DockMessagePort *dmp)
+{
+    send_port_msg_to_dock(c, o, dmp, GM_UNREGISTER_PORT);
+}
+
 ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 {
 	struct DockMessageGetSize* gs;
@@ -118,6 +146,8 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 				dgd->bounds.y = 0;
                 dgd->bounds.w = 0;
                 dgd->bounds.h = 0;
+                dgd->windowX  = 0;
+                dgd->windowY  = 0;
             }
 			return (ULONG)no;
 
@@ -139,15 +169,19 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 			dgd->bounds.y = sb->b->y;			
             dgd->bounds.w = sb->b->w;
             dgd->bounds.h = sb->b->h;
+            dgd->windowX  = sb->windowX;
+            dgd->windowY  = sb->windowY;
 			break;
 
         case DM_GETBOUNDS:
             gb = (struct DockMessageGetBounds *)msg;
             dgd = INST_DATA(c, o);
-            gb->b->x = dgd->bounds.x;
-            gb->b->y = dgd->bounds.y;
-            gb->b->w = dgd->bounds.w;
-            gb->b->h = dgd->bounds.h;
+            gb->b->x    = dgd->bounds.x;
+            gb->b->y    = dgd->bounds.y;
+            gb->b->w    = dgd->bounds.w;
+            gb->b->h    = dgd->bounds.h;
+            gb->windowX = dgd->windowX;
+            gb->windowY = dgd->windowY;
             break;
 
 		case DM_GETSIZE:
@@ -196,6 +230,14 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
         case DM_CANEDIT:
             return FALSE;
 
+        case DM_REG_PORT:
+            send_register_port_msg_to_dock(c, o, (struct DockMessagePort *)msg);
+            break;
+
+        case DM_UNREG_PORT:
+            send_unregister_port_msg_to_dock(c, o, (struct DockMessagePort *)msg);
+            break;
+
         case DM_TICK:
         case DM_CLICK:
         case DM_DROP:
@@ -210,6 +252,8 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 
         case DM_GETHOTKEY:
         case DM_GETLABEL:
+
+        case DM_MESSAGE:
             break;
 
 		default:

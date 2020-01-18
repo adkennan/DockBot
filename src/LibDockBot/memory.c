@@ -12,6 +12,17 @@
 
 #include "lib.h"
 
+#ifdef DEBUG_BUILD
+
+#define MEM_PREFIX 0xF0E1D2C3
+#define MEM_SUFFIX 0xA9B8C7D6
+#define MEM_FREED  0xDEADBEEF
+
+VOID *AllocMemInternalReal(struct DockBotLibrary *lib, ULONG byteSize, ULONG attributes);
+VOID FreeMemInternalReal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSize);
+
+#endif
+
 extern struct DockBotLibrary *DockBotBase;
 
 BOOL InitMem(struct DockBotLibrary *lib) 
@@ -41,13 +52,56 @@ VOID CleanUpMem(struct DockBotLibrary *lib)
     if( mc->chipPool ) {
         DeletePool(mc->chipPool);
     }
+
+#ifdef DEBUG_BUILD
+
+    if( mc->chipAllocated > 0 ) {
+        DebugLog("MEMORY ERROR: Chip Memory Not Freed: %ld\n", mc->chipAllocated);
+    }
+
+    if( mc->fastAllocated > 0 ) {
+        DebugLog("MEMORY ERROR: Fast Memory Not Freed: %ld\n", mc->fastAllocated);
+    }
+
+#endif
 }
 
 
 VOID* AllocMemInternal(struct DockBotLibrary *lib, ULONG byteSize, ULONG attributes)
 {
+
+#ifdef DEBUG_BUILD
+
+    ULONG actualSize = byteSize + 12;
+    VOID *m;
+    ULONG *p, *s;
+
+    if( actualSize & 1 ) {
+        actualSize++;
+    }
+
+    if( m = AllocMemInternalReal(lib, actualSize, attributes) ) {
+    
+        p = (ULONG *)m;
+        *p = MEM_PREFIX;
+        p++;
+        *p = byteSize;
+        p++;
+
+        s = (ULONG *)(((UBYTE *)m) + actualSize - 4);
+        *s = MEM_SUFFIX;
+
+        return (VOID *)p;    
+    }
+    
+    return NULL;
+}
+
+VOID *AllocMemInternalReal(struct DockBotLibrary *lib, ULONG byteSize, ULONG attributes)
+{
+#endif
+
     VOID *result;
-    ULONG i;
     struct MemoryControl *mc = &lib->l_MemControl;
   
     if( (attributes & MEMF_CHIP) || ! mc->fastPool ) {
@@ -73,10 +127,7 @@ VOID* AllocMemInternal(struct DockBotLibrary *lib, ULONG byteSize, ULONG attribu
     }
 
     if( result && (attributes & MEMF_CLEAR ) ) {
-        // TODO: Make this faster
-        for( i = 0;i < byteSize; i++ ) {
-            *(((UBYTE*)result) + i) = 0;
-        }
+        memset(result, 0, byteSize);
     }
 
     return result;    
@@ -84,6 +135,52 @@ VOID* AllocMemInternal(struct DockBotLibrary *lib, ULONG byteSize, ULONG attribu
 
 VOID FreeMemInternal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSize)
 {
+#ifdef DEBUG_BUILD
+
+    UBYTE *m;
+    ULONG prefix, size, suffix, actualSize = byteSize + 12;
+    ULONG *p;
+    BOOL showErr = FALSE;
+
+    if( actualSize & 1 ) {
+        actualSize++;
+    }
+
+    m = ((UBYTE *)memoryBlock) - 8;
+
+    p = (ULONG *)m;
+    prefix = *p;
+    *p = MEM_FREED;
+    if( prefix != MEM_PREFIX ) {
+        showErr = TRUE;
+    }
+    *p++;
+    size = *p;
+    if( size != byteSize ) {
+        showErr = TRUE;        
+    }
+
+    p = (ULONG *)(m + actualSize - 4);
+    suffix = *p;
+    *p = MEM_FREED;
+    if( suffix != MEM_SUFFIX ) {
+        showErr = TRUE;
+    }
+
+    if( showErr ) {
+
+        DebugLog("MEMORY ERROR! PREFIX %08x %08x, SIZE %ld %ld SUFFIX %08x, %08x", 
+            MEM_PREFIX, prefix, byteSize, size, MEM_SUFFIX, suffix);
+    }
+
+    FreeMemInternalReal(lib, m, actualSize);
+}
+
+VOID FreeMemInternalReal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSize)
+{
+
+#endif
+
     struct MemoryControl *mc = &lib->l_MemControl;
 
     if( TypeOfMem(memoryBlock) & MEMF_CHIP ) {

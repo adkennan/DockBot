@@ -25,7 +25,8 @@
 VOID run_event_loop(struct DockWindow *dock)
 {
     ULONG signals, winsig, iconsig, docksig, notifysig, 
-          timersig, gadgetsig, cxsig, totsig, screensig;
+          timersig, gadgetsig, cxsig, totsig, screensig,
+          customsig;
 
     while( dock->runState != RS_STOPPED ) {
 
@@ -125,7 +126,9 @@ VOID run_event_loop(struct DockWindow *dock)
                 while( dock->runState == RS_RUNNING || 
                         dock->runState == RS_QUITTING ) {
 
-                    signals = Wait( totsig );
+                    customsig = get_custom_sigs(dock);
+
+                    signals = Wait( totsig | customsig );
 
                     if( signals & SIGBREAKF_CTRL_C ) {
                         SetSignal(0, SIGBREAKF_CTRL_C);
@@ -154,6 +157,10 @@ VOID run_event_loop(struct DockWindow *dock)
 
                     if( signals & gadgetsig ) {
                         handle_gadget_message(dock);
+                    }
+
+                    if( signals & customsig ) {
+                        handle_custom_message(dock, signals);
                     }
 
                     if( signals & cxsig ) {

@@ -16,32 +16,22 @@
 
 #include "dock_handle.h"
 
-BOOL add_dock_gadget(struct DockWindow *dock, Object *dg)
+BOOL create_dock_handle(struct DockWindow *dock)
 {
-    struct DgNode *n;
+    struct DgNode *dg;
 
-    if( n = DB_AllocMem(sizeof(struct DgNode), MEMF_CLEAR) ) {
-        n->dg = dg;
-        AddTail(&dock->cfg.gadgets, (struct Node *)n);
+    DEBUG(printf("create_dock_handle\n"));
+
+    if( dg = DB_AllocGadget(HANDLE_CLASS_NAME) ) {
+
+        AddTail(&dock->cfg.gadgets, (struct Node *)dg);
+
+        DEBUG(printf("  Created handle.\n"));
 
         return TRUE;
     }
 
-    return FALSE;
-}
-
-BOOL create_dock_handle(struct DockWindow *dock)
-{
-    Object *gad;
-    
-    if( gad = NewObjectA(dock->handleClass, NULL, TAG_DONE) ) {
-
-        if( add_dock_gadget(dock, gad) ) {
-
-            return TRUE;
-
-        }
-    }
+    DEBUG(printf("  Failed to create handle.\n"));
 
     return FALSE;
 }
@@ -81,10 +71,7 @@ BOOL init_gadgets(struct DockWindow *dock)
 
     NewList(&dock->cfg.gadgets);
 
-    if( create_dock_handle(dock) ) {
-        return TRUE;
-    }
-    return FALSE; 
+    return create_dock_handle(dock);
 }
 
 
@@ -96,13 +83,14 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
     disable_layout(dock);
 
-    while( ! IsListEmpty(&dock->cfg.gadgets) ) {
+    while( !IsListEmpty(&dock->cfg.gadgets) ) {
+
         if( dg = (struct DgNode *)RemTail(&dock->cfg.gadgets) ) {
-            DisposeObject(dg->dg);
-            if( dg->n.ln_Name ) {
-                FREE_STRING(dg->n.ln_Name);
+
+            if( OCLASS(dg->dg) != dock->handleClass ) {
+
+                DB_FreeGadget(dg);
             }
-            DB_FreeMem(dg, sizeof(struct DgNode));
         }
     }
 }
@@ -135,13 +123,14 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
     struct Window *win;
     struct RastPort *rp;
     struct Rect gb;
+    UWORD winX, winY;
 
     if( dock->win ) {
     
         win = dock->win;
         rp = win->RPort;
 
-        DB_GetDockGadgetBounds(gadget, &gb);
+        DB_GetDockGadgetBounds(gadget, &gb, &winX, &winY);
 
         SetAPen(rp, 0);
         RectFill(rp, gb.x, gb.y, gb.w, gb.h);
@@ -181,7 +170,7 @@ VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
     struct Screen *screen;
     struct DrawInfo *drawInfo;
     struct Rect b;
-    UWORD w;
+    UWORD w, winX, winY;
 
 	struct TagItem tags[] = {
 		{ WA_Left, 0 },
@@ -223,7 +212,7 @@ VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
             tags[2].ti_Data = w + 4;
             tags[3].ti_Data = text.ITextFont->ta_YSize + 4;
 
-            DB_GetDockGadgetBounds(gadget, &b);
+            DB_GetDockGadgetBounds(gadget, &b, &winX, &winY);
 
             switch( dock->cfg.pos ) {
                 case DP_LEFT:
@@ -318,42 +307,87 @@ VOID launch(struct DockWindow *dock, struct GadgetMessageLaunch *msg)
                          msg->wb);
 }
 
+struct DgNode *get_gadget_node(struct DockWindow *dock, Object *obj)
+{
+    struct DgNode *curr;
+
+    FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+        if( obj == curr->dg ) {
+            return curr;
+        }
+    }
+
+    return NULL;
+}
+
+VOID register_gadget_port(struct DgNode *g, struct GadgetMessagePort *portMsg)
+{
+    struct PortReg *pr;
+
+    DEBUG(printf("register_gadget_port: %s %lx\n", g->n.ln_Name, portMsg->port));
+    
+    if( pr = DB_AllocMem(sizeof(struct PortReg), MEMF_CLEAR) ) {
+
+        pr->port = portMsg->port;
+
+        AddTail((struct List *)&g->ports, (struct Node *)pr);
+    }
+}
+
+VOID unregister_gadget_port(struct DgNode *g, struct GadgetMessagePort *portMsg)
+{
+    struct PortReg *pr;
+
+    DEBUG(printf("unregister_gadget_port: %s %lx\n", g->n.ln_Name, portMsg->port));
+
+    FOR_EACH_PORTREG(&g->ports, pr) {
+        if( pr->port == portMsg->port ) {
+            Remove((struct Node *)pr);
+
+            DB_FreeMem(pr, sizeof(struct PortReg));
+
+            break;
+        }
+    }         
+}
+
 VOID handle_gadget_message(struct DockWindow *dock)
 {
     struct DgNode *curr;
     struct GadgetMessage *msg;
-    BOOL exists = FALSE;
     
     while( msg = (struct GadgetMessage *)GetMsg(dock->gadgetPort) ) {
         if( dock->runState == RS_RUNNING ) {
 
-            FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
-
-                if( msg->sender == curr->dg ) {
-                    exists = TRUE;
-                    break;
-                }
+            curr = get_gadget_node(dock, msg->sender);
+            if( curr == NULL ) {
+                break;
             }
 
-            if( exists ) {
+            switch( msg->messageType ) {
+                case GM_DRAW:
+                    draw_gadget(dock, msg->sender);
+                    break;
 
-                switch( msg->messageType ) {
-                    case GM_DRAW:
-                        draw_gadget(dock, msg->sender);
-                        break;
+                case GM_QUIT:
+                    dock->runState = RS_QUITTING;
+                    break;    
 
-                    case GM_QUIT:
-                        dock->runState = RS_QUITTING;
-                        break;    
+                case GM_LAUNCH:
+                    launch(dock, (struct GadgetMessageLaunch *)msg);
+                    break;
 
-                    case GM_LAUNCH:
-                        launch(dock, (struct GadgetMessageLaunch *)msg);
-                        break;
-                }
+                case GM_REGISTER_PORT:
+                    register_gadget_port(curr, (struct GadgetMessagePort *)msg);
+                    break;
+
+                case GM_UNREGISTER_PORT:
+                    unregister_gadget_port(curr, (struct GadgetMessagePort *)msg);
+                    break;                
             }
         }
 
-        DB_FreeMem(msg, sizeof(struct GadgetMessage));
+        DB_FreeMem(msg, msg->m.mn_Length);
     }
 }
 
@@ -365,3 +399,42 @@ VOID remap_gadgets(struct DockWindow *dock)
         dock_gadget_remap(curr->dg);
     }
 }
+
+ULONG get_custom_sigs(struct DockWindow *dock)
+{
+    struct DgNode *curr;
+    struct PortReg *pr;
+    ULONG sig = 0;
+
+//    DEBUG(printf("get_custom_sigs\n"));
+
+    FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+        FOR_EACH_PORTREG(&curr->ports, pr) {
+
+            sig |= (1 << pr->port->mp_SigBit);
+        }
+    }
+
+    return sig;
+}
+
+VOID handle_custom_message(struct DockWindow *dock, ULONG signal)
+{
+    struct DgNode *curr;
+    struct PortReg *pr;
+
+    DEBUG(printf("handle_custom_message\n"));
+
+    FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+        FOR_EACH_PORTREG(&curr->ports, pr) {
+
+            DEBUG(printf("  dg = %s, p = %lx\n", curr->n.ln_Name, pr->port));
+
+            if( signal & (1 << pr->port->mp_SigBit) ) {
+    
+                dock_gadget_message(curr->dg, pr->port);
+            }
+        }
+    }
+}
+

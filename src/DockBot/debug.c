@@ -8,36 +8,30 @@
 
 #include "dock.h"
 
-struct MemoryControl
-{
-    APTR fastPool;
-    APTR chipPool;
-    ULONG fastAllocated;
-    ULONG chipAllocated;
-    ULONG fastAllocCount;
-    ULONG chipAllocCount;
-    ULONG fastAllocMax;
-    ULONG chipAllocMax;
-};
+#include <dos/dos.h>
+#include <dos/rdargs.h>
+#include <clib/dos_protos.h>
 
-WORD memLogCounter = 0;
+#ifdef DEBUG_BUILD
 
-VOID log_memory(VOID)
+BOOL __DebugEnabled = FALSE;
+
+#define TEMPLATE "DEBUG/S"
+#define OPT_DEBUG 0
+
+VOID parse_args(VOID)
 {
-    struct MemoryControl *mc = DB_GetMemInfo();
-    if( ! mc ) {
-        printf("No memory info available\n");
-    }
-    printf("C: a: %ld, c: %ld, m: %ld   F: a: %ld, c: %ld, m: %ld\n", 
-        mc->chipAllocated, mc->chipAllocCount, mc->chipAllocMax,
-        mc->fastAllocated, mc->fastAllocCount, mc->fastAllocMax);
+    struct RDArgs *rd;
+    LONG values[] = {
+        (LONG)FALSE
+    };
+
+    if( rd = ReadArgs(TEMPLATE, values, NULL ) ) {
+
+        __DebugEnabled = values[OPT_DEBUG];
+
+        FreeArgs(rd);
+    }        
 }
 
-VOID log_memory_timed(VOID)
-{
-    memLogCounter--;
-    if( memLogCounter <= 0 ) {
-        log_memory();
-        memLogCounter = 10;
-    }
-}
+#endif

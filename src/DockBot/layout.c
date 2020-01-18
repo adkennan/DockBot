@@ -32,7 +32,7 @@ UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
 
 VOID layout_gadgets(struct DockWindow *dock)
 {
-    UWORD w, h, x, y, i, max, size = 0, maxSize;
+    UWORD w, h, x, y, i, max, size = 0, maxSize, wx, wy;
     struct DgNode *curr;
     struct Screen *screen;   
     struct Rect b;
@@ -77,6 +77,9 @@ VOID layout_gadgets(struct DockWindow *dock)
                     i++;
                 }
              
+                wx = get_window_left(screen, dock->cfg.pos, dock->cfg.align, size);
+                wy = get_window_top(screen, dock->cfg.pos, dock->cfg.align, max);
+
                 i = 0;
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
                 
@@ -84,17 +87,14 @@ VOID layout_gadgets(struct DockWindow *dock)
                     b.y = y;
                     b.w = sizes[i];
                     b.h = max;
-                    dock_gadget_set_bounds(curr->dg, &b);
+                    dock_gadget_set_bounds(curr->dg, &b, wx, wy);
                     
                     x += sizes[i];
                     i++;
                 }                
 
-                ChangeWindowBox(dock->win, 
-                    get_window_left(screen, dock->cfg.pos, dock->cfg.align, x),
-                    get_window_top(screen, dock->cfg.pos, dock->cfg.align, max),
-                    x, max);
-            
+                ChangeWindowBox(dock->win, wx, wy, x, max);
+
             } else {
     
                 i = 0;
@@ -111,6 +111,9 @@ VOID layout_gadgets(struct DockWindow *dock)
                     sizes[i] = h;
                     i++;
                 }
+
+                wx = get_window_left(screen, dock->cfg.pos, dock->cfg.align, max);
+                wy = get_window_top(screen, dock->cfg.pos, dock->cfg.align, size);
                 
                 i = 0;             
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
@@ -119,17 +122,13 @@ VOID layout_gadgets(struct DockWindow *dock)
                     b.y = y;
                     b.w = max;
                     b.h = sizes[i];
-                    dock_gadget_set_bounds(curr->dg, &b);
+                    dock_gadget_set_bounds(curr->dg, &b, wx, wy);
 
                     y += sizes[i];
                     i++;
                 }                
 
-                ChangeWindowBox(dock->win, 
-                    get_window_left(screen, dock->cfg.pos, dock->cfg.align, max),
-                    get_window_top(screen, dock->cfg.pos, dock->cfg.align, y),
-                    max, y);
-     
+                ChangeWindowBox(dock->win, wx, wy, max, y);
             }
 
             DB_FreeMem(sizes, sizeof(UWORD) * gadgetCount);

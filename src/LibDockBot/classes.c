@@ -38,7 +38,7 @@
 
 extern struct Library *DOSBase;
 extern struct Library *IntuitionBase;
-extern struct DockBotLibrary *DockBotBase;
+extern struct DockBotLibrary *DockBotBaseFull;
 
 struct LibNode
 {
@@ -101,7 +101,7 @@ Object * __asm __saveds DB_CreateDockGadget(
                 if( o = NewObjectA(NULL, name, TAG_DONE) ) {
 
                     ln->lib = lib;
-                    AddTail((struct List*)&DockBotBase->l_ClassLibs, (struct Node *)ln);
+                    AddTail((struct List*)&DockBotBaseFull->l_ClassLibs, (struct Node *)ln);
 
                     return o;
                 }           
@@ -123,6 +123,13 @@ Object * __asm __saveds DB_CreateDockGadget(
     return o;
 }
 
+VOID __asm __saveds DB_DisposeDockGadget(
+    register __a0 Object *o)
+{
+    if( o ) {
+        DisposeObject(o);
+    }
+}
 
 BOOL __asm __saveds DB_ListClasses(
     register __a0 struct List *list)

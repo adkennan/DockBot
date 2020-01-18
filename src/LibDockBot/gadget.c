@@ -15,7 +15,9 @@
 
 VOID __asm __saveds DB_GetDockGadgetBounds(
 	register __a0 Object *obj, 
-	register __a1 struct Rect *bounds)
+	register __a1 struct Rect *bounds,
+    register __a2 UWORD *windowX,
+    register __a3 UWORD *windowY)
 {
     
     struct DockMessageGetBounds msg = {
@@ -23,6 +25,8 @@ VOID __asm __saveds DB_GetDockGadgetBounds(
     };
     msg.b = bounds;
     DoMethodA(obj, (Msg)&msg);
+    *windowX = msg.windowX;
+    *windowY = msg.windowY;
 }
 
 
@@ -57,4 +61,31 @@ VOID __asm __saveds DB_RequestLaunch(
 
     DoMethodA(obj, (Msg)&msg);    
 }
+
+VOID __asm __saveds DB_RegisterPort(
+    register __a0 Object *obj,
+    register __a1 struct MsgPort *port)
+{
+    struct DockMessagePort msg = {
+        DM_REG_PORT
+    };
+
+    msg.port = port;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
+VOID __asm __saveds DB_UnregisterPort(
+    register __a0 Object *obj,
+    register __a1 struct MsgPort *port)
+{
+    struct DockMessagePort msg = {
+        DM_UNREG_PORT
+    };
+
+    msg.port = port;
+
+    DoMethodA(obj, (Msg)&msg);
+}
+
 

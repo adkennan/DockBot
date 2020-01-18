@@ -40,6 +40,7 @@ struct DockBotLibrary {
     struct MemoryControl    l_MemControl;
     struct IClass *         l_GadgetClass;
     struct MinList          l_ClassLibs;
+    BPTR                    l_DebugOutput;
 };
 
 BOOL InitClassLibs(struct DockBotLibrary *lib);
@@ -53,6 +54,10 @@ VOID FreeMemInternal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSi
 
 BOOL InitGadgetClass(struct DockBotLibrary *lib);
 VOID FreeGadgetClass(struct DockBotLibrary *lib);
+
+VOID ShowErrorInternal(STRPTR message);
+
+VOID DebugLog(STRPTR fmt, ...);
 
 #endif
 

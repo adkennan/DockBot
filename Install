@@ -175,12 +175,20 @@
            (help copyfiles-help)
            (infos)
 )
-
 (complete 75)
+
 (makedir (tackon #app-dir "Catalogs"))
 (makedir (tackon #app-dir "Catalogs/Español"))
 (copyfiles (source "src/Locale/Catalogs/Spanish")
 		   (dest (tackon #app-dir "Catalogs/Español"))
+		   (pattern "#?.catalog")
+		   (help copyfiles-help)
+)
+(complete 80)
+
+(makedir (tackon #app-dir "Catalogs/Français"))
+(copyfiles (source "src/Locale/Catalogs/French")
+		   (dest (tackon #app-dir "Catalogs/Français"))
 		   (pattern "#?.catalog")
 		   (help copyfiles-help)
 )

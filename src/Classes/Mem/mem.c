@@ -116,7 +116,7 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
     text.IText = (STRPTR)&buf;
     text.FrontPen = di->dri_Pens[TEXTPEN];
     text.LeftEdge = frame.x + 2;
-    text.TopEdge = frame.y + 1;
+    text.TopEdge = frame.y + (frame.h - di->dri_Font->tf_YSize) / 2;
 
     PrintIText(rp, &text, 0, 0);
 }
@@ -126,6 +126,7 @@ DB_METHOD_M(DRAW,DockMessageDraw)
     struct Screen *screen;
     struct DrawInfo *drawInfo;
     struct Rect b;
+    UWORD winX, winY;
     ULONG totalChip, freeChip, totalFast, freeFast;
     
     totalChip = AvailMem(MEMF_CHIP | MEMF_TOTAL);
@@ -134,7 +135,7 @@ DB_METHOD_M(DRAW,DockMessageDraw)
     totalFast = AvailMem(MEMF_FAST | MEMF_TOTAL);
     freeFast = AvailMem(MEMF_FAST);
 
-    DB_GetDockGadgetBounds(o, &b);
+    DB_GetDockGadgetBounds(o, &b, &winX, &winY);
 
     if( screen = LockPubScreen(NULL) ) {
     

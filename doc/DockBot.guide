@@ -92,13 +92,15 @@ There are two ways to add a gadget to the dock:
 
 - Click the New button and select the type of gadget to add.
 
-The three gadgets available are:
+The four gadgets available are:
 
 - @{"DockButton" link configDockButton} - a button representing an executable file. Displays the icon of the executable.
 
 - DockClock - a clock. See @{"Time Formats" link timeFormats} for information on configuring it.
 
 - DockMem - a memory meter with a graphical representation of the available chip and fast memory.
+
+- Switcher - a window switcher.
 
 Once added to the dock, gadgets can be ordered with the Up and Down buttons. If the gadget has additional configuration options the Edit button will be enabled when the gadget is selected.
 
@@ -208,11 +210,12 @@ I have adoc, ADtoHT2 and FlexCat installed in my path as well.
 
 @node devCompiling "Compiling - The DockBot Manual"
 
-The src drawer contains three scripts used to build DockBot:
+The src drawer contains a number of scripts used to build DockBot:
 
 - Compile - Compiles all components for a single CPU.
 - CompileDist - Compiles DockBot for all 68000, 68020 and 68040 CPUs for distribution.
 - BuildDocs - Generates autodocs and converts them to AmigaGuide.
+- Package - Generates a release package.
 
 The Compile script has the following options:
 
@@ -220,24 +223,32 @@ The Compile script has the following options:
 - CLEAN/S      Remove object files and binaries.
 - CLEANOBJ/S   Remove object files.
 - CPU/K        Sets the CPU to target. Defaults to CPU of this machine.
-- NOEXE/S      Do not compile the DockBot executable.
-- NOLIB/S      Do not compile dockbot.library.
-- NOCLASSES/S  Do not compile loadable gadget modules.
-- NOPREFS/S    Do not compile the preferences application.
-- DEBUGMEM/S   Output memory debugging information.
-- DEBUG/S      Compile with debug symbols.
-- DEBUGOUT/S   Enable debugging output.
-- STRIP/S      Strip all debug information.
-- OPT/S        Optimize the compiler output.
-- DIR/K        Set the output directory. Defaults to /bin/<CPU>.
+- DIR/K        Set the output directory.
+  - If compiling without the RELEASE switch defaults to /bin/debug.
+  - Otherwise defaults to /bin/<CPU>
+- ALL/S        Compile all components.
+- RELEASE/S    Compile for release - optimize, no debug info.
+- EXE/S        Compile the DockBot executable only.
+- LIB/S        Compile dockbot.library only.
+- PREFS/S      Compile the preferences application only.
+- BUTTON/S     Compile the button class only.
+- CLOCK/S      Compile the clock class only.
+- MEM/S        Compile the mem class only.
+- SWITCHER/S   Compile the switcher class only.
 
 CompileDist only has a single option:
 
 - CLEAN/S      Removes object files and binaries for all CPUs.
 
-BuildDocs has no options.
+BuildDocs and Package has no options.
 
-To build DockBot for your CPU, open a shell window, CD to the src drawer and execute the Compile script.
+To build DockBot for your CPU, open a shell window, CD to the src drawer and enter:
+
+> COMPILE ALL
+
+or
+
+> COMPILE ALL RELEASE
 
 @endnode
 
@@ -332,7 +343,7 @@ It's a great thrill to receive positive feedback about DockBot but what is best 
 
 I'd like to thank the following people for their contributions to DockBot:
 
-- flype for submitting the code to support screennotify.library.
+- flype for submitting the code to support screennotify.library and a French translation.
 - Gulliver for submitting language catalogs.
 - shanshe for a bugfix to the gadget layout.
 

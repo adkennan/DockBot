@@ -1,0 +1,15 @@
+#language français
+#version 1
+;
+; DockClock
+;
+;
+MSG_Description (//)
+Un moniteur de mémoire pour DockBot
+;
+MSG_LBL_Chip (//)
+Chip %d%%
+;
+MSG_LBL_Fast (//)
+Fast %d%%
+;
