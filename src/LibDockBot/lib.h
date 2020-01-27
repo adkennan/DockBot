@@ -26,6 +26,8 @@ struct MemoryControl
     ULONG chipAllocCount;
     ULONG fastAllocMax;
     ULONG chipAllocMax;
+    ULONG fastFreeCount;
+    ULONG chipFreeCount;
 };
 
 struct DockBotLibrary {

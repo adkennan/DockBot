@@ -230,7 +230,7 @@ VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR 
 
 
     if( wb ) {
-        len = strlen((STRPTR)&dock->progPath) + 6;
+        len = strlen((STRPTR)&dock->progPath) + 7;
     }   
     
     len += strlen(path) + 1;
@@ -238,13 +238,14 @@ VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR 
         len += strlen(args) + 1;
     }
 
-    if( cmd = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
+    if( cmd = (STRPTR)DB_AllocMem(len + 1, MEMF_CLEAR) ) {
         
         pos = cmd;
         if( wb ) {
             COPY_STRING((STRPTR)&dock->progPath, pos);
             pos--;
             COPY_STRING("/WBRUN ", pos);
+            pos--;
         }
         
         COPY_STRING(path, pos);
@@ -267,6 +268,8 @@ VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR 
                 shellTags[2].ti_Data = fhIn;
                 shellTags[3].ti_Data = fhOut;
                 
+                DEBUG(printf(__FUNC__ ": cmd = >%s<\n", cmd));             
+
                 if( SystemTagList(cmd, (struct TagItem*)&shellTags) == -1 ) {
                     Close(fhIn);
                     Close(fhOut);
@@ -276,7 +279,7 @@ VOID execute_external(struct DockWindow* dock, STRPTR path, STRPTR args, STRPTR 
                 Close(fhOut);
             }
         }
-        DB_FreeMem(cmd, len);
+        DB_FreeMem(cmd, len + 1);
     }
 }
 

@@ -28,6 +28,8 @@
 #define METHOD_DISPOSE      clock_dispose
 
 #define METHOD_TICK         clock_tick
+#define METHOD_CLICK	 	clock_click
+#define METHOD_LAUNCHED		clock_launched
 
 #define METHOD_GETSIZE      clock_get_size
 #define METHOD_DRAW         clock_draw
@@ -45,7 +47,6 @@
 struct ClockLibData
 {
   struct Library *dosBase;
-  struct Library *utilityBase;
   struct Library *gfxBase;
 };
 
@@ -56,6 +57,7 @@ struct ClockGadgetData
     STRPTR format;
     STRPTR splitFormat;   
     ULONG counter;
+	BOOL clicked;
 };
 
 #endif

@@ -29,14 +29,6 @@ enum {
     OBJ_STR_HOTKEY
 };
 
-
-struct TagItem *make_tag_list(ULONG data, ...)
-{
-    struct TagItem *tags = (struct TagItem *)&data;
-
-    return CloneTagItems(tags);
-}
-
 STRPTR get_pos_type(struct Values *values, UWORD val) {
 
     while( values->Name ) {
@@ -56,7 +48,7 @@ DB_METHOD_DM(GETEDITOR,DockMessageGetEditor)
     positions[0] = (STRPTR)MSG_POS_Dock;
     positions[1] = (STRPTR)MSG_POS_Screen;
 
-    msg->uiTags = make_tag_list(   
+    msg->uiTags = DB_MakeTagList(   
         VertGroupA,
             Space,
             LineArray,

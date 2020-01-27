@@ -1,4 +1,4 @@
-.key HELP/S,CLEAN/S,CLEANOBJ/S,CPU/K,ALL/S,EXE/S,LIB/S,PREFS/S,BUTTON/S,CLOCK/S,MEM/S,SWITCHER/S,DIR/K,RELEASE/S
+.key HELP/S,CLEAN/S,CLEANOBJ/S,CPU/K,ALL/S,EXE/S,LIB/S,PREFS/S,BUTTON/S,CLOCK/S,MEM/S,SWITCHER/S,EYES/S,DIR/K,RELEASE/S
 
 IF <HELP$NOHELP> EQ HELP
   ECHO "Options: "
@@ -9,13 +9,14 @@ IF <HELP$NOHELP> EQ HELP
   ECHO "  DIR/K        Set the output directory. Defaults to /bin/debug."
   ECHO "  ALL/S        Compile all components."
   ECHO "  RELEASE/S    Compile for release - optimize, no debug info."
-  ECHO "  EXE/S        Compile the DockBot executable only."
-  ECHO "  LIB/S        Compile dockbot.library only."
-  ECHO "  PREFS/S      Compile the preferences application only."
-  ECHO "  BUTTON/S     Compile the button class only."
-  ECHO "  CLOCK/S      Compile the clock class only."
-  ECHO "  MEM/S        Compile the mem class only."
-  ECHO "  SWITCHER/S   Compile the switcher class only."
+  ECHO "  EXE/S        Compile the DockBot executable."
+  ECHO "  LIB/S        Compile dockbot.library."
+  ECHO "  PREFS/S      Compile the preferences application."
+  ECHO "  BUTTON/S     Compile the button class."
+  ECHO "  CLOCK/S      Compile the clock class."
+  ECHO "  MEM/S        Compile the mem class."
+  ECHO "  SWITCHER/S   Compile the switcher class."
+  ECHO "  EYES/S       Compile the eyes class."
   ECHO
   QUIT
 ENDIF
@@ -90,6 +91,7 @@ SET COMPILEBUTTON 	N
 SET COMPILECLOCK 	N
 SET COMPILEMEM 		N
 SET COMPILESWITCHER	N
+SET COMPILEEYES		N
 
 IF <ALL$NOALL> EQ ALL
 
@@ -103,6 +105,7 @@ IF <ALL$NOALL> EQ ALL
   SET COMPILECLOCK 		Y
   SET COMPILEMEM 		Y
   SET COMPILESWITCHER	Y
+  SET COMPILEEYES		Y
 ELSE
   IF <LIB$NOLIB> EQ LIB
     SET COMPILELIB		Y
@@ -124,6 +127,9 @@ ELSE
   ENDIF
   IF <SWITCHER$NOSWITCHER> EQ SWITCHER
     SET COMPILESWITCHER	Y
+  ENDIF
+  IF <EYES$NOEYES> EQ EYES 
+	SET COMPILEEYES 	Y
   ENDIF
 ENDIF
 
@@ -202,4 +208,13 @@ IF $COMPILESWITCHER EQ Y
   smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
   cd //
 ENDIF
+
+IF $COMPILEEYES EQ Y
+  echo Compiling Classes/Eyes
+  echo " "
+  cd Classes/Eyes
+  smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
+  cd //
+ENDIF
+
 

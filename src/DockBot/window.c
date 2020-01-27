@@ -85,6 +85,10 @@ BOOL build_menu(struct DockWindow *dock) {
         UnlockPubScreen(NULL, screen);        
     }
 
+    if( ! result ) {
+        DEBUG(printf(" Failed\n"));
+    }
+
     return result;
 }
 
@@ -116,11 +120,17 @@ BOOL show_dock_window(struct DockWindow *dock)
                     
                     result = TRUE;
                                     
+                } else {
+                    DEBUG(printf(" AddAppWindow Failed\n"));
                 }
+            
+            } else {
+                DEBUG(printf(" CreateMsgPort Failed\n"));
             }
         }
+    } else {
+       DEBUG(printf(" OpenWindow Failed\n"));
     }
-    
     return result;     
 }
 

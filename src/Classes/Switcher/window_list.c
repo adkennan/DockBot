@@ -155,7 +155,7 @@ VOID open_window(Object *o, struct SwitcherGadgetData *data)
 {
     struct Rect b;
     UWORD dwX, dwY;
-    LONG wX, wY, dwXl, dwYl, w, h, bx, by, bw, bh;
+    LONG wX = 0, wY = 0, dwXl, dwYl, w, h, bx, by, bw, bh;
     struct Screen *screen;
 
     if( data->win ) {

@@ -30,6 +30,8 @@ BOOL init_timer_notification(struct DockWindow *dock)
             }
         }
     }
+
+    DEBUG(printf(" Failed\n"));
     return FALSE;
 }
 

@@ -315,6 +315,11 @@ struct Values
     CopyMem(setting.Value, dest, setting.ValueLength); \
     dest[setting.ValueLength] = '\0'; 
 
+int atoi(const char *);
+
+#define GET_INTEGER(setting, dest) \
+    dest = atoi(setting.Value);
+
 #define GET_VALUE(setting, values, curr, len, dest) \
     curr = &values[0];\
     while( curr->Name ) { \

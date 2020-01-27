@@ -79,16 +79,8 @@ enum {
 
 struct Library *DOSBase;
 struct Library *IconBase;
-struct Library *UtilityBase;
 struct Library *AslBase;
 struct ButtonLibData *StaticData;
-
-struct TagItem *make_tag_list(ULONG data, ...)
-{
-    struct TagItem *tags = (struct TagItem *)&data;
-
-    return CloneTagItems(tags);
-}
 
 VOID dock_button_launch(Object *o, struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
 {
@@ -233,20 +225,15 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
         DOSBase = cld->dosBase;
         if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
             IconBase = cld->iconBase;
-            if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
-                UtilityBase = cld->utilityBase;
-                if( cld->aslBase = OpenLibrary("asl.library", 37) ) {
-                    AslBase = cld->aslBase;
+            if( cld->aslBase = OpenLibrary("asl.library", 37) ) {
+                AslBase = cld->aslBase;
 
-                    return 1;
-                }
-                CloseLibrary(cld->utilityBase);
+                return 1;
             }
             CloseLibrary(cld->iconBase);
         }
         CloseLibrary(cld->dosBase);
     }
-    cld->utilityBase = NULL;
     cld->iconBase = NULL;
     cld->dosBase = NULL;
     cld->aslBase = NULL;
@@ -262,10 +249,6 @@ ULONG __saveds button_lib_expunge(struct ButtonLibData *cld)
 
     if( cld->dosBase ) {
         CloseLibrary(cld->dosBase);
-    }
-
-    if( cld->utilityBase ) {
-        CloseLibrary(cld->utilityBase);
     }
 
     if( cld->aslBase ) {
@@ -466,7 +449,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
     startTypes[0] = (STRPTR)MSG_ST_Workbench;
     startTypes[1] = (STRPTR)MSG_ST_Shell;
 
-    msg->uiTags = make_tag_list(   
+    msg->uiTags = DB_MakeTagList(   
         VertGroupA,
             Space,
             HorizGroupC,

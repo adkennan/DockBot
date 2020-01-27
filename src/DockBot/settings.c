@@ -18,11 +18,15 @@ BOOL load_config(struct DockWindow *dock)
     struct DgNode *curr;
     BOOL r = FALSE;
 
-    DEBUG(printf("load_config: %s\n", CONFIG_FILE));
+    DEBUG(printf(__FUNC__ ": %s\n", CONFIG_FILE));
 
     if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 
+        DEBUG(printf(__FUNC__ ":  settings opened\n"));
+
         if( DB_ReadConfig(&dock->cfg, s) ) {
+
+            DEBUG(printf(__FUNC__ ":  config read\n"));
 
             FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
@@ -56,9 +60,12 @@ BOOL init_config_notification(struct DockWindow *dock)
         }
 
         dock->notifyEnabled = TRUE;
+
+        return TRUE;
     }
 
-    return TRUE; 
+    DEBUG(printf(" Failed\n"));
+    return FALSE; 
 }
 
 VOID free_config_notification(struct DockWindow *dock)

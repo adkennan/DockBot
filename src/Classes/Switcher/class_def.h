@@ -66,7 +66,6 @@ struct SwitcherLibData
 {
     struct Library *gfxBase;
     struct Library *keymapBase;
-    struct Library *utilityBase;
 };
 
 struct SwitcherGadgetData

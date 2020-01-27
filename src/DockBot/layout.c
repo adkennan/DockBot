@@ -39,6 +39,8 @@ VOID layout_gadgets(struct DockWindow *dock)
     UWORD* sizes;
     UWORD gadgetCount;
 
+    DEBUG(printf(__FUNC__ "\n"));
+
     if( dock->disableLayout ) {
         return;
     }

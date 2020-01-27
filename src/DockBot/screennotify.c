@@ -42,7 +42,8 @@ BOOL init_screennotify(struct DockWindow *dock)
             return TRUE;
         }
     }
-    
+
+    DEBUG(printf(" Failed\n"));    
     return FALSE;
 }
 

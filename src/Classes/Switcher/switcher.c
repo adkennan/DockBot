@@ -18,7 +18,6 @@
 
 struct Library *KeymapBase;
 struct Library *GfxBase;
-struct Library *UtilityBase;
 
 ULONG __saveds switcher_lib_init(struct SwitcherLibData* cld)
 {
@@ -29,11 +28,7 @@ ULONG __saveds switcher_lib_init(struct SwitcherLibData* cld)
         if( cld->gfxBase = OpenLibrary("graphics.library", 37) ) {
             GfxBase = cld->gfxBase;
 
-            if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
-                UtilityBase = cld->utilityBase;
-            
-                return 1;
-            }
+            return 1;
         }
     }
     return 0;
@@ -46,9 +41,6 @@ ULONG __saveds switcher_lib_expunge(struct SwitcherLibData *cld)
     }
     if( cld->gfxBase ) {
         CloseLibrary(cld->gfxBase);
-    }
-    if( cld->utilityBase ) {
-        CloseLibrary(cld->utilityBase);
     }
     return 1;
 }

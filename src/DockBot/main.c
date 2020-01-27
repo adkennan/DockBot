@@ -90,6 +90,11 @@ int main(int argc, char** argv)
 
     if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
 
+#ifdef DEBUG_BUILD
+
+        DB_RegisterDebugStream(NULL);
+#endif
+
         DEBUG(DB_RegisterDebugStream(Output()));
 
         if( DosBase = open_lib("dos.library", 39, FALSE) ) {

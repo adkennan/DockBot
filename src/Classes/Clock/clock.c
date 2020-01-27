@@ -35,11 +35,12 @@
 
 #include "dockclock_cat.h"
 
-struct Library *UtilityBase;
 extern struct GfxBase *GfxBase;
 
 #define S_FORMAT "format"
 #define DEFAULT_FORMAT "%Q:%M"
+
+#define DATE_PREFS "SYS:Prefs/Time"
 
 enum {
     OBJ_STR_FORMAT = 2001
@@ -60,14 +61,6 @@ struct TextLine {
 #define FOR_EACH_LINE for( line = (struct TextLine *)data->lines.mlh_Head; \
                                          line->n.mln_Succ; \
                                          line = (struct TextLine *)line->n.mln_Succ )
-
-
-struct TagItem *make_tag_list(ULONG data, ...)
-{
-    struct TagItem *tags = (struct TagItem *)&data;
-
-    return CloneTagItems(tags);
-}
 
 
 VOID create_lines(struct ClockGadgetData *data) 
@@ -197,17 +190,13 @@ ULONG __saveds clock_lib_init(struct ClockLibData* cld)
 {
     if( cld->dosBase = OpenLibrary("dos.library", 37) ) {
         DOSBase = (struct DosLibrary *)cld->dosBase;
-        if( cld->utilityBase = OpenLibrary("utility.library", 37) ) {
-            UtilityBase = cld->utilityBase;
-            if( cld->gfxBase = OpenLibrary("graphics.library", 37) ) {
-                GfxBase = (struct GfxBase *)cld->gfxBase;
-           
-                return 1;
-            }
+        if( cld->gfxBase = OpenLibrary("graphics.library", 37) ) {
+            GfxBase = (struct GfxBase *)cld->gfxBase;
+       
+            return 1;
         }
         CloseLibrary(cld->dosBase);
     }
-    cld->utilityBase = NULL;
     cld->dosBase = NULL;
     return 0;
 }
@@ -216,10 +205,6 @@ ULONG __saveds clock_lib_expunge(struct ClockLibData *cld)
 {
     if( cld->gfxBase ) {
         CloseLibrary(cld->gfxBase);
-    }
-
-    if( cld->utilityBase ) {
-        CloseLibrary(cld->utilityBase);
     }
 
     if( cld->dosBase ) {
@@ -278,7 +263,11 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
             SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
             RectFill(msg->rp, b.x, b.y, b.w + b.x - 1, b.h + b.y - 1);
 
-            DB_DrawOutsetFrame(msg->rp, &b);
+            if( data->clicked ) {
+                DB_DrawInsetFrame(msg->rp, &b);
+            } else {
+                DB_DrawOutsetFrame(msg->rp, &b);
+            }
 
             yPos = b.y + (b.h - textH) / 2;
 
@@ -301,6 +290,17 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
     return 1;    
 }
 
+DB_METHOD_D(CLICK)
+
+    DB_RequestDockGadgetDraw(o);
+
+    data->clicked = TRUE;
+
+    DB_RequestLaunch(o, DATE_PREFS, NULL, NULL, TRUE);   
+
+    return 1;
+}
+
 DB_METHOD_D(TICK)
 
     struct DateStamp ds;
@@ -314,10 +314,19 @@ DB_METHOD_D(TICK)
 
     DateStamp(&ds);
     
-    if( format_time(data, &ds) ) {
-    
+    if( format_time(data, &ds)) {
+   
         DB_RequestDockGadgetDraw(o);
     }
+
+    return 1;
+}
+
+DB_METHOD_D(LAUNCHED)
+
+    data->clicked = FALSE;
+
+    DB_RequestDockGadgetDraw(o);
 
     return 1;
 }
@@ -387,7 +396,7 @@ DB_METHOD_DM(GETEDITOR,DockMessageGetEditor)
         }
     }
 
-    msg->uiTags = make_tag_list(   
+    msg->uiTags = DB_MakeTagList(   
         VertGroupA,
             Space,
             LineArray,

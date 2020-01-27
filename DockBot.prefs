@@ -3,11 +3,20 @@ begin
   position=left
   labels=true
   begin
+    gadget=Switcher
+    key=ctrl tab
+    position=dock
+  end
+  begin
     gadget=DockClock
     format=%H:%M
   end
   begin
     gadget=DockMem
+  end
+  begin
+    gadget=Eyes
+    numberOfEyes=2
   end
   begin
     gadget=DockButton

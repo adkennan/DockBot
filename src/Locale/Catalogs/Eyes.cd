@@ -1,0 +1,11 @@
+#language english
+#version 1
+;
+; Eyes
+;
+;
+MSG_Description (//)
+Eyes that follow your mouse pointer
+;
+MSG_UI_NumEyes (//)
+How many eyes?

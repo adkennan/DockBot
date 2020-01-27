@@ -45,6 +45,8 @@ BOOL init_gadget_classes(struct DockWindow *dock)
             return TRUE;
         }   
     }
+
+    DEBUG(printf(" Failed\n"));
     return FALSE;
 }
 
@@ -53,6 +55,7 @@ BOOL free_gadget_classes(struct DockWindow *dock)
     DEBUG(printf("free_gadget_classes\n"));
 
     if( dock->handleClass ) {
+        
         if( ! free_dock_handle_class(dock->handleClass) ) {
             return FALSE;
         }
@@ -87,10 +90,7 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
         if( dg = (struct DgNode *)RemTail(&dock->cfg.gadgets) ) {
 
-            if( OCLASS(dg->dg) != dock->handleClass ) {
-
-                DB_FreeGadget(dg);
-            }
+            DB_FreeGadget(dg);
         }
     }
 }

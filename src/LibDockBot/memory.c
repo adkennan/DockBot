@@ -56,11 +56,11 @@ VOID CleanUpMem(struct DockBotLibrary *lib)
 #ifdef DEBUG_BUILD
 
     if( mc->chipAllocated > 0 ) {
-        DebugLog("MEMORY ERROR: Chip Memory Not Freed: %ld\n", mc->chipAllocated);
+        DebugLog("MEMORY ERROR: Chip Memory Not Freed: %ld, Allocs: %ld, Frees: %ld\n", mc->chipAllocated, mc->chipAllocCount, mc->chipFreeCount);
     }
 
     if( mc->fastAllocated > 0 ) {
-        DebugLog("MEMORY ERROR: Fast Memory Not Freed: %ld\n", mc->fastAllocated);
+        DebugLog("MEMORY ERROR: Fast Memory Not Freed: %ld, Allocs: %ld, Frees: %ld\n", mc->fastAllocated, mc->fastAllocCount, mc->fastFreeCount);
     }
 
 #endif
@@ -116,6 +116,7 @@ VOID *AllocMemInternalReal(struct DockBotLibrary *lib, ULONG byteSize, ULONG att
         }   
         
     } else {
+
         if( result = AllocPooled(mc->fastPool, byteSize) ) {
             mc->fastAllocated += byteSize;
             mc->fastAllocCount++;
@@ -169,8 +170,8 @@ VOID FreeMemInternal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSi
 
     if( showErr ) {
 
-        DebugLog("MEMORY ERROR! PREFIX %08x %08x, SIZE %ld %ld SUFFIX %08x, %08x", 
-            MEM_PREFIX, prefix, byteSize, size, MEM_SUFFIX, suffix);
+        DebugLog("MEMORY ERROR! block = %08lx, PREFIX %08lx %08lx, SIZE %ld %ld SUFFIX %08lx, %08lx\n", 
+            memoryBlock, MEM_PREFIX, prefix, byteSize, size, MEM_SUFFIX, suffix);
     }
 
     FreeMemInternalReal(lib, m, actualSize);
@@ -186,11 +187,13 @@ VOID FreeMemInternalReal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG by
     if( TypeOfMem(memoryBlock) & MEMF_CHIP ) {
 
         FreePooled(mc->chipPool, memoryBlock, byteSize);
+        mc->chipFreeCount++;
         mc->chipAllocated -= byteSize;
         
     } else {
-        
+
         FreePooled(mc->fastPool, memoryBlock, byteSize);
+        mc->fastFreeCount++;
         mc->fastAllocated -= byteSize;
     }
 }

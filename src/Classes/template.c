@@ -23,6 +23,7 @@
 #include <proto/exec.h>
 #include <proto/intuition.h>
 #include <proto/locale.h>
+#include <proto/utility.h>
 
 #include "dockbot.h"
 #include "dockbot_protos.h"
@@ -44,6 +45,7 @@ struct ClassLibrary {
     struct Library          *cl_DockBotBase;
     struct Library          *cl_TritonBase;
     struct Library          *cl_LocaleBase;
+    struct Library          *cl_UtilityBase;
     struct Catalog          *cl_Catalog;
 #ifdef GADGET_LIB_DATA
     struct GADGET_LIB_DATA  cl_Data;
@@ -190,6 +192,7 @@ struct Library *DockBotBase;
 extern struct Library *TritonBase;
 struct ClassLibrary *ClassLib;
 struct Library *LocaleBase;
+struct Library *UtilityBase;
 
 struct ClassLibrary * __saveds __asm InitLib(
     register __a6 struct Library *sysBase,
@@ -203,33 +206,36 @@ struct ClassLibrary * __saveds __asm InitLib(
 
     if( IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39) ) {
         if( LocaleBase = OpenLibrary("locale.library", 37) ) {
-            if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
-                if( cb->cl_GadgetClass = InitClass() ) {
+            if( UtilityBase = OpenLibrary("utility.library", 37) ) { 
+                if( DockBotBase = OpenLibrary("dockbot.library", 1) ) {
+                    if( cb->cl_GadgetClass = InitClass() ) {
 
-                    if( cb->cl_Catalog = OpenCatalog(NULL, CLASS_NAME ".catalog"
-                                            , OC_BuiltInLanguage, "english"
-              	    					    , OC_Version, 0
-								            , TAG_DONE) ) {
+                        if( cb->cl_Catalog = OpenCatalog(NULL, CLASS_NAME ".catalog"
+                                                , OC_BuiltInLanguage, "english"
+              	        					    , OC_Version, 0
+					    			            , TAG_DONE) ) {
 
-                        InitCatalog(cb->cl_Catalog);            
-                    }
+                            InitCatalog(cb->cl_Catalog);            
+                        }
 
 #ifdef GADGET_LIB_INIT
-                    if( GADGET_LIB_INIT(&cb->cl_Data) ) {
+                        if( GADGET_LIB_INIT(&cb->cl_Data) ) {
 #endif
-                        cb->cl_IntuitionBase = (struct Library *)IntuitionBase;
-                        cb->cl_DockBotBase = DockBotBase;
-                        cb->cl_TritonBase = NULL;
-                        cb->cl_LocaleBase = LocaleBase;
-                        TritonBase = NULL;
+                            cb->cl_IntuitionBase = (struct Library *)IntuitionBase;
+                            cb->cl_DockBotBase = DockBotBase;
+                            cb->cl_TritonBase = NULL;
+                            cb->cl_LocaleBase = LocaleBase;
+                            cb->cl_UtilityBase = UtilityBase;
+                            TritonBase = NULL;
         
-                        ClassLib = cb;
-
-                        return cb;
+                            ClassLib = cb;
+    
+                            return cb;
                         
 #ifdef GADGET_LIB_INIT
-                    }
+                        }
 #endif
+                    }
                 }
             }
         }
@@ -622,6 +628,10 @@ VOID __saveds CloseLibs(VOID)
     if( LocaleBase ) {
         CloseLibrary(LocaleBase);
     }
+
+    if( UtilityBase ) {
+        CloseLibrary(UtilityBase);
+    }
 }
 
 VOID __saveds FreeLib(struct ClassLibrary *cb)
@@ -635,6 +645,13 @@ VOID __saveds FreeLib(struct ClassLibrary *cb)
     negPtr -= neg;
 
     FreeMem(negPtr, full);
+}
+
+struct TagItem *DB_MakeTagList(ULONG data, ...)
+{
+    struct TagItem *tags = (struct TagItem *)&data;
+
+    return CloneTagItems(tags);
 }
 
 #ifdef DEBUG_BUILD

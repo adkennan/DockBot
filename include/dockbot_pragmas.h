@@ -6,7 +6,7 @@
 /*                                  */
 /************************************/
 /* Dock gadget functions*/
-#pragma libcall DockBotBase DB_GetDockGadgetBounds 1e 9802
+#pragma libcall DockBotBase DB_GetDockGadgetBounds 1e BA9804
 #pragma libcall DockBotBase DB_RequestDockQuit 24 801
 #pragma libcall DockBotBase DB_RequestDockGadgetDraw 2a 801
 #pragma libcall DockBotBase DB_RequestLaunch 30 0BA9805
@@ -34,3 +34,15 @@
 #pragma libcall DockBotBase DB_ListClasses 9c 801
 /* User Messages*/
 #pragma libcall DockBotBase DB_ShowError a2 801
+/* Gadget Message Ports*/
+#pragma libcall DockBotBase DB_RegisterPort a8 9802
+#pragma libcall DockBotBase DB_UnregisterPort ae 9802
+/* Config cleanup*/
+#pragma libcall DockBotBase DB_DisposeConfig b4 801
+/* More gadget stuff*/
+#pragma libcall DockBotBase DB_DisposeDockGadget ba 801
+#pragma libcall DockBotBase DB_FreeGadget c0 801
+#pragma libcall DockBotBase DB_AllocGadget c6 801
+/* Debug Logging*/
+#pragma libcall DockBotBase DB_RegisterDebugStream cc 801
+#pragma libcall DockBotBase DB_DebugLog d2 9802

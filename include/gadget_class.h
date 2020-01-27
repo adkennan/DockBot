@@ -9,6 +9,8 @@
 #ifndef __GADGET_CLASS_H__
 #define __GADGET_CLASS_H__
 
+#include <utility/tagitem.h>
+
 VOID geta4(VOID);
 
 // Class Information
@@ -94,6 +96,8 @@ VOID DB_Printf(STRPTR fmt, ...);
 #define __METHOD__ CLASS_NAME "::" __FUNC__ ": "
 
 #endif
+
+struct TagItem *DB_MakeTagList(ULONG data, ...);
 
 #endif
 

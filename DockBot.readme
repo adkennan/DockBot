@@ -20,8 +20,10 @@ Changes:
 
 Version 1.6:
 
-* New Window Switcher gadget.
+* New Window Switcher and Eyes gadgets.
+* Clicking the Clock gadget will launch the Time prefs.
 * French translation from flype.
+* Fixed a few bugs around memory usage.
 
 Version 1.5:
 

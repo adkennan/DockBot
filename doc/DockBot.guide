@@ -92,7 +92,7 @@ There are two ways to add a gadget to the dock:
 
 - Click the New button and select the type of gadget to add.
 
-The four gadgets available are:
+The five gadgets available are:
 
 - @{"DockButton" link configDockButton} - a button representing an executable file. Displays the icon of the executable.
 
@@ -101,6 +101,8 @@ The four gadgets available are:
 - DockMem - a memory meter with a graphical representation of the available chip and fast memory.
 
 - Switcher - a window switcher.
+
+- Eyes - Eyes that follow your mouse pointer.
 
 Once added to the dock, gadgets can be ordered with the Up and Down buttons. If the gadget has additional configuration options the Edit button will be enabled when the gadget is selected.
 
@@ -233,6 +235,7 @@ The Compile script has the following options:
 - PREFS/S      Compile the preferences application only.
 - BUTTON/S     Compile the button class only.
 - CLOCK/S      Compile the clock class only.
+- EYES/S       Compile the eyes class only.
 - MEM/S        Compile the mem class only.
 - SWITCHER/S   Compile the switcher class only.
 

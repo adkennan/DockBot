@@ -539,6 +539,8 @@ struct DgNode * __asm __saveds DB_AllocGadget(
     UWORD l;
     STRPTR nc;
 
+    DebugLog(__FUNC__ ": %s\n", name);
+
     l = strlen(name) + 1;
     if( nc = AllocMemInternal(DockBotBaseFull, l, MEMF_CLEAR) ) {
 

@@ -55,7 +55,6 @@ struct ButtonLibData
 {
 	struct Library *iconBase;
 	struct Library *dosBase;
-    struct Library *utilityBase;
     struct Library *aslBase;
 };
 

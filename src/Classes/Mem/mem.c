@@ -172,9 +172,9 @@ DB_METHOD_D(TICK)
 
 DB_METHOD_M(GETSIZE,DockMessageGetSize)
 
-    struct IntuiText text;
+    struct IntuiText text = { 0 };
     struct TextAttr ta;
-    UWORD rows, w;    
+    UWORD rows, w = 0;    
     BYTE buf[32];
     struct Screen *screen;
     struct DrawInfo *di;
