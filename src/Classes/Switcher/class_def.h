@@ -75,8 +75,7 @@ struct SwitcherGadgetData
     UWORD width;
     UWORD height;
     UWORD closeTimer;
-    UWORD dockPos;
-    UWORD dockAlign;
+    UWORD bounceTimer;
     UWORD position;
     STRPTR hotkey;
 };

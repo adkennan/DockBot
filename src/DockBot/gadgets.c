@@ -101,6 +101,7 @@ VOID draw_gadgets(struct DockWindow *dock)
     struct Window *win;
     struct RastPort *rp;
     struct DgNode *curr;
+    struct Rect r;
 
     if( dock->win ) {
     
@@ -114,6 +115,14 @@ VOID draw_gadgets(struct DockWindow *dock)
 
             dock_gadget_draw(curr->dg, rp);
         }
+        
+        if( ! dock->cfg.showGadgetBorders ) {
+            r.x = 0;
+            r.y = 0;
+            r.w = win->Width;
+            r.h = win->Height;
+            DB_DrawOutsetFrame(rp, &r);
+        }
     }
 }
 
@@ -122,18 +131,17 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 {
     struct Window *win;
     struct RastPort *rp;
-    struct Rect gb;
-    UWORD winX, winY;
+    struct GadgetEnvironment env;
 
     if( dock->win ) {
     
         win = dock->win;
         rp = win->RPort;
 
-        DB_GetDockGadgetBounds(gadget, &gb, &winX, &winY);
+        DB_GetDockGadgetEnvironment(gadget, &env);
 
         SetAPen(rp, 0);
-        RectFill(rp, gb.x, gb.y, gb.w, gb.h);
+        RectFill(rp, env.gadgetBounds.x, env.gadgetBounds.y, env.gadgetBounds.w, env.gadgetBounds.h);
     
         dock_gadget_draw(gadget, rp);
     }
@@ -169,8 +177,9 @@ VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
     struct TextAttr ta;
     struct Screen *screen;
     struct DrawInfo *drawInfo;
+    struct GadgetEnvironment env;
     struct Rect b;
-    UWORD w, winX, winY;
+    UWORD w;
 
 	struct TagItem tags[] = {
 		{ WA_Left, 0 },
@@ -212,26 +221,26 @@ VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
             tags[2].ti_Data = w + 4;
             tags[3].ti_Data = text.ITextFont->ta_YSize + 4;
 
-            DB_GetDockGadgetBounds(gadget, &b, &winX, &winY);
+            DB_GetDockGadgetEnvironment(gadget, &env);
 
             switch( dock->cfg.pos ) {
                 case DP_LEFT:
                     tags[0].ti_Data = dock->win->LeftEdge + dock->win->Width + 8;
-                    tags[1].ti_Data = dock->win->TopEdge + b.y + (b.h - text.ITextFont->ta_YSize - 4) / 2;
+                    tags[1].ti_Data = dock->win->TopEdge + env.gadgetBounds.y + (env.gadgetBounds.h - text.ITextFont->ta_YSize - 4) / 2;
                     break;
 
                 case DP_RIGHT:
                     tags[0].ti_Data = dock->win->LeftEdge - w - 8;
-                    tags[1].ti_Data = dock->win->TopEdge + b.y + (b.h - text.ITextFont->ta_YSize - 4) / 2;
+                    tags[1].ti_Data = dock->win->TopEdge + env.gadgetBounds.y + (env.gadgetBounds.h - text.ITextFont->ta_YSize - 4) / 2;
                     break;
 
                 case DP_TOP:
-                    tags[0].ti_Data = dock->win->LeftEdge + b.x + (b.w - w - 4) / 2;
+                    tags[0].ti_Data = dock->win->LeftEdge + env.gadgetBounds.x + (env.gadgetBounds.w - w - 4) / 2;
                     tags[1].ti_Data = dock->win->TopEdge + dock->win->Height + 8;
                     break;
 
                 case DP_BOTTOM: 
-                    tags[0].ti_Data = dock->win->LeftEdge + b.x + (b.w - w - 4) / 2;
+                    tags[0].ti_Data = dock->win->LeftEdge + env.gadgetBounds.x + (env.gadgetBounds.w - w - 4) / 2;
                     tags[1].ti_Data = dock->win->TopEdge - text.ITextFont->ta_YSize - 12;
                     break;
             }

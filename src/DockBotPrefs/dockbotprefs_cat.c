@@ -50,7 +50,7 @@
     Variables
 */
 
-struct FC_String DockBotPrefs_Strings[40] = {
+struct FC_String DockBotPrefs_Strings[41] = {
     { (STRPTR) "DockBot Preferences", 0 },
     { (STRPTR) "Preferences editor for DockBot", 1 },
     { (STRPTR) "_OK", 2 },
@@ -79,18 +79,19 @@ struct FC_String DockBotPrefs_Strings[40] = {
     { (STRPTR) "Position", 25 },
     { (STRPTR) "Alignment", 26 },
     { (STRPTR) "Show Labels", 27 },
-    { (STRPTR) "Gadgets", 28 },
-    { (STRPTR) "_New...", 29 },
-    { (STRPTR) "_Edit...", 30 },
-    { (STRPTR) "Delete", 31 },
-    { (STRPTR) "_Up", 32 },
-    { (STRPTR) "_Down", 33 },
-    { (STRPTR) "Save", 34 },
-    { (STRPTR) "Test", 35 },
-    { (STRPTR) "Use", 36 },
-    { (STRPTR) "Delete Gadget", 37 },
-    { (STRPTR) "Are you sure you want to delete this gadget?", 38 },
-    { (STRPTR) "_OK|Cancel", 39 }
+    { (STRPTR) "Show Borders", 28 },
+    { (STRPTR) "Gadgets", 29 },
+    { (STRPTR) "_New...", 30 },
+    { (STRPTR) "_Edit...", 31 },
+    { (STRPTR) "Delete", 32 },
+    { (STRPTR) "_Up", 33 },
+    { (STRPTR) "_Down", 34 },
+    { (STRPTR) "Save", 35 },
+    { (STRPTR) "Test", 36 },
+    { (STRPTR) "Use", 37 },
+    { (STRPTR) "Delete Gadget", 38 },
+    { (STRPTR) "Are you sure you want to delete this gadget?", 39 },
+    { (STRPTR) "_OK|Cancel", 40 }
 };
 
 STATIC struct Catalog *DockBotPrefsCatalog = NULL;
@@ -141,7 +142,7 @@ VOID OpenDockBotPrefsCatalog(VOID)
 	    struct FC_String *fc;
 	    int i;
 
-	    for (i = 0, fc = DockBotPrefs_Strings;  i < 40;  i++, fc++) {
+	    for (i = 0, fc = DockBotPrefs_Strings;  i < 41;  i++, fc++) {
 		 fc->msg = GetCatalogStr(DockBotPrefsCatalog, fc->id, (STRPTR) fc->msg);
 	    }
 	}
@@ -244,7 +245,7 @@ VOID InitDockBotPrefsCatalog(STRPTR language)
 				    bytesRemaining -= 8 + (skipSize << 2);
 				    ptr += skipSize;
 
-				    for (i = 0, fc = DockBotPrefs_Strings;  i < 40;  i++, fc++) {
+				    for (i = 0, fc = DockBotPrefs_Strings;  i < 41;  i++, fc++) {
 					if (fc->id == id) {
 					    fc->msg = sptr;
 					}

@@ -28,17 +28,16 @@ struct DockHandleData {
 VOID dock_handle_draw(Class *c, Object *o, struct RastPort *rp)
 {
     struct DockHandleData *dhd;
-    struct Rect bounds;
-    UWORD winX, winY;
+    struct GadgetEnvironment env;
 
     dhd = INST_DATA(c,o);
 
-    DB_GetDockGadgetBounds(o, &bounds, &winX, &winY);
+    DB_GetDockGadgetEnvironment(o, &env);
 
     if( dhd->counter == 0 ) {
-        DB_DrawOutsetFrame(rp, &bounds);
+        DB_DrawOutsetFrame(rp, &env.gadgetBounds);
     } else {
-        DB_DrawInsetFrame(rp, &bounds);
+        DB_DrawInsetFrame(rp, &env.gadgetBounds);
     }
 }
 

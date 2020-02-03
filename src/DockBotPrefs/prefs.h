@@ -33,34 +33,37 @@
 #define DB_BUTTON_CLASS "DockButton"
 
 enum {
-    OBJ_MENU_ABOUT  = 1001,
-    OBJ_MENU_QUIT   = 1002,
+    OBJ_MENU_ABOUT      = 1001,
+    OBJ_MENU_QUIT       = 1002,
 
-    OBJ_POSITION    = 1013,
-    OBJ_ALIGNMENT   = 1014,
-    OBJ_SHOW_LABELS = 1015,
+    OBJ_POSITION        = 1013,
+    OBJ_ALIGNMENT       = 1014,
+    OBJ_SHOW_LABELS     = 1015,
+    OBJ_SHOW_BORDERS    = 1016,
     
-    OBJ_GADGETS     = 1016,
+    OBJ_GADGETS         = 1020,
 
-    OBJ_BTN_NEW     = 1021,
-    OBJ_BTN_DELETE  = 1022,
-    OBJ_BTN_EDIT    = 1023,
-    OBJ_BTN_UP      = 1024,
-    OBJ_BTN_DOWN    = 1025,
+    OBJ_BTN_NEW         = 1021,
+    OBJ_BTN_DELETE      = 1022,
+    OBJ_BTN_EDIT        = 1023,
+    OBJ_BTN_UP          = 1024,
+    OBJ_BTN_DOWN        = 1025,
 
-    OBJ_BTN_SAVE    = 1031,
-    OBJ_BTN_USE     = 1032,
-    OBJ_BTN_TEST    = 1033,
-    OBJ_BTN_CANCEL  = 1034,
+    OBJ_BTN_SAVE        = 1031,
+    OBJ_BTN_USE         = 1032,
+    OBJ_BTN_TEST        = 1033,
+    OBJ_BTN_CANCEL      = 1034,
 
-    OBJ_BTN_GAD_OK  = 1041,
-    OBJ_BTN_GAD_CAN = 1042,
+    OBJ_BTN_GAD_OK      = 1041,
+    OBJ_BTN_GAD_CAN     = 1042,
 
-    OBJ_NEW_GADGET  = 1051,
-    OBJ_BTN_NEW_OK  = 1052,
-    OBJ_BTN_NEW_CAN = 1053,
-    OBJ_NEW_STR_NAME= 1054,
-    OBJ_NEW_STR_DESC= 1055
+    OBJ_NEW_GADGET      = 1051,
+    OBJ_BTN_NEW_OK      = 1052,
+    OBJ_BTN_NEW_CAN     = 1053,
+    OBJ_NEW_STR_NAME    = 1054,
+    OBJ_NEW_STR_DESC    = 1055
+
+
 };
 
 struct DockPrefs 

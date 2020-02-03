@@ -9,7 +9,7 @@
 *                                  
 ***********************************
 * Dock gadget functions
-DB_GetDockGadgetBounds(obj,bounds,windowX,windowY)(a0/a1/a2/a3)
+DB_GetDockGadgetEnvironment(obj,env)(a0/a1)
 DB_RequestDockQuit(obj)(a0)
 DB_RequestDockGadgetDraw(obj)(a0)
 DB_RequestLaunch(obj,path,args,console,wb)(a0/a1/a2/a3,d0)

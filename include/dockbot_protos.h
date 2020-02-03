@@ -16,40 +16,36 @@
 
 #include "dockbot.h"
 
-/****** dockbot.library/DB_GetDockGadgetBounds *****************************
+/****** dockbot.library/DB_GetDockGadgetEnvironment ***********************
 *
 *   NAME
-*	DB_GetDockGadgetBounds -- Get the bounding box of a dock gadget.
+*	DB_GetDockGadgetEnvironment -- Get the environment info for the gadget.
 *
 *   SYNOPSIS
-*	DB_GetDockGadgetBounds(obj, bounds, windowX, windowY)
-*	                       A0     A1      A2       A3
-*	VOID DB_GetDockGadgetBounds(Object *, struct Rect *, UWORD *, UWORD *);
+*	DB_GetDockGadgetEnvironment(obj, env)
+*	                            A0    A1
+*	VOID DB_GetDockGadgetEnvironment(Object *, struct GadgetEnvironment *)
 *
 *   FUNCTION
-*	Queries a dock gadget for it's position and size.
+*	Queries a dock gadget for it's position, size and information about
+*   the dock window.
 *
 *   INPUTS
 *	obj    - The dock gadget to query.
-*	bounds - A pointer to a Rect to be filled in by the gadget.
-*   windowX - A pointer to a UWORD to be filled with the Window X position.
-*   windowY - A pointer to a UWORD to be filled with the Window Y position.
+*	env - A pointer to a DockGadgetEnvironment to be filled in by the gadget.
 *
 *   RESULT
-*	The parameter bounds will be filled contain the bounds of the gadget and
-*   the position of the Dock window will be in windowX and windowY.
+*	The parameter env will be filled contain the bounds of the gadget as well
+*   as the position of the Dock window and its alignment.
 *
 *   EXAMPLE
-*	struct Rect bounds;
-*   UWORD winX, winY;
-*	DB_GetDockGadgetBounds(obj, &bounds, &winX, &winY);
+*	struct DockGadgetEnvironment env;
+*	DB_GetDockGadgetEnvironment(obj, &env);
 *
 ***************************************************************************/
-VOID __asm __saveds DB_GetDockGadgetBounds(
+VOID __asm __saveds DB_GetDockGadgetEnvironment(
 	register __a0 Object *obj, 
-	register __a1 struct Rect *bounds,
-    register __a2 UWORD *windowX,
-    register __a3 UWORD *windowY);
+	register __a1 struct GadgetEnvironment *env);
 
 /****** dockbot.library/DB_DrawOutsetFrame *********************************
 *

@@ -32,12 +32,12 @@ UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
 
 VOID layout_gadgets(struct DockWindow *dock)
 {
-    UWORD w, h, x, y, i, max, size = 0, maxSize, wx, wy;
+    UWORD w, h, x, y, i, max, size, maxSize, wx, wy;
     struct DgNode *curr;
     struct Screen *screen;   
-    struct Rect b;
     UWORD* sizes;
     UWORD gadgetCount;
+    struct GadgetEnvironment env;
 
     DEBUG(printf(__FUNC__ "\n"));
 
@@ -45,11 +45,21 @@ VOID layout_gadgets(struct DockWindow *dock)
         return;
     }
 
+    env.align = dock->cfg.align;
+    env.pos = dock->cfg.pos;
+    env.showBorders = dock->cfg.showGadgetBorders;
+
     if( screen = LockPubScreen(NULL)) {
 
-        y = 0;
-        x = 0;
-              
+        if( ! dock->cfg.showGadgetBorders ) {
+            size = 2;   
+            x = 1;
+            y = 1;                    
+        } else {
+            size = 0;
+            y = 0;
+            x = 0;
+        }      
         maxSize = get_max_window_size(screen, dock->cfg.pos);
 
         gadgetCount = 0;    
@@ -83,19 +93,33 @@ VOID layout_gadgets(struct DockWindow *dock)
                 wy = get_window_top(screen, dock->cfg.pos, dock->cfg.align, max);
 
                 i = 0;
+
+                y = max;
+                env.gadgetBounds.y = 0;
+
+                if( ! dock->cfg.showGadgetBorders ) {
+                    y += 3;
+                    env.gadgetBounds.y = 2;
+                }
+                
+                env.windowBounds.x = wx;
+                env.windowBounds.y = wy;
+                env.windowBounds.w = x;
+                env.windowBounds.h = y;
+
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
                 
-                    b.x = x;
-                    b.y = y;
-                    b.w = sizes[i];
-                    b.h = max;
-                    dock_gadget_set_bounds(curr->dg, &b, wx, wy);
+                    env.gadgetBounds.x = x;
+                    env.gadgetBounds.w = sizes[i];
+                    env.gadgetBounds.h = max;
+
+                    dock_gadget_set_environment(curr->dg, &env);
                     
                     x += sizes[i];
                     i++;
                 }                
 
-                ChangeWindowBox(dock->win, wx, wy, x, max);
+                ChangeWindowBox(dock->win, wx, wy, x, y);
 
             } else {
     
@@ -118,19 +142,33 @@ VOID layout_gadgets(struct DockWindow *dock)
                 wy = get_window_top(screen, dock->cfg.pos, dock->cfg.align, size);
                 
                 i = 0;             
-                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
-                    b.x = x;
-                    b.y = y;
-                    b.w = max;
-                    b.h = sizes[i];
-                    dock_gadget_set_bounds(curr->dg, &b, wx, wy);
+                x = max;
+                env.gadgetBounds.x = 0;
+
+                if( ! dock->cfg.showGadgetBorders ) {
+                    x += 3;
+                    env.gadgetBounds.x = 2;
+                }
+                
+                env.windowBounds.x = wx;
+                env.windowBounds.y = wy;
+                env.windowBounds.w = x;
+                env.windowBounds.h = y;
+
+                FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+                
+                    env.gadgetBounds.y = y;
+                    env.gadgetBounds.w = max;
+                    env.gadgetBounds.h = sizes[i];
+
+                    dock_gadget_set_environment(curr->dg, &env);
 
                     y += sizes[i];
                     i++;
                 }                
 
-                ChangeWindowBox(dock->win, wx, wy, max, y);
+                ChangeWindowBox(dock->win, wx, wy, x, y);
             }
 
             DB_FreeMem(sizes, sizeof(UWORD) * gadgetCount);

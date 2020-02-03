@@ -469,6 +469,10 @@ BOOL __asm __saveds DB_ReadConfig(
                 else if( IS_KEY(S_LABELS, v) ) {
                     GET_VALUE(v, BooleanValues, vals, l, cfg->showGadgetLabels)
                 }
+
+                else if( IS_KEY(S_BORDERS, v) ) {
+                    GET_VALUE(v, BooleanValues, vals, l, cfg->showGadgetBorders)
+                }
             }
         }
     }
@@ -494,6 +498,10 @@ BOOL __asm __saveds DB_WriteConfig(
         }
 
         if( ! DB_WriteSetting(settings, S_LABELS, get_name(BooleanValues, cfg->showGadgetLabels) ) ) {
+            goto error;
+        }
+
+        if( ! DB_WriteSetting(settings, S_BORDERS, get_name(BooleanValues, cfg->showGadgetBorders) ) ) {
             goto error;
         }
 

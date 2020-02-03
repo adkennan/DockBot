@@ -108,6 +108,18 @@ TR_Project *open_main_window(VOID) {
                         Space,
                     EndLine,
                     Space,
+                    BeginLine,
+                        Space,
+                        TextN(MSG_MW_ShowBorders),
+                        Space,
+                        HorizGroupSAC,
+                            Space,
+                            CheckBox(OBJ_SHOW_BORDERS),
+                            Space,
+                        EndGroup,
+                        Space,
+                    EndLine,
+                    Space,
                 EndArray,
             Space,
             NamedFrameBox(MSG_MW_Gadgets),
@@ -244,6 +256,10 @@ VOID run_event_loop(struct DockPrefs *prefs)
 
                             case OBJ_SHOW_LABELS:
                                 prefs->cfg.showGadgetLabels = (BOOL)msgData;
+                                break;
+
+                            case OBJ_SHOW_BORDERS:
+                                prefs->cfg.showGadgetBorders = (BOOL)msgData;
                                 break;
                         }
                         break;
@@ -392,6 +408,11 @@ int main(char **argv, int argc)
 
             if( UtilityBase = open_lib("utility.library", 37) ) {
 
+                prefs.cfg.align = DA_CENTER;
+                prefs.cfg.pos = DP_RIGHT;
+                prefs.cfg.showGadgetLabels = TRUE;
+                prefs.cfg.showGadgetBorders = TRUE;
+
                 NewList(&prefs.cfg.gadgets);
                 NewList(&prefs.gadLabels);
                 NewList(&prefs.classes);
@@ -405,6 +426,7 @@ int main(char **argv, int argc)
                             TR_SetAttribute(prefs.mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
                             TR_SetAttribute(prefs.mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
                             TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
+                            TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_BORDERS, TRAT_Value, (ULONG)prefs.cfg.showGadgetBorders);
         
                             update_gadget_list(&prefs);
 

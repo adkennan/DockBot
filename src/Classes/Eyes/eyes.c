@@ -60,19 +60,21 @@ ULONG __saveds eyes_lib_expunge(struct EyesLibData *eld)
 VOID init_eyes(struct EyesGadgetData *data)
 {
     UWORD i;
-    UWORD rx = ((data->w - 4) / (data->eyeCount * 2));
-    UWORD ry = (data->h - 4) / 2;
+    UWORD xs = ((data->w - 4) / (data->eyeCount * 2));
+    UWORD ys = ((data->h - 4) / 2);
+    UWORD rx = xs - 1;
+    UWORD ry = ys - 1;
     struct Eye *eye;
-    UWORD xs = data->w / (data->eyeCount * 2);
-    UWORD ys = data->h / 2;    
+
+    DEBUG(DB_Printf(__METHOD__ "\n"));
 
     if( data->eyes = (struct Eye *)DB_AllocMem(data->eyeCount * sizeof(struct Eye), MEMF_CLEAR) ) {
 
         for( i = 0; i < data->eyeCount; i++ ) {
 
             eye = &data->eyes[i];
-            eye->cx = xs + (2 * xs * i) + 1;
-            eye->cy = ys;
+            eye->cx = 2 + xs + (2 * xs * i);
+            eye->cy = 2 + ys;
             eye->sx = data->sx + eye->cx;
             eye->sy = data->sy + eye->cy;
             eye->rx = rx;
@@ -85,6 +87,8 @@ VOID init_eyes(struct EyesGadgetData *data)
 
 VOID free_eyes(struct EyesGadgetData *data)
 {
+    DEBUG(DB_Printf(__METHOD__ "\n"));
+
     if( data->eyes ) {
         DB_FreeMem(data->eyes, data->eyeCount * sizeof(struct Eye));
         data->eyes = NULL;
@@ -118,6 +122,8 @@ VOID measure_eyes(struct EyesGadgetData *data)
     UWORD i;
     struct Screen *screen;
 
+    DEBUG(DB_Printf(__METHOD__ "\n"));
+
     if( screen = LockPubScreen(NULL) ) {
 
         for( i = 0; i < data->eyeCount; i++ ) {
@@ -132,7 +138,7 @@ VOID measure_eyes(struct EyesGadgetData *data)
     }
 }
 
-VOID draw_eyes(struct EyesGadgetData *data)
+VOID draw_eyes(struct EyesGadgetData *data, BOOL showBorders)
 {
     UWORD i;
     LONG fillPen, outlinePen;
@@ -144,6 +150,14 @@ VOID draw_eyes(struct EyesGadgetData *data)
 
         fillPen = ObtainBestPenA(screen->ViewPort.ColorMap, 0xff << 24, 0xff << 24, 0xff << 24, NULL);
         outlinePen = ObtainBestPenA(screen->ViewPort.ColorMap, 0, 0, 0, NULL);
+
+        for( i = 0; i < data->eyeCount; i++ ) {
+
+            eye = &data->eyes[i];
+
+            DEBUG(DB_Printf(__METHOD__ "s = %ld,%ld, c = %ld,%ld, r = %ld,%ld, i = %ld,%ld\n",
+                (LONG)data->w, (LONG)data->h, (LONG)eye->cx, (LONG)eye->cy, (LONG)eye->rx, (LONG)eye->ry, (LONG)eye->ix, (LONG)eye->iy));
+        }
 
         SetAPen(&data->rp, fillPen);
 
@@ -182,7 +196,9 @@ VOID draw_eyes(struct EyesGadgetData *data)
     b.w = data->w;
     b.h = data->h;
 
-    DB_DrawOutsetFrame(&data->rp, &b);
+    if( showBorders ) {
+        DB_DrawOutsetFrame(&data->rp, &b);
+    }
 }
 
 VOID free_offscreen_bm(struct EyesGadgetData *data)
@@ -214,16 +230,15 @@ VOID free_offscreen_bm(struct EyesGadgetData *data)
 VOID init_offscreen_bm(Object *o, struct EyesGadgetData *data)
 {
     struct Screen *screen;
-    struct Rect b;
-    UWORD winX, winY;
+    struct GadgetEnvironment env;
 
     if( data->initialized ) {
         free_offscreen_bm(data);
     }  
 
-    DB_GetDockGadgetBounds(o, &b, &winX, &winY);
-    
-    data->trBufSize = RASSIZE(b.w, b.h);
+    DB_GetDockGadgetEnvironment(o, &env);
+
+    data->trBufSize = RASSIZE(env.gadgetBounds.w * 2, env.gadgetBounds.h * 2);
     data->aiBufSize = 20 * data->eyeCount;
 
     if( screen = LockPubScreen(NULL) ) {
@@ -232,27 +247,30 @@ VOID init_offscreen_bm(Object *o, struct EyesGadgetData *data)
 
             if( data->aiBuf = DB_AllocMem(data->aiBufSize, MEMF_CHIP|MEMF_CLEAR) ) {
 
-                InitArea(&data->ai, data->aiBuf, data->aiBufSize);
+                if( data->bm = AllocBitMap(env.gadgetBounds.w, env.gadgetBounds.h, screen->BitMap.Depth, BMF_CLEAR | BMF_INTERLEAVED, NULL) ) {
 
-                InitTmpRas(&data->tr, data->trBuf, data->trBufSize);
+                    InitArea(&data->ai, data->aiBuf, data->aiBufSize);
 
-                data->bm = AllocBitMap(b.w, b.h, screen->BitMap.Depth, BMF_CLEAR | BMF_INTERLEAVED, NULL);
+                    InitTmpRas(&data->tr, data->trBuf, data->trBufSize);
 
-                InitRastPort(&data->rp);
+                    InitRastPort(&data->rp);
 
-                data->rp.BitMap = data->bm;
-                data->rp.AreaInfo = &data->ai;
-                data->rp.TmpRas = &data->tr;
+                    data->rp.BitMap = data->bm;
+                    data->rp.AreaInfo = &data->ai;
+                    data->rp.TmpRas = &data->tr;
 
-                data->w = b.w;
-                data->h = b.h;
-                data->cx = b.x;
-                data->cy = b.y;
-                data->sx = winX + b.x;
-                data->sy = winY + b.y;
-                data->d = screen->BitMap.Depth;
+                    data->w = env.gadgetBounds.w;
+                    data->h = env.gadgetBounds.h;
+                    data->cx = env.gadgetBounds.x;
+                    data->cy = env.gadgetBounds.y;
+                    data->sx = env.windowBounds.x + env.gadgetBounds.x;
+                    data->sy = env.windowBounds.y + env.gadgetBounds.y;
+                    data->d = screen->BitMap.Depth;
     
-                data->initialized = TRUE;
+                    data->initialized = TRUE;
+                } else {
+                    DEBUG(DB_Printf(__METHOD__ "AllocBitMap failed\n"));
+                }
             }
         }
 
@@ -280,8 +298,17 @@ DB_METHOD_D(DISPOSE)
 
 DB_METHOD_DM(DRAW,DockMessageDraw)
 
-    struct Rect b;
-    UWORD winX, winY;
+    struct GadgetEnvironment env;
+
+    DB_GetDockGadgetEnvironment(o, &env);
+
+    if( env.gadgetBounds.x != data->cx || 
+        env.gadgetBounds.y != data->cy || 
+        env.gadgetBounds.w != data->w || 
+        env.gadgetBounds.h != data->h ) {
+        free_eyes(data);
+        free_offscreen_bm(data);
+    }
 
     if( ! data->initialized ) {
 
@@ -293,11 +320,10 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
     if( data->initialized ) {
 
         if( data->needsRedraw ) {
-            draw_eyes(data);
+            draw_eyes(data, env.showBorders);
         }
 
-        DB_GetDockGadgetBounds(o, &b, &winX, &winY);
-        BltBitMapRastPort(data->bm, 0, 0, msg->rp, b.x, b.y, b.w, b.h, 0xC0);
+        BltBitMapRastPort(data->bm, 0, 0, msg->rp, env.gadgetBounds.x, env.gadgetBounds.y, env.gadgetBounds.w, env.gadgetBounds.h, 0xC0);
     }
 
     return 1;    
@@ -337,6 +363,8 @@ DB_METHOD_M(GETSIZE,DockMessageGetSize)
 
     msg->w = DEFAULT_SIZE;
     msg->h = ((DEFAULT_SIZE * 2 / 3) * xAspect) / yAspect;
+
+    DEBUG(DB_Printf(__METHOD__ "w = %ld, h = %ld\n", (LONG)msg->w, (LONG)msg->h));
 
     return 1;
 }

@@ -125,7 +125,7 @@ APTR FuncTable[] = {
     _LibExpunge,
     _ExtFuncLib,
 
-    DB_GetDockGadgetBounds,
+    DB_GetDockGadgetEnvironment,
     DB_RequestDockQuit,
     DB_RequestDockGadgetDraw,
     DB_RequestLaunch,

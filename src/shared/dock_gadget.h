@@ -24,7 +24,7 @@ VOID dock_gadget_drop(Object *obj, STRPTR *paths, UWORD count);
 
 VOID dock_gadget_launched(Object *obj, STRPTR path, STRPTR args, STRPTR console, BOOL wb);
 
-VOID dock_gadget_set_bounds(Object *obj, struct Rect *bounds, UWORD windowX, UWORD windowY);
+VOID dock_gadget_set_environment(Object *obj, struct GadgetEnvironment *env);
 
 VOID dock_gadget_get_size(Object *obj
 			, DockPosition position, DockAlign align

@@ -13,20 +13,18 @@
 #include "dockbot_protos.h"
 
 
-VOID __asm __saveds DB_GetDockGadgetBounds(
+VOID __asm __saveds DB_GetDockGadgetEnvironment(
 	register __a0 Object *obj, 
-	register __a1 struct Rect *bounds,
-    register __a2 UWORD *windowX,
-    register __a3 UWORD *windowY)
+	register __a1 struct GadgetEnvironment *env)
 {
     
-    struct DockMessageGetBounds msg = {
-        DM_GETBOUNDS
+    struct DockMessageGetEnvironment msg = {
+        DM_GETENV
     };
-    msg.b = bounds;
+
+    msg.env = env;
+
     DoMethodA(obj, (Msg)&msg);
-    *windowX = msg.windowX;
-    *windowY = msg.windowY;
 }
 
 

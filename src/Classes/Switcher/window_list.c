@@ -153,14 +153,15 @@ VOID draw_text(struct SwitcherGadgetData *data)
 
 VOID open_window(Object *o, struct SwitcherGadgetData *data)
 {
-    struct Rect b;
-    UWORD dwX, dwY;
+    struct GadgetEnvironment env;
     LONG wX = 0, wY = 0, dwXl, dwYl, w, h, bx, by, bw, bh;
     struct Screen *screen;
 
     if( data->win ) {
         return;
     }
+
+    data->bounceTimer = 2;
 
     DB_RequestDockGadgetDraw(o);
 
@@ -170,23 +171,28 @@ VOID open_window(Object *o, struct SwitcherGadgetData *data)
         return;
     }
 
-    DB_GetDockGadgetBounds(o, &b, &dwX, &dwY);
-    dwXl = dwX;
-    dwYl = dwY;
-    bx = b.x;
-    by = b.y;
-    bw = b.w;
-    bh = b.h;
+    DB_GetDockGadgetEnvironment(o, &env);
+
+    DEBUG(DB_Printf(__METHOD__ "G = %ld,%ld,%ld,%ld W = %ld,%ld,%ld,%ld\n",
+        (LONG)env.gadgetBounds.x,(LONG)env.gadgetBounds.y,(LONG)env.gadgetBounds.w,(LONG)env.gadgetBounds.h,
+        (LONG)env.windowBounds.x,(LONG)env.windowBounds.y,(LONG)env.windowBounds.w,(LONG)env.windowBounds.h));
+
+    dwXl = env.windowBounds.x;
+    dwYl = env.windowBounds.y;
+    bx = env.gadgetBounds.x;
+    by = env.gadgetBounds.y;
+    bw = env.gadgetBounds.w;
+    bh = env.gadgetBounds.h;
     w = data->width + MARGIN_H * 2;    
     h = data->height + MARGIN_V * 2;   
 
     if( screen = LockPubScreen(NULL) ) {
 
         if( data->position == POS_DOCK ) {
-            switch( data->dockPos ) {
+            switch( env.pos ) {
                 case DP_TOP:
                     wX = (dwXl + bx) + ((bw - w) >> 1);
-                    wY = dwYl + bh;
+                    wY = dwYl + env.windowBounds.h;
                     break;
 
                 case DP_BOTTOM:
@@ -195,7 +201,7 @@ VOID open_window(Object *o, struct SwitcherGadgetData *data)
                     break;
     
                 case DP_LEFT:
-                    wX = dwXl + bw;
+                    wX = dwXl + env.windowBounds.w;
                     wY = (dwYl + by) + ((bh - h) >> 1);
                     break;
     
@@ -253,7 +259,7 @@ VOID open_window(Object *o, struct SwitcherGadgetData *data)
 
         draw_text(data);
 
-        data->closeTimer = 20;
+        data->closeTimer = 30;
     }
 }
 
@@ -273,6 +279,7 @@ VOID close_window(Object *o, struct SwitcherGadgetData *data)
     CloseWindow(win);
 
     data->closeTimer = 0;
+    data->bounceTimer = 0;
 
     free_window_list(data);
 

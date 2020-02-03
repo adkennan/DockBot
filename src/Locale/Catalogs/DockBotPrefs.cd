@@ -97,6 +97,9 @@ Alignment
 MSG_MW_ShowLabels (//)
 Show Labels
 ;
+MSG_MW_ShowBorders (//)
+Show Borders
+;
 MSG_MW_Gadgets (//)
 Gadgets
 ;

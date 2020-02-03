@@ -58,6 +58,7 @@ struct DockConfig
 	DockPosition pos;
 	DockAlign align;
     BOOL showGadgetLabels;
+	BOOL showGadgetBorders;
 	struct List gadgets;
 };
 
@@ -103,8 +104,8 @@ typedef enum {
     DM_REQ_QUIT         = 1203,
     DM_REQ_DRAW         = 1204,
     DM_BUILTIN          = 1205,
-	DM_SETBOUNDS 	    = 1206,
-    DM_GETBOUNDS        = 1207,
+	DM_SETENV	 	    = 1206,
+    DM_GETENV	        = 1207,
 	DM_HITTEST		    = 1208,
     DM_REQ_LAUNCH       = 1209,
     DM_REG_PORT         = 1210,
@@ -145,6 +146,13 @@ struct DockWindow;
 
 extern struct Library *DockBotBase;
 
+struct GadgetEnvironment {
+	struct Rect gadgetBounds;
+    struct Rect windowBounds;
+	UWORD align;
+	UWORD pos;
+	BOOL showBorders;
+};
 
 struct DockMessageAdded
 {
@@ -165,11 +173,10 @@ struct DockMessageDrop
 	UWORD pathCount;
 };
 
-struct DockMessageSetBounds
+struct DockMessageSetEnvironment
 {
 	ULONG MethodID;
-	struct Rect *b;
-    UWORD windowX, windowY;
+	struct GadgetEnvironment *env;
 };
 
 struct DockMessageGetSize
@@ -191,10 +198,9 @@ struct DockMessageHitTest {
 	UWORD x, y;
 };
 
-struct DockMessageGetBounds {
+struct DockMessageGetEnvironment {
     ULONG MethodID;
-    struct Rect *b;
-    UWORD windowX, windowY;
+	struct GadgetEnvironment *env;
 };
 
 struct DockMessageGetInfo {
@@ -344,6 +350,7 @@ int atoi(const char *);
 #define S_ALIGN "align"
 #define S_POSITION "position"
 #define S_LABELS "labels"
+#define S_BORDERS "borders"
 #define S_GADGET "gadget"
 
 struct DockSettingValue

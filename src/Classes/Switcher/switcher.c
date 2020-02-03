@@ -67,8 +67,8 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
 
     struct Screen *screen;
     struct DrawInfo *drawInfo;
-    struct Rect b;
-    UWORD winX, winY, off1, off2, x, y;
+    struct GadgetEnvironment env;
+    UWORD off1, off2, x, y;
     struct Border b1;
     WORD xy[] = {      0,      0, 
                   ICON_W,      0, 
@@ -77,9 +77,9 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
                        0,      1,
                   ICON_W,      1 };
 
-    DB_GetDockGadgetBounds(o, &b, &winX, &winY);
-    x = b.x + (b.w - (ICON_W + ICON_OFF * 2)) / 2;    
-    y = b.y + (b.h - (ICON_H + ICON_OFF * 2)) / 2;
+    DB_GetDockGadgetEnvironment(o, &env);
+    x = env.gadgetBounds.x + (env.gadgetBounds.w - (ICON_W + ICON_OFF * 2)) / 2;    
+    y = env.gadgetBounds.y + (env.gadgetBounds.h - (ICON_H + ICON_OFF * 2)) / 2;
     
 
     if( screen = LockPubScreen(NULL) ) {
@@ -88,13 +88,17 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
 
             if( data->closeTimer == 0 ) {
 
-                DB_DrawOutsetFrame(msg->rp, &b);
+                if( env.showBorders ) {
+                    DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
+                }
 
                 off1 = ICON_OFF;
                 off2 = ICON_OFF * 2;
             } else {
 
-                DB_DrawInsetFrame(msg->rp, &b);
+                if( env.showBorders ) {
+                    DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
+                }
 
                 off1 = ICON_OFF * 2;
                 off2 = ICON_OFF;
@@ -184,7 +188,9 @@ DB_METHOD_DM(MESSAGE, DockMessagePort)
 
     } else if( keyCode > 0 ) {
         DEBUG(DB_Printf(__METHOD__ "keyCode = %ld\n", (LONG)keyCode));
-        switch_by_key(o, data, keyCode);
+        if( data->bounceTimer == 0 ) {
+            switch_by_key(o, data, keyCode);
+        }
     }
 
     return 1;
@@ -192,8 +198,9 @@ DB_METHOD_DM(MESSAGE, DockMessagePort)
 
 DB_METHOD_D(HOTKEY)
 
-    toggle_window(o, data);
-
+    if( data->bounceTimer == 0 ) {
+        toggle_window(o, data);
+    }
     return 1;
 }
 
@@ -201,9 +208,6 @@ DB_METHOD_DM(GETSIZE,DockMessageGetSize)
 
     msg->w = ICON_W + ICON_OFF * 4;
     msg->h = ICON_H + ICON_OFF * 4;
-
-    data->dockPos = msg->position;  
-    data->dockAlign = msg->align;
 
     return 1;
 }
@@ -216,6 +220,10 @@ DB_METHOD_D(TICK)
         if( data->closeTimer == 0 ) {
             close_window(o, data);
         }
+    }
+
+    if( data->bounceTimer > 0 ) {
+        data->bounceTimer--;
     }
 
     return 1;

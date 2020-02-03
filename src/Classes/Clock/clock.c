@@ -247,12 +247,15 @@ DB_METHOD_D(DISPOSE)
 DB_METHOD_DM(DRAW,DockMessageDraw)
 
     struct TextLine *line;
-    struct Rect b;
-    UWORD textW, textH, yPos, winX, winY;
+    struct GadgetEnvironment env;
+    UWORD textW, textH, yPos;
     struct Screen *screen;
     struct DrawInfo *drawInfo;
 
-    DB_GetDockGadgetBounds(o, &b, &winX, &winY);
+    DB_GetDockGadgetEnvironment(o, &env);
+
+    DEBUG(DB_Printf(__METHOD__ " %ld, %ld, %ld, %ld\n",
+        (LONG)env.gadgetBounds.x, (LONG)env.gadgetBounds.y, (LONG)env.gadgetBounds.w, (LONG)env.gadgetBounds.h));
 
     if( screen = LockPubScreen(NULL) ) {
     
@@ -261,19 +264,24 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
             measure_text(data, drawInfo, &textW, &textH);
 
             SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
-            RectFill(msg->rp, b.x, b.y, b.w + b.x - 1, b.h + b.y - 1);
+            RectFill(msg->rp, env.gadgetBounds.x
+                    , env.gadgetBounds.y
+                    , env.gadgetBounds.w + env.gadgetBounds.x - 1
+                    , env.gadgetBounds.h + env.gadgetBounds.y - 1);
 
-            if( data->clicked ) {
-                DB_DrawInsetFrame(msg->rp, &b);
-            } else {
-                DB_DrawOutsetFrame(msg->rp, &b);
+            if( env.showBorders ) {
+                if( data->clicked ) {
+                    DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
+                } else {
+                    DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
+                }
             }
 
-            yPos = b.y + (b.h - textH) / 2;
+            yPos = env.gadgetBounds.y + (env.gadgetBounds.h - textH) / 2;
 
             FOR_EACH_LINE
             {
-                line->text.LeftEdge = b.x + (b.w - line->width) / 2;
+                line->text.LeftEdge = env.gadgetBounds.x + (env.gadgetBounds.w - line->width) / 2;
                 line->text.TopEdge = yPos;
 
                 yPos += line->height;

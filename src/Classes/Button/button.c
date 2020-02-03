@@ -274,12 +274,11 @@ DB_METHOD_D(DISPOSE)
 
 DB_METHOD_DM(DRAW, DockMessageDraw)
 
-    struct Rect bounds;
-    UWORD winX, winY;
+    struct GadgetEnvironment env;
     
-    DB_GetDockGadgetBounds(o, &bounds, &winX, &winY);  
+    DB_GetDockGadgetEnvironment(o, &env);
 
-    if( bounds.w == 0 || bounds.h == 0 ) {
+    if( env.gadgetBounds.w == 0 || env.gadgetBounds.h == 0 ) {
         return 1;
     }
 
@@ -287,18 +286,19 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
 
         DrawIconState(msg->rp, data->diskObj, 
                 NULL, 
-                bounds.x + (bounds.w - data->imageW) / 2, 
-                bounds.y + (bounds.h - data->imageH) / 2,
+                env.gadgetBounds.x + (env.gadgetBounds.w - data->imageW) / 2, 
+                env.gadgetBounds.y + (env.gadgetBounds.h - data->imageH) / 2,
                 data->iconState,
                 ICONDRAWA_Borderless, TRUE, TAG_END); 
     }
 
-    if( data->iconState == 0 ) {
-        DB_DrawOutsetFrame(msg->rp, &bounds);
-    } else {
-        DB_DrawInsetFrame(msg->rp, &bounds);
+    if( env.showBorders ) {
+        if( data->iconState == 0 ) {
+            DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
+        } else {
+            DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
+        }
     }
-
     return 1;
 }
 

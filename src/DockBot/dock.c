@@ -152,6 +152,7 @@ struct DockWindow* create_dock(VOID)
         dock->cfg.align = DA_CENTER;
         dock->cfg.pos = DP_RIGHT;
         dock->cfg.showGadgetLabels = TRUE;
+        dock->cfg.showGadgetBorders = TRUE;
 
         if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 

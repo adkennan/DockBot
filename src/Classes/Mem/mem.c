@@ -83,7 +83,7 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
     frame.w = bounds->w;
 
     SetAPen(rp, di->dri_Pens[BACKGROUNDPEN]);
-    RectFill(rp, frame.x, frame.y, frame.x + frame.w, frame.y + frame.h);
+    RectFill(rp, frame.x, frame.y, frame.x + frame.w - 1, frame.y + frame.h - 1);
 
     DB_DrawOutsetFrame(rp, &frame);
     
@@ -125,8 +125,7 @@ DB_METHOD_M(DRAW,DockMessageDraw)
 
     struct Screen *screen;
     struct DrawInfo *drawInfo;
-    struct Rect b;
-    UWORD winX, winY;
+    struct GadgetEnvironment env;
     ULONG totalChip, freeChip, totalFast, freeFast;
     
     totalChip = AvailMem(MEMF_CHIP | MEMF_TOTAL);
@@ -135,17 +134,17 @@ DB_METHOD_M(DRAW,DockMessageDraw)
     totalFast = AvailMem(MEMF_FAST | MEMF_TOTAL);
     freeFast = AvailMem(MEMF_FAST);
 
-    DB_GetDockGadgetBounds(o, &b, &winX, &winY);
+    DB_GetDockGadgetEnvironment(o, &env);
 
     if( screen = LockPubScreen(NULL) ) {
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
 
-            draw_mem(msg->rp, drawInfo, &b, 0, (STRPTR)MSG_LBL_Chip, totalChip, freeChip);
+            draw_mem(msg->rp, drawInfo, &env.gadgetBounds, 0, (STRPTR)MSG_LBL_Chip, totalChip, freeChip);
 
             if( totalFast > 0 ) {
 
-                draw_mem(msg->rp, drawInfo, &b, 1, (STRPTR)MSG_LBL_Fast, totalFast, freeFast);
+                draw_mem(msg->rp, drawInfo, &env.gadgetBounds, 1, (STRPTR)MSG_LBL_Fast, totalFast, freeFast);
             }
 
             FreeScreenDrawInfo(screen, drawInfo);

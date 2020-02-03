@@ -28,15 +28,14 @@
 extern struct IntuitionBase *IntuitionBase;
 
 struct DockGadgetData {
-	struct Rect bounds;
     struct MsgPort *dockPort;
-    UWORD windowX, windowY;
+    struct GadgetEnvironment env;
 };
 
 
 VOID draw_default_image(Class *c, Object *o, struct RastPort *rp, struct DockGadgetData *dgd)
 {
-    DB_DrawOutsetFrame(rp, &dgd->bounds);
+    DB_DrawOutsetFrame(rp, &dgd->env.gadgetBounds);
 }
 
 VOID read_settings(Msg msg)
@@ -126,8 +125,8 @@ VOID send_unregister_port_msg_to_dock(Class *c, Object *o, struct DockMessagePor
 ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 {
 	struct DockMessageGetSize* gs;
-	struct DockMessageSetBounds* sb;
-    struct DockMessageGetBounds* gb;
+	struct DockMessageSetEnvironment* senv;
+    struct DockMessageGetEnvironment* genv;
     struct DockMessageDraw* dm;
     struct DockMessageHitTest* ht;
     struct DockMessageAdded *am;
@@ -139,16 +138,7 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
 	switch( msg->MethodID ) 
 	{
 		case OM_NEW:	
-			if( no = (Object *)DoSuperMethodA(c, o, msg) )
-			{	
-				dgd = INST_DATA(c, no);
-				dgd->bounds.x = 0;
-				dgd->bounds.y = 0;
-                dgd->bounds.w = 0;
-                dgd->bounds.h = 0;
-                dgd->windowX  = 0;
-                dgd->windowY  = 0;
-            }
+			no = (Object *)DoSuperMethodA(c, o, msg);
 			return (ULONG)no;
 
         case OM_DISPOSE:
@@ -162,26 +152,16 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
         case DM_BUILTIN:
             return (ULONG)FALSE;
     
-		case DM_SETBOUNDS:
-			sb = (struct DockMessageSetBounds *)msg;			
+		case DM_SETENV:
+			senv = (struct DockMessageSetEnvironment *)msg;			
 			dgd = INST_DATA(c, o);
-			dgd->bounds.x = sb->b->x;
-			dgd->bounds.y = sb->b->y;			
-            dgd->bounds.w = sb->b->w;
-            dgd->bounds.h = sb->b->h;
-            dgd->windowX  = sb->windowX;
-            dgd->windowY  = sb->windowY;
+            dgd->env = *senv->env;
 			break;
 
-        case DM_GETBOUNDS:
-            gb = (struct DockMessageGetBounds *)msg;
+        case DM_GETENV:
+            genv = (struct DockMessageGetEnvironment *)msg;
             dgd = INST_DATA(c, o);
-            gb->b->x    = dgd->bounds.x;
-            gb->b->y    = dgd->bounds.y;
-            gb->b->w    = dgd->bounds.w;
-            gb->b->h    = dgd->bounds.h;
-            gb->windowX = dgd->windowX;
-            gb->windowY = dgd->windowY;
+            *genv->env = dgd->env;
             break;
 
 		case DM_GETSIZE:
@@ -193,8 +173,10 @@ ULONG __saveds dock_gadget_dispatch(Class *c, Object *o, Msg msg)
         case DM_HITTEST:
             ht = (struct DockMessageHitTest *)msg;
             dgd = INST_DATA(c, o);
-            if( dgd->bounds.x <= ht->x && ht->x < (dgd->bounds.x + dgd->bounds.w) &&
-                dgd->bounds.y <= ht->y && ht->y < (dgd->bounds.y + dgd->bounds.h) ) {
+            if( dgd->env.gadgetBounds.x <= ht->x && 
+                ht->x < (dgd->env.gadgetBounds.x + dgd->env.gadgetBounds.w) &&
+                dgd->env.gadgetBounds.y <= ht->y && 
+                ht->y < (dgd->env.gadgetBounds.y + dgd->env.gadgetBounds.h) ) {
                 return 1;
             }
             break;
