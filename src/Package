@@ -1,6 +1,6 @@
 CD //
 
-SET FN Dockbot.lha
+SET FN DockBot.lha
 
 IF EXISTS $FN
   DELETE $FN
@@ -11,5 +11,7 @@ IF NOT EXISTS DockBot.info
 ENDIF
 
 LHA a -r $FN @DockBot/filelist
+
+COPY DockBot/DockBot.readme DockBot.readme
 
 CD DockBot/src

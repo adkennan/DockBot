@@ -202,7 +202,7 @@ I use the following script to initialize my development environment:
 	ASSIGN lib:        SYS:Dev/Triton/lib     ADD
 	ASSIGN include:    SYS:Dev/Triton/include ADD
 
-    ASSIGN include:    SYS:Dev/ScreenNotify/include ADD
+	ASSIGN include:    SYS:Dev/ScreenNotify/include ADD
 
 	PATH   sc:c        ADD
 
@@ -294,6 +294,8 @@ These macros describe methods implemented by the gadget class:
 - METHOD_DROP - Called when the user drops Workbench icons on the gadget.
 - METHOD_DRAW - Draws the gadget.
 - METHOD_LAUNCHED - Called after the dock has launched an external program at the request of the gadget.
+- METHOD_REMAP - Called when it might be necessary to remap any pens used for drawing.
+- METHOD_MESSAGE - Called when a message is received at a port registered by the gadget.
 
 - METHOD_GETHOTKEY - Returns the hotkey to be registered for activating the gadget.
 - METHOD_GETSIZE - Returns the preferred size of the gadget.
@@ -315,6 +317,18 @@ These macros are used to provide implementations of the above methods:
 - DB_METHOD_D - A method with access to gadget private data.
 - DB_METHOD_M - A method with a message parameter but no access to private data.
 - DB_METHOD_DM - A method with both gadget private data and a message.
+
+When DEBUG_BUILD is defined the gadget can generate console output using the following functions and macros:
+
+- DB_Printf(fmt, ...) - A printf like function that will write to the output stream of the DockBot or DockBotPrefs applications.
+- __METHOD__ - A macro that combines the gadget name with the current function name.
+- DEBUG() - A macro that used to wrap an operation that is only present in debug builds.
+
+Use these together like this:
+
+DEBUG(DB_Printf(__METHOD__ "Some debug message: %ld\n", aNumber));
+
+See the DOS function VFPrintf for info on the format string.
 
 @endnode
 

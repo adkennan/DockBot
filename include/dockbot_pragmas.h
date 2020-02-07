@@ -6,7 +6,7 @@
 /*                                  */
 /************************************/
 /* Dock gadget functions*/
-#pragma libcall DockBotBase DB_GetDockGadgetBounds 1e BA9804
+#pragma libcall DockBotBase DB_GetDockGadgetEnvironment 1e 9802
 #pragma libcall DockBotBase DB_RequestDockQuit 24 801
 #pragma libcall DockBotBase DB_RequestDockGadgetDraw 2a 801
 #pragma libcall DockBotBase DB_RequestLaunch 30 0BA9805

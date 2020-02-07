@@ -872,7 +872,6 @@ VOID __asm __saveds DB_RegisterDebugStream(
 *
 *   SEE ALSO
 *   DB_RegisterDebugStream, VFPrintf
-
 *
 ***************************************************************************/
 VOID __asm __saveds DB_DebugLog(

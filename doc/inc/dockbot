@@ -1,6 +1,6 @@
 @DATABASE "dockbot"
 @MASTER   "Stuff:Andrew/DockBot/doc/dockbot.doc"
-@REMARK   This file was created by ADtoHT 2.1 on 03-Dec-19 21:19:02
+@REMARK   This file was created by ADtoHT 2.1 on 07-Feb-20 20:51:38
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 
@@ -9,16 +9,19 @@
                                @{b}dockbot.library@{ub}
 
 @{"DB_AllocMem()" LINK "DB_AllocMem"}           @{"DB_CloseSettings()" LINK "DB_CloseSettings"}
+@{"DB_DebugLog()" LINK "DB_DebugLog"}           @{"DB_DisposeConfig()" LINK "DB_DisposeConfig"}
 @{"DB_DrawInsetFrame()" LINK "DB_DrawInsetFrame"}     @{"DB_DrawOutsetFrame()" LINK "DB_DrawOutsetFrame"}
-@{"DB_FreeMem()" LINK "DB_FreeMem"}            @{"DB_GetDockGadgetBounds()" LINK "DB_GetDockGadgetBounds"}
+@{"DB_FreeMem()" LINK "DB_FreeMem"}            @{"DB_GetDockGadgetEnvironment()" LINK "DB_GetDockGadgetEnvironment"}
 @{"DB_ListClasses()" LINK "DB_ListClasses"}        @{"DB_OpenSettingsRead()" LINK "DB_OpenSettingsRead"}
 @{"DB_OpenSettingsWrite()" LINK "DB_OpenSettingsWrite"}  @{"DB_ReadBeginBlock()" LINK "DB_ReadBeginBlock"}
 @{"DB_ReadConfig()" LINK "DB_ReadConfig"}         @{"DB_ReadEndBlock()" LINK "DB_ReadEndBlock"}
-@{"DB_ReadSetting()" LINK "DB_ReadSetting"}        @{"DB_RequestDockGadgetDraw()" LINK "DB_RequestDockGadgetDraw"}
+@{"DB_ReadSetting()" LINK "DB_ReadSetting"}        @{"DB_RegisterDebugStream()" LINK "DB_RegisterDebugStream"}
+@{"DB_RegisterPort()" LINK "DB_RegisterPort"}       @{"DB_RequestDockGadgetDraw()" LINK "DB_RequestDockGadgetDraw"}
 @{"DB_RequestDockQuit()" LINK "DB_RequestDockQuit"}    @{"DB_RequestLaunch()" LINK "DB_RequestLaunch"}
-@{"DB_ShowError()" LINK "DB_ShowError"}          @{"DB_WriteBeginBlock()" LINK "DB_WriteBeginBlock"}
-@{"DB_WriteBeginEnd()" LINK "DB_WriteEndBlock"}      @{"DB_WriteConfig()" LINK "DB_WriteConfig"}
-@{"DB_WriteEndBlock()" LINK "DB_WriteEndBlock"}      @{"DB_WriteSetting()" LINK "DB_WriteSetting"}
+@{"DB_ShowError()" LINK "DB_ShowError"}          @{"DB_UnregisterPort()" LINK "DB_UnregisterPort"}
+@{"DB_WriteBeginBlock()" LINK "DB_WriteBeginBlock"}    @{"DB_WriteBeginEnd()" LINK "DB_WriteEndBlock"}
+@{"DB_WriteConfig()" LINK "DB_WriteConfig"}        @{"DB_WriteEndBlock()" LINK "DB_WriteEndBlock"}
+@{"DB_WriteSetting()" LINK "DB_WriteSetting"}       
 
 @ENDNODE
 @NODE "DB_AllocMem" "dockbot.library/DB_AllocMem()"
@@ -98,6 +101,54 @@
         @{"DB_OpenSettingsRead()" LINK "DB_OpenSettingsRead"},@{"DB_OpenSettingsWrite()" LINK "DB_OpenSettingsWrite"}
 
 @ENDNODE
+@NODE "DB_DebugLog" "dockbot.library/DB_DebugLog()"
+@{b}
+
+   NAME@{ub}
+        DB_DebugLog - Writes a message to the debug logging stream.@{b}
+
+   SYNOPSIS@{ub}
+        DB_DebugLog(fmt,    argv);
+                    A0      A1
+        DB_DebugLog(STRPTR, LONG *);@{b}
+
+   FUNCTION@{ub}
+        Used for debug builds only. Writes a log message to the debug output
+        stream if one has been registered.@{b}
+
+   INPUTS@{ub}
+        fmt - A printf style format string.
+        argv - Pointer to the first arg value.@{b}
+
+   SEE ALSO@{ub}
+        @{"DB_RegisterDebugStream" LINK "DB_RegisterDebugStream"}, VFPrintf
+
+@ENDNODE
+@NODE "DB_DisposeConfig" "dockbot.library/DB_DisposeConfig()"
+@{b}
+
+   NAME@{ub}
+        DB_DisposeConfig - Cleans up the gadgets on a DockConfig structure.@{b}
+
+   SYNOPSIS@{ub}
+        DB_DisposeConfig(cfg)
+                         A0
+        VOID DB_DisposeConfig(@{"struct DockConfig" LINK "dockbot.h/File" 56} *);@{b}
+
+   FUNCTION@{ub}
+        Disposes of gadget objects and cleans up associated memory allocated
+        by the DockConfig structure.@{b}
+
+   INPUTS@{ub}
+        cfg - The DockConfig structure containing references to gadgets.@{b}
+
+   RESULT@{ub}
+        The gadgets allocated by @{"DB_ReadConfig" LINK "DB_ReadConfig"} will be cleaned up.@{b}
+
+   SEE ALSO@{ub}
+        @{"DB_ReadConfig()" LINK "DB_ReadConfig"}
+
+@ENDNODE
 @NODE "DB_DrawInsetFrame" "dockbot.library/DB_DrawInsetFrame()"
 @{b}
 
@@ -107,7 +158,7 @@
    SYNOPSIS@{ub}
         DB_DrawInsetFrame(rp, bounds)
                           A0    A1
-        VOID DB_DrawInsetFrame(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 68} *);@{b}
+        VOID DB_DrawInsetFrame(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 86} *);@{b}
 
    FUNCTION@{ub}
         Draws a lowered 3d frame with the supplied RastPort.@{b}
@@ -120,8 +171,8 @@
         A 3d frame will be drawn to the window.@{b}
 
    EXAMPLE@{ub}
-        @{"struct Rect" LINK "dockbot.h/File" 68} bounds;
-        @{"DB_GetDockGadgetBounds" LINK "DB_GetDockGadgetBounds"}(obj, &bounds);
+        @{"struct Rect" LINK "dockbot.h/File" 86} bounds;
+        DB_GetDockGadgetBounds(obj, &bounds);
         DB_DrawInsetFrame(rp, &bounds);
 
 @ENDNODE
@@ -134,7 +185,7 @@
    SYNOPSIS@{ub}
         DB_DrawOutsetFrame(rp, bounds)
                            A0    A1
-        VOID DB_DrawOutsetFrame(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 68} *);@{b}
+        VOID DB_DrawOutsetFrame(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 86} *);@{b}
 
    FUNCTION@{ub}
         Draws a raised 3d frame with the supplied RastPort.@{b}
@@ -147,8 +198,8 @@
         A 3d frame will be drawn to the window.@{b}
 
    EXAMPLE@{ub}
-        @{"struct Rect" LINK "dockbot.h/File" 68} bounds;
-        @{"DB_GetDockGadgetBounds" LINK "DB_GetDockGadgetBounds"}(obj, &bounds);
+        @{"struct Rect" LINK "dockbot.h/File" 86} bounds;
+        DB_GetDockGadgetBounds(obj, &bounds);
         DB_DrawOutsetFrame(rp, &bounds);
 
 @ENDNODE
@@ -174,30 +225,32 @@
         @{"DB_AllocMem()" LINK "DB_AllocMem"}, FreeMem()
 
 @ENDNODE
-@NODE "DB_GetDockGadgetBounds" "dockbot.library/DB_GetDockGadgetBounds()"
+@NODE "DB_GetDockGadgetEnvironment" "dockbot.library/DB_GetDockGadgetEnvironment()"
 @{b}
 
    NAME@{ub}
-        DB_GetDockGadgetBounds -- Get the bounding box of a dock gadget.@{b}
+        DB_GetDockGadgetEnvironment -- Get the environment info for the gadget.@{b}
 
    SYNOPSIS@{ub}
-        DB_GetDockGadgetBounds(obj, bounds)
-                               A0     A1
-        VOID DB_GetDockGadgetBounds(Object *, @{"struct Rect" LINK "dockbot.h/File" 68} *);@{b}
+        DB_GetDockGadgetEnvironment(obj, env)
+                                    A0    A1
+        VOID DB_GetDockGadgetEnvironment(Object *, @{"struct GadgetEnvironment" LINK "dockbot.h/File" 149} *)@{b}
 
    FUNCTION@{ub}
-        Queries a dock gadget for it's position and size.@{b}
+        Queries a dock gadget for it's position, size and information about
+        the dock window.@{b}
 
    INPUTS@{ub}
         obj    - The dock gadget to query.
-        bounds - A pointer to a Rect to be filled in by the gadget.@{b}
+        env - A pointer to a DockGadgetEnvironment to be filled in by the gadget.@{b}
 
    RESULT@{ub}
-        The parameter bounds will be filled contain the bounds of the gadget.@{b}
+        The parameter env will be filled contain the bounds of the gadget as well
+        as the position of the Dock window and its alignment.@{b}
 
    EXAMPLE@{ub}
-        @{"struct Rect" LINK "dockbot.h/File" 68} bounds;
-        DB_GetDockGadgetBounds(obj, &bounds);
+        struct DockGadgetEnvironment env;
+        DB_GetDockGadgetEnvironment(obj, &env);
 
 @ENDNODE
 @NODE "DB_ListClasses" "dockbot.library/DB_ListClasses()"
@@ -335,7 +388,7 @@
    SYNOPSIS@{ub}
         success = DB_ReadConfig(cfg,settings)
           D0                                    A0  A1
-        BOOL DB_ReadConfig(@{"struct DockConfig" LINK "dockbot.h/File" 50} *, struct DockSettings *)@{b}
+        BOOL DB_ReadConfig(@{"struct DockConfig" LINK "dockbot.h/File" 56} *, struct DockSettings *)@{b}
 
    FUNCTION@{ub}
         Reads the configuration data from the settings object and populates
@@ -394,7 +447,7 @@
    SYNOPSIS@{ub}
         success = DB_ReadSetting(settings, value)
           D0                       A0        A1
-        BOOL DB_ReadSetting(struct DockSettings *, @{"struct DockSettingValue" LINK "dockbot.h/File" 311} *);@{b}
+        BOOL DB_ReadSetting(struct DockSettings *, @{"struct DockSettingValue" LINK "dockbot.h/File" 356} *);@{b}
 
    FUNCTION@{ub}
         Looks for the key and value separated by an equals sign on the current
@@ -409,7 +462,7 @@
 
    EXAMPLE@{ub}
         struct DockSettings *s;
-        @{"struct DockSettingValue" LINK "dockbot.h/File" 311} val;
+        @{"struct DockSettingValue" LINK "dockbot.h/File" 356} val;
         if( s = @{"DB_OpenSettingsRead" LINK "DB_OpenSettingsRead"}("ENV:DockBot.prefs") ) {
           if( @{"DB_ReadBeginBlock" LINK "DB_ReadBeginBlock"}(s) ) {
             while(!@{"DB_ReadEndBlock" LINK "DB_ReadEndBlock"}(s)) {
@@ -423,6 +476,54 @@
 
    SEE ALSO@{ub}
         @{"DB_OpenSettingsRead()" LINK "DB_OpenSettingsRead"}
+
+@ENDNODE
+@NODE "DB_RegisterDebugStream" "dockbot.library/DB_RegisterDebugStream()"
+@{b}
+
+   NAME@{ub}
+        DB_RegisterDebugStream - Registers an output stream with dockbot.library.@{b}
+
+   SYNOPSIS@{ub}
+        DB_RegisterDebugStream(fh);
+                               A0
+        DB_RegisterDebugStream(BPTR);@{b}
+
+   FUNCTION@{ub}
+        Used for debug builds only. Registers an output stream for the library
+        and gadget classes to send debug output to.@{b}
+
+   INPUTS@{ub}
+        fh - The output stream.@{b}
+
+   SEE ALSO@{ub}
+        @{"DB_DebugLog" LINK "DB_DebugLog"}
+
+@ENDNODE
+@NODE "DB_RegisterPort" "dockbot.library/DB_RegisterPort()"
+@{b}
+
+   NAME@{ub}
+        DB_RegisterPort - Registers a message port with the Dock so that gadgets
+                      can receive messages.@{b}
+
+   SYNOPSIS@{ub}
+        DB_RegisterPort(obj, port);
+                         A0   A1
+        DB_RegisterPort(Object *, struct MsgPort *);@{b}
+
+   FUNCTION@{ub}
+        Registers a gadget-owned port with the Dock so that the gadget can receive
+        custom messages. For example, if the gadget causes a window to be opened
+        this function allows messages received by the window's port to be routed
+        back to the gadget.@{b}
+
+   INPUTS@{ub}
+        obj - The gadget object registering the port.
+        port - The port to be registered.@{b}
+
+   SEE ALSO@{ub}
+        @{"DB_UnregisterPort" LINK "DB_UnregisterPort"}
 
 @ENDNODE
 @NODE "DB_RequestDockGadgetDraw" "dockbot.library/DB_RequestDockGadgetDraw()"
@@ -527,6 +628,29 @@
         message - The error message to display to the user.
 
 @ENDNODE
+@NODE "DB_UnregisterPort" "dockbot.library/DB_UnregisterPort()"
+@{b}
+
+   NAME@{ub}
+        DB_UnregisterPort - Removes a previously registered port from the Dock.@{b}
+
+   SYNOPSIS@{ub}
+        DB_UnregisterPort(obj, port);
+                           A0   A1
+        DB_UnregisterPort(Object *, struct MsgPort *);@{b}
+
+   FUNCTION@{ub}
+        Removes a port registration from the Dock when the gadget is finished with
+        it.@{b}
+
+   INPUTS@{ub}
+        obj - The gadget object that registered the port.
+        port - The port to be un-registered.@{b}
+
+   SEE ALSO@{ub}
+        @{"DB_RegisterPort" LINK "DB_RegisterPort"}
+
+@ENDNODE
 @NODE "DB_WriteBeginBlock" "dockbot.library/DB_WriteBeginBlock()"
 @{b}
 
@@ -570,7 +694,7 @@
    SYNOPSIS@{ub}
         success = DB_WriteConfig(cfg,settings)
           D0                                     A0  A1
-        BOOL DB_WriteConfig(@{"struct DockConfig" LINK "dockbot.h/File" 50} *, struct DockSettings *)@{b}
+        BOOL DB_WriteConfig(@{"struct DockConfig" LINK "dockbot.h/File" 56} *, struct DockSettings *)@{b}
 
    FUNCTION@{ub}
         Writes the configuration data in cfg to the settings object.@{b}

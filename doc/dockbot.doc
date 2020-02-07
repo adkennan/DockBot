@@ -2,10 +2,12 @@ TABLE OF CONTENTS
 
 dockbot.library/DB_AllocMem
 dockbot.library/DB_CloseSettings
+dockbot.library/DB_DebugLog
+dockbot.library/DB_DisposeConfig
 dockbot.library/DB_DrawInsetFrame
 dockbot.library/DB_DrawOutsetFrame
 dockbot.library/DB_FreeMem
-dockbot.library/DB_GetDockGadgetBounds
+dockbot.library/DB_GetDockGadgetEnvironment
 dockbot.library/DB_ListClasses
 dockbot.library/DB_OpenSettingsRead
 dockbot.library/DB_OpenSettingsWrite
@@ -13,10 +15,13 @@ dockbot.library/DB_ReadBeginBlock
 dockbot.library/DB_ReadConfig
 dockbot.library/DB_ReadEndBlock
 dockbot.library/DB_ReadSetting
+dockbot.library/DB_RegisterDebugStream
+dockbot.library/DB_RegisterPort
 dockbot.library/DB_RequestDockGadgetDraw
 dockbot.library/DB_RequestDockQuit
 dockbot.library/DB_RequestLaunch
 dockbot.library/DB_ShowError
+dockbot.library/DB_UnregisterPort
 dockbot.library/DB_WriteBeginBlock
 dockbot.library/DB_WriteConfig
 dockbot.library/DB_WriteEndBlock
@@ -94,6 +99,50 @@ dockbot.library/DB_WriteSetting
    SEE ALSO
 	DB_OpenSettingsRead(),DB_OpenSettingsWrite()
 
+dockbot.library/DB_DebugLog                          dockbot.library/DB_DebugLog
+
+   NAME
+	DB_DebugLog - Writes a message to the debug logging stream.
+
+   SYNOPSIS
+	DB_DebugLog(fmt,    argv);
+	            A0      A1
+	DB_DebugLog(STRPTR, LONG *);
+
+   FUNCTION
+    Used for debug builds only. Writes a log message to the debug output
+    stream if one has been registered.
+
+   INPUTS
+    fmt - A printf style format string.
+    argv - Pointer to the first arg value.
+
+   SEE ALSO
+    DB_RegisterDebugStream, VFPrintf
+
+dockbot.library/DB_DisposeConfig                dockbot.library/DB_DisposeConfig
+
+   NAME
+	DB_DisposeConfig - Cleans up the gadgets on a DockConfig structure.
+
+   SYNOPSIS
+	DB_DisposeConfig(cfg)
+	                 A0
+	VOID DB_DisposeConfig(struct DockConfig *);
+
+   FUNCTION
+    Disposes of gadget objects and cleans up associated memory allocated
+    by the DockConfig structure.
+
+   INPUTS
+	cfg - The DockConfig structure containing references to gadgets.
+
+   RESULT
+	The gadgets allocated by DB_ReadConfig will be cleaned up.
+
+   SEE ALSO
+	DB_ReadConfig()
+
 dockbot.library/DB_DrawInsetFrame              dockbot.library/DB_DrawInsetFrame
 
    NAME
@@ -164,29 +213,31 @@ dockbot.library/DB_WriteSetting
    SEE ALSO
 	DB_AllocMem(), FreeMem()
 
-dockbot.library/DB_GetDockGadgetBounds    dockbot.library/DB_GetDockGadgetBounds
+dockbot.library/DB_GetDockGadgetEnvironmentdockbot.library/DB_GetDockGadgetEnvironment
 
    NAME
-	DB_GetDockGadgetBounds -- Get the bounding box of a dock gadget.
+	DB_GetDockGadgetEnvironment -- Get the environment info for the gadget.
 
    SYNOPSIS
-	DB_GetDockGadgetBounds(obj, bounds)
-	                       A0     A1
-	VOID DB_GetDockGadgetBounds(Object *, struct Rect *);
+	DB_GetDockGadgetEnvironment(obj, env)
+	                            A0    A1
+	VOID DB_GetDockGadgetEnvironment(Object *, struct GadgetEnvironment *)
 
    FUNCTION
-	Queries a dock gadget for it's position and size.
+	Queries a dock gadget for it's position, size and information about
+    the dock window.
 
    INPUTS
 	obj    - The dock gadget to query.
-	bounds - A pointer to a Rect to be filled in by the gadget.
+	env - A pointer to a DockGadgetEnvironment to be filled in by the gadget.
 
    RESULT
-	The parameter bounds will be filled contain the bounds of the gadget.
+	The parameter env will be filled contain the bounds of the gadget as well
+    as the position of the Dock window and its alignment.
 
    EXAMPLE
-	struct Rect bounds;
-	DB_GetDockGadgetBounds(obj, &bounds);
+	struct DockGadgetEnvironment env;
+	DB_GetDockGadgetEnvironment(obj, &env);
 
 dockbot.library/DB_ListClasses                    dockbot.library/DB_ListClasses
 
@@ -399,6 +450,50 @@ dockbot.library/DB_WriteSetting
    SEE ALSO
 	DB_OpenSettingsRead()
 
+dockbot.library/DB_RegisterDebugStream    dockbot.library/DB_RegisterDebugStream
+
+   NAME
+	DB_RegisterDebugStream - Registers an output stream with dockbot.library.
+
+   SYNOPSIS
+	DB_RegisterDebugStream(fh);
+	                       A0
+	DB_RegisterDebugStream(BPTR);
+
+   FUNCTION
+    Used for debug builds only. Registers an output stream for the library
+    and gadget classes to send debug output to.
+
+   INPUTS
+    fh - The output stream.
+
+   SEE ALSO
+    DB_DebugLog
+
+dockbot.library/DB_RegisterPort                  dockbot.library/DB_RegisterPort
+
+   NAME
+	DB_RegisterPort - Registers a message port with the Dock so that gadgets
+                      can receive messages.
+
+   SYNOPSIS
+	DB_RegisterPort(obj, port);
+	                 A0   A1
+	DB_RegisterPort(Object *, struct MsgPort *);
+
+   FUNCTION
+    Registers a gadget-owned port with the Dock so that the gadget can receive
+    custom messages. For example, if the gadget causes a window to be opened
+    this function allows messages received by the window's port to be routed
+    back to the gadget.
+
+   INPUTS
+    obj - The gadget object registering the port.
+    port - The port to be registered.
+
+   SEE ALSO
+    DB_UnregisterPort
+
 dockbot.library/DB_RequestDockGadgetDrawdockbot.library/DB_RequestDockGadgetDraw
 
    NAME
@@ -492,6 +587,27 @@ dockbot.library/DB_WriteSetting
 
    INPUTS
     message - The error message to display to the user.
+
+dockbot.library/DB_UnregisterPort              dockbot.library/DB_UnregisterPort
+
+   NAME
+	DB_UnregisterPort - Removes a previously registered port from the Dock.
+
+   SYNOPSIS
+	DB_UnregisterPort(obj, port);
+	                   A0   A1
+	DB_UnregisterPort(Object *, struct MsgPort *);
+
+   FUNCTION
+    Removes a port registration from the Dock when the gadget is finished with
+    it.
+
+   INPUTS
+    obj - The gadget object that registered the port.
+    port - The port to be un-registered.
+
+   SEE ALSO
+    DB_RegisterPort
 
 dockbot.library/DB_WriteBeginBlock            dockbot.library/DB_WriteBeginBlock
 
