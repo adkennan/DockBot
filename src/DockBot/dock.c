@@ -206,6 +206,14 @@ VOID free_dock(struct DockWindow* dock)
 
     delete_port(dock->pubPort);
 
+    if( dock->cfg.bgBrushPath ) {
+        FREE_STRING(dock->cfg.bgBrushPath);
+    
+        if( dock->bgBrush ) {
+            DB_FreeBrush(dock->bgBrush);
+        }
+    }
+
 	DB_FreeMem(dock, sizeof(struct DockWindow));
 
     DEBUG(printf("Done\n"));

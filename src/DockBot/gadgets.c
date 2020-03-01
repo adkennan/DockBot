@@ -20,7 +20,7 @@ BOOL create_dock_handle(struct DockWindow *dock)
 {
     struct DgNode *dg;
 
-    DEBUG(printf("create_dock_handle\n"));
+    DEBUG(printf(__FUNC__ "\n"));
 
     if( dg = DB_AllocGadget(HANDLE_CLASS_NAME) ) {
 
@@ -31,14 +31,14 @@ BOOL create_dock_handle(struct DockWindow *dock)
         return TRUE;
     }
 
-    DEBUG(printf("  Failed to create handle.\n"));
+    DEBUG(printf(__FUNC__ ": Failed to create handle.\n"));
 
     return FALSE;
 }
 
 BOOL init_gadget_classes(struct DockWindow *dock)
 {
-    DEBUG(printf("init_gadget_classes\n"));
+    DEBUG(printf(__FUNC__ "\n"));
 
     if( dock->gadgetPort = CreateMsgPort() ) {
         if( dock->handleClass = init_dock_handle_class() ) {
@@ -46,13 +46,13 @@ BOOL init_gadget_classes(struct DockWindow *dock)
         }   
     }
 
-    DEBUG(printf(" Failed\n"));
+    DEBUG(printf(__FUNC__ ": Failed\n"));
     return FALSE;
 }
 
 BOOL free_gadget_classes(struct DockWindow *dock)
 {
-    DEBUG(printf("free_gadget_classes\n"));
+    DEBUG(printf(__FUNC__ "\n"));
 
     if( dock->handleClass ) {
         
@@ -70,7 +70,7 @@ BOOL free_gadget_classes(struct DockWindow *dock)
 
 BOOL init_gadgets(struct DockWindow *dock)
 {
-    DEBUG(printf("init_gadgets\n"));
+    DEBUG(printf(__FUNC__ "\n"));
 
     NewList(&dock->cfg.gadgets);
 
@@ -82,7 +82,7 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 {
     struct DgNode *dg;
 
-    DEBUG(printf("remove_dock_gadgets\n"));
+    DEBUG(printf(__FUNC__ "\n"));
 
     disable_layout(dock);
 
@@ -95,6 +95,84 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
     }
 }
 
+VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *b)
+{
+    UWORD x, y, bx, by, bw, bh, stepX, stepY, ex, ey;
+
+    if( ! dock->bgBrush ) {
+
+        SetAPen(rp, 0);
+        RectFill(rp, b->x, b->y, b->w, b->h);
+
+        return;
+    }
+
+    DB_GetBrushSize(dock->bgBrush, &stepX, &stepY);
+
+    x = b->x;
+    y = b->y;
+    
+    bx = 0;
+    if( x > 0 ) {
+        bx = x % stepX;
+    }
+    
+    by = 0;
+    if( y > 0 ) {
+        by = y % stepY;
+    }    
+
+    ex = b->x + b->w;
+    ey = b->y + b->h;
+    
+    if( y + stepY >= ey ) {
+        bh = ey - y;
+    } else if( by > 0 ) {
+        bh = stepY - by;
+    } else {
+        bh = stepY;
+    }
+
+    DEBUG(printf(__FUNC__ ": y = %ld, stepY = %ld, ey = %ld, bh = %ld\n",
+       (LONG)y, (LONG)stepY, (LONG)ey, (LONG)bh));
+
+    while( y < ey ) {
+
+        if( x + stepX >= ex ) {
+            bw = ex - x;
+        } else if( bx > 0 ) {
+            bw = stepX - bx;
+        } else {
+            bw = stepX;
+        }
+    
+        DB_DrawBrush(dock->bgBrush, rp, bx, by, x, y, bw, bh);
+
+        bx = 0;
+        x += bw;
+        if( x >= ex ) {
+            x = b->x;
+            if( x > 0 ) {
+                bx = x % stepX;
+            }
+
+            y += bh;    
+            by = 0;
+
+            if( y + stepY >= ey ) {
+                bh = ey - y;
+            } else if( by > 0 ) {
+                bh = stepY - by;
+            } else {
+                bh = stepY;
+            }
+
+            DEBUG(printf(__FUNC__ ": y = %ld, stepY = %ld, ey = %ld, bh = %ld\n",
+                (LONG)y, (LONG)stepY, (LONG)ey, (LONG)bh));
+        }
+    }    
+
+}
 
 VOID draw_gadgets(struct DockWindow *dock)
 {
@@ -107,9 +185,12 @@ VOID draw_gadgets(struct DockWindow *dock)
     
         win = dock->win;
         rp = win->RPort;
+        r.x = 0;
+        r.y = 0;
+        r.w = win->Width;
+        r.h = win->Height;
 
-        SetAPen(rp, 0);
-        RectFill(rp, 0, 0, win->Width, win->Height);
+        fill_background(dock, rp, &r);
 
         FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
@@ -117,10 +198,6 @@ VOID draw_gadgets(struct DockWindow *dock)
         }
         
         if( ! dock->cfg.showGadgetBorders ) {
-            r.x = 0;
-            r.y = 0;
-            r.w = win->Width;
-            r.h = win->Height;
             DB_DrawOutsetFrame(rp, &r);
         }
     }
@@ -140,9 +217,8 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 
         DB_GetDockGadgetEnvironment(gadget, &env);
 
-        SetAPen(rp, 0);
-        RectFill(rp, env.gadgetBounds.x, env.gadgetBounds.y, env.gadgetBounds.w, env.gadgetBounds.h);
-    
+        fill_background(dock, rp, &env.gadgetBounds);
+
         dock_gadget_draw(gadget, rp);
     }
 }
@@ -333,7 +409,7 @@ VOID register_gadget_port(struct DgNode *g, struct GadgetMessagePort *portMsg)
 {
     struct PortReg *pr;
 
-    DEBUG(printf("register_gadget_port: %s %lx\n", g->n.ln_Name, portMsg->port));
+    DEBUG(printf(__FUNC__ ": %s %lx\n", g->n.ln_Name, portMsg->port));
     
     if( pr = DB_AllocMem(sizeof(struct PortReg), MEMF_CLEAR) ) {
 
@@ -347,7 +423,7 @@ VOID unregister_gadget_port(struct DgNode *g, struct GadgetMessagePort *portMsg)
 {
     struct PortReg *pr;
 
-    DEBUG(printf("unregister_gadget_port: %s %lx\n", g->n.ln_Name, portMsg->port));
+    DEBUG(printf(__FUNC__ ": %s %lx\n", g->n.ln_Name, portMsg->port));
 
     FOR_EACH_PORTREG(&g->ports, pr) {
         if( pr->port == portMsg->port ) {

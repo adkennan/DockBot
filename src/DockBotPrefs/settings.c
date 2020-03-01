@@ -77,6 +77,19 @@ VOID free_plugins(struct DockPrefs *prefs)
     }
 }
 
+VOID free_config(struct DockPrefs *prefs) 
+{
+    DEBUG(printf(__FUNC__ "\n"));
+       
+    remove_dock_gadgets(prefs);
+
+    free_gadget_list(prefs);
+
+    free_plugins(prefs);
+
+    FREE_STRING(prefs->cfg.bgBrushPath);
+}
+
 BOOL load_config(struct DockPrefs *prefs)
 {
     struct DockSettings *s;

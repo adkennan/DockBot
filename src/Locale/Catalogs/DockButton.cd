@@ -21,6 +21,9 @@ Shell
 MSG_FR_ChooseApplication (//)
 Choose an application
 ;
+MSG_FR_ChooseBrush (//)
+Choose an image
+;
 MSG_FR_OkText (//)
 Select
 ;
@@ -32,6 +35,9 @@ Cancel
 ;
 MSG_UI_Name (//)
 Name
+;
+MSG_UI_Brush (//)
+Image
 ;
 MSG_UI_Args (//)
 Arguments

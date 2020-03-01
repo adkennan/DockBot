@@ -40,6 +40,8 @@ enum {
     OBJ_ALIGNMENT       = 1014,
     OBJ_SHOW_LABELS     = 1015,
     OBJ_SHOW_BORDERS    = 1016,
+    OBJ_BG_BRUSH        = 1017,
+    OBJ_BTN_BG_BRUSH    = 1018,
     
     OBJ_GADGETS         = 1020,
 
@@ -96,6 +98,8 @@ BOOL save_config(struct DockPrefs *prefs, BOOL permanent);
 VOID remove_dock_gadgets(struct DockPrefs *prefs);
 
 VOID free_plugins(struct DockPrefs *prefs);
+
+VOID free_config(struct DockPrefs *prefs);
 
 VOID revert_config(VOID);
 

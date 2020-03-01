@@ -14,6 +14,12 @@
 
 extern struct DockBotLibrary *DockBotBaseFull;
 
+#ifdef DEBUG_BUILD
+
+BOOL __DebugEnabled = TRUE;
+
+#endif
+
 VOID __asm __saveds DB_RegisterDebugStream(
 	register __a0 BPTR fh)
 {
@@ -45,5 +51,7 @@ VOID DebugLog(STRPTR fmt, ...)
 {
     DebugLogInternal(fmt, (LONG *)(&fmt + 1));
 }
+
+
 
 

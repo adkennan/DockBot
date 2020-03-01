@@ -86,19 +86,20 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
     
         if( drawInfo = GetScreenDrawInfo(screen) ) {
 
+            SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
+            RectFill(msg->rp, env.gadgetBounds.x, env.gadgetBounds.y, 
+                                env.gadgetBounds.x + env.gadgetBounds.w - 1,
+                                env.gadgetBounds.y + env.gadgetBounds.h - 1);
+
             if( data->closeTimer == 0 ) {
 
-                if( env.showBorders ) {
-                    DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
-                }
+                DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
 
                 off1 = ICON_OFF;
                 off2 = ICON_OFF * 2;
             } else {
 
-                if( env.showBorders ) {
-                    DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
-                }
+                DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
 
                 off1 = ICON_OFF * 2;
                 off2 = ICON_OFF;
@@ -204,7 +205,7 @@ DB_METHOD_D(HOTKEY)
     return 1;
 }
 
-DB_METHOD_DM(GETSIZE,DockMessageGetSize)
+DB_METHOD_M(GETSIZE,DockMessageGetSize)
 
     msg->w = ICON_W + ICON_OFF * 4;
     msg->h = ICON_H + ICON_OFF * 4;

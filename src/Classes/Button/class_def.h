@@ -55,7 +55,6 @@ struct ButtonLibData
 {
 	struct Library *iconBase;
 	struct Library *dosBase;
-    struct Library *aslBase;
 };
 
 struct ButtonGadgetData
@@ -65,9 +64,11 @@ struct ButtonGadgetData
     STRPTR args;
     STRPTR con;
     STRPTR hotKey;
+    STRPTR brushPath;
     UWORD imageW;
     UWORD imageH;
     struct DiskObject *diskObj;
+    APTR brushImg;
     UWORD startType;
     UWORD counter;
     UWORD iconState;

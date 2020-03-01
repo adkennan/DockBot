@@ -50,10 +50,10 @@
     Variables
 */
 
-struct FC_String DockBotPrefs_Strings[41] = {
+struct FC_String DockBotPrefs_Strings[43] = {
     { (STRPTR) "DockBot Preferences", 0 },
     { (STRPTR) "Preferences editor for DockBot", 1 },
-    { (STRPTR) "_OK", 2 },
+    { (STRPTR) "OK", 2 },
     { (STRPTR) "Cancel", 3 },
     { (STRPTR) "Couldn't load class list.", 4 },
     { (STRPTR) "Couldn't load config.", 5 },
@@ -80,18 +80,20 @@ struct FC_String DockBotPrefs_Strings[41] = {
     { (STRPTR) "Alignment", 26 },
     { (STRPTR) "Show Labels", 27 },
     { (STRPTR) "Show Borders", 28 },
-    { (STRPTR) "Gadgets", 29 },
-    { (STRPTR) "_New...", 30 },
-    { (STRPTR) "_Edit...", 31 },
-    { (STRPTR) "Delete", 32 },
-    { (STRPTR) "_Up", 33 },
-    { (STRPTR) "_Down", 34 },
-    { (STRPTR) "Save", 35 },
-    { (STRPTR) "Test", 36 },
-    { (STRPTR) "Use", 37 },
-    { (STRPTR) "Delete Gadget", 38 },
-    { (STRPTR) "Are you sure you want to delete this gadget?", 39 },
-    { (STRPTR) "_OK|Cancel", 40 }
+    { (STRPTR) "Background Image", 29 },
+    { (STRPTR) "Gadgets", 30 },
+    { (STRPTR) "_New...", 31 },
+    { (STRPTR) "_Edit...", 32 },
+    { (STRPTR) "Delete", 33 },
+    { (STRPTR) "_Up", 34 },
+    { (STRPTR) "_Down", 35 },
+    { (STRPTR) "Save", 36 },
+    { (STRPTR) "Test", 37 },
+    { (STRPTR) "Use", 38 },
+    { (STRPTR) "Delete Gadget", 39 },
+    { (STRPTR) "Are you sure you want to delete this gadget?", 40 },
+    { (STRPTR) "_OK|Cancel", 41 },
+    { (STRPTR) "Choose a background", 42 }
 };
 
 STATIC struct Catalog *DockBotPrefsCatalog = NULL;
@@ -142,7 +144,7 @@ VOID OpenDockBotPrefsCatalog(VOID)
 	    struct FC_String *fc;
 	    int i;
 
-	    for (i = 0, fc = DockBotPrefs_Strings;  i < 41;  i++, fc++) {
+	    for (i = 0, fc = DockBotPrefs_Strings;  i < 43;  i++, fc++) {
 		 fc->msg = GetCatalogStr(DockBotPrefsCatalog, fc->id, (STRPTR) fc->msg);
 	    }
 	}
@@ -245,7 +247,7 @@ VOID InitDockBotPrefsCatalog(STRPTR language)
 				    bytesRemaining -= 8 + (skipSize << 2);
 				    ptr += skipSize;
 
-				    for (i = 0, fc = DockBotPrefs_Strings;  i < 41;  i++, fc++) {
+				    for (i = 0, fc = DockBotPrefs_Strings;  i < 43;  i++, fc++) {
 					if (fc->id == id) {
 					    fc->msg = sptr;
 					}

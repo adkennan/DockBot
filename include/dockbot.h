@@ -60,6 +60,7 @@ struct DockConfig
     BOOL showGadgetLabels;
 	BOOL showGadgetBorders;
 	struct List gadgets;
+    STRPTR bgBrushPath;
 };
 
 struct DgNode
@@ -339,7 +340,7 @@ int atoi(const char *);
 
 #define FREE_STRING(str) \
     if( str ) { \
-        DB_FreeMem(str, strlen(str) + 1); \
+        DB_FreeMem((VOID *)str, strlen((STRPTR)str) + 1); \
         str = NULL; \
     }
 
@@ -351,6 +352,7 @@ int atoi(const char *);
 #define S_POSITION "position"
 #define S_LABELS "labels"
 #define S_BORDERS "borders"
+#define S_BACKGROUND "background"
 #define S_GADGET "gadget"
 
 struct DockSettingValue

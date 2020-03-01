@@ -121,6 +121,9 @@ struct DockWindow
     struct Window *hoverWin;
     UWORD hoverCount;
 
+    // Background image
+    APTR bgBrush;
+
     // Path to WBRun
     UBYTE progPath[2048];
 };

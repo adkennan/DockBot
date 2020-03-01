@@ -264,21 +264,19 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
             measure_text(data, drawInfo, &textW, &textH);
 
             SetAPen(msg->rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
-            RectFill(msg->rp, env.gadgetBounds.x
-                    , env.gadgetBounds.y
-                    , env.gadgetBounds.w + env.gadgetBounds.x - 1
-                    , env.gadgetBounds.h + env.gadgetBounds.y - 1);
+            RectFill(msg->rp, env.gadgetBounds.x, env.gadgetBounds.y, 
+                                env.gadgetBounds.x + env.gadgetBounds.w - 1,
+                                env.gadgetBounds.y + env.gadgetBounds.h - 1);
 
-            if( env.showBorders ) {
-                if( data->clicked ) {
-                    DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
-                } else {
-                    DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
-                }
+            if( data->clicked ) {
+                DB_DrawInsetFrame(msg->rp, &env.gadgetBounds);
+            } else {
+                DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);
             }
 
             yPos = env.gadgetBounds.y + (env.gadgetBounds.h - textH) / 2;
 
+            SetAPen(msg->rp, drawInfo->dri_Pens[TEXTPEN]);
             FOR_EACH_LINE
             {
                 line->text.LeftEdge = env.gadgetBounds.x + (env.gadgetBounds.w - line->width) / 2;

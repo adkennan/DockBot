@@ -49,4 +49,11 @@ DB_AllocGadget(name) (a0)
 * Debug Logging
 DB_RegisterDebugStream(fh) (a0)
 DB_DebugLog(fmt,argv) (a0/a1)
+* Brushes
+DB_LoadBrush(fileName,createMask) (a0,d0)
+DB_FreeBrush(brush) (a0)
+DB_DrawBrush(brush,rp,srcX,srcY,dstX,dstY,w,h) (a0/a1,d0/d1/d2/d3/d4/d5)
+DB_GetBrushSize(brush,w,h) (a0,a1,a2)
+* File Requester
+DB_SelectFile(title,okText,cancelText,path) (a0/a1/a2/a3)
 ##end

@@ -167,6 +167,13 @@ APTR FuncTable[] = {
     DB_RegisterDebugStream,
     DB_DebugLog,
 
+    DB_LoadBrush,
+    DB_FreeBrush,
+    DB_DrawBrush,
+    DB_GetBrushSize,
+
+    DB_SelectFile,
+
     (APTR)-1
 };
 
@@ -174,6 +181,8 @@ struct Library *SysBase = NULL;
 struct Library *DOSBase = NULL;
 struct Library *GfxBase = NULL;
 struct Library *IntuitionBase = NULL;
+struct Library *DataTypesBase = NULL;
+struct Library *AslBase = NULL;
 struct Library *DockBotBase = NULL;
 struct DockBotLibrary *DockBotBaseFull = NULL;
 
@@ -201,17 +210,29 @@ struct DockBotLibrary * __saveds __asm InitLib(
 
                 dockBotBase->l_GfxBase = GfxBase;
 
-                if( InitMem(dockBotBase) ) {
+                if( DataTypesBase = OpenLibrary("datatypes.library", 39) ) {
+            
+                    dockBotBase->l_DataTypesBase = DataTypesBase;
 
-                    if( InitClassLibs(dockBotBase) ) {
+                    if( AslBase = OpenLibrary("asl.library", 37) ) {
+        
+                        dockBotBase->l_AslBase = AslBase;                    
 
-                        if( InitGadgetClass(dockBotBase) ) {
+                        if( InitMem(dockBotBase) ) {
 
-                            return dockBotBase;
+                            if( InitClassLibs(dockBotBase) ) {
+
+                                if( InitGadgetClass(dockBotBase) ) {
+
+                                    return dockBotBase;
+                                }
+                                FreeClassLibs(dockBotBase);
+                            }
+                            CleanUpMem(dockBotBase);
                         }
-                        FreeClassLibs(dockBotBase);
+                        CloseLibrary(AslBase);
                     }
-                    CleanUpMem(dockBotBase);
+                    CloseLibrary(DataTypesBase);
                 }
                 CloseLibrary(GfxBase);
             }
@@ -249,13 +270,26 @@ BPTR __saveds __asm _LibClose(
     return NULL;
 }
 
+VOID CloseLib(struct Library *lib)
+{
+    if( lib ) {
+        CloseLibrary(lib);
+    }
+}   
+
 BPTR __saveds __asm _LibExpunge(
     register __a6 struct DockBotLibrary *dockBotBase)
 {
     BPTR segList;
 
     if( dockBotBase->l_Lib.lib_OpenCnt == ClassLibCount(dockBotBase) ) {
-        
+     
+        CloseLib(AslBase);
+        CloseLib(DataTypesBase);
+        CloseLib(GfxBase);
+        CloseLib(DOSBase);
+        CloseLib(IntuitionBase);
+   
         FreeGadgetClass(dockBotBase);
         FreeClassLibs(dockBotBase);
         CleanUpMem(dockBotBase);

@@ -11,14 +11,12 @@
 #include <dos/dos.h>
 #include <dos/dostags.h>
 #include <workbench/workbench.h>
-#include <libraries/asl.h>
 
 #include <clib/utility_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/graphics_protos.h>
 #include <clib/dos_protos.h>
-#include <clib/asl_protos.h>
 
 #include <stdio.h>
 
@@ -29,6 +27,7 @@
 
 #define S_NAME      "name"
 #define S_PATH      "path"
+#define S_BRUSH     "brush"
 #define S_START     "start"
 #define S_ARGS      "args"
 #define S_CON       "console"
@@ -44,8 +43,6 @@ struct Values StartValues[] = {
 };
 
 STRPTR startTypes[] = { NULL /*"Workbench"*/, NULL /*"Shell"*/, NULL };
-
-#define DEFAULT_PATH "SYS:"
 
 #define COPY_STRING(src, dst) \
     l = strlen(src);\
@@ -67,19 +64,19 @@ STRPTR startTypes[] = { NULL /*"Workbench"*/, NULL /*"Shell"*/, NULL };
 
 enum {
     OBJ_STR_NAME = 1001,
+    OBJ_STR_BRUSH,
     OBJ_STR_ARGS,
     OBJ_CYC_START,
     OBJ_STR_CON,
     OBJ_STR_HOTKEY,
     OBJ_ICON,
-    OBJ_BTN_SELECT,
+    OBJ_BTN_SELECT_TARGET,
+    OBJ_BTN_SELECT_BRUSH,
     OBJ_TXT_PATH
 };
 
-
 struct Library *DOSBase;
 struct Library *IconBase;
-struct Library *AslBase;
 struct ButtonLibData *StaticData;
 
 VOID dock_button_launch(Object *o, struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
@@ -139,104 +136,71 @@ STRPTR get_start_type(struct Values *values, UWORD val) {
     return NULL;
 }
 
-VOID select_file(struct ButtonGadgetData *data, struct TR_Project *window)
+VOID select_target(struct ButtonGadgetData *data, struct TR_Project *window)
 {
-    STRPTR buf, t1, t2, t3;
-    BOOL freePath = FALSE;
-    struct FileRequester *fr;
-    ULONG len;
-    struct TagItem tags[] = {
-        { ASL_Hail, NULL /*"Choose an application"*/ },
-        { ASL_OKText, NULL /*"Select"*/ },
-        { ASL_CancelText, NULL /*"Cancel"*/ },
-        { ASL_File, NULL },
-        { ASL_Dir, NULL }
-    };        
-    
-    tags[0].ti_Data = (ULONG)MSG_FR_ChooseApplication;
-    tags[1].ti_Data = (ULONG)MSG_FR_OkText;
-    tags[2].ti_Data = (ULONG)MSG_FR_CancelText;
+    STRPTR newPath, newName;
+    UWORD len;
 
-    if( data->path ) {
+    if( newPath = DB_SelectFile(MSG_FR_ChooseApplication
+                                , MSG_FR_OkText
+                                , MSG_FR_CancelText
+                                , data->path) ) {
+        FREE_STRING(data->path);
+        data->path = newPath;
 
-        t1 = PathPart(data->path);
-        len = strlen(data->path) - strlen(t1) + 1;
-        if( buf = DB_AllocMem(len, MEMF_CLEAR) ) {
+        TR_SetAttribute(window, OBJ_TXT_PATH, TRAT_Text, (ULONG)data->path);
 
-            t2 = data->path;
-            t3 = buf;
-            while( t2 != t1 ) {
-                *(t3++) = *(t2++);
-            }
-
-            tags[4].ti_Data = (ULONG)buf;
-            freePath = TRUE;
+        FREE_STRING(data->name);
+        newName = FilePart(newPath);
+        len = strlen(newName) + 1;
+        if( data->name = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
+            CopyMem(newName, data->name, len);
         }
-    } else {
-        tags[4].ti_Data = (ULONG)DEFAULT_PATH;
-    }
-
-    if( fr = (struct FileRequester *)AllocAslRequest(ASL_FileRequest, tags) ) {
-        if( AslRequest(fr, NULL) ) {
-
-            FREE_STRING(data->path);
-
-            if( buf = DB_AllocMem(1024, MEMF_ANY) ) {
-                CopyMem(fr->rf_Dir, buf, strlen(fr->rf_Dir) + 1);
-                if( AddPart(buf, fr->rf_File, 1024) ) {
-                    len = strlen(buf) + 1;
-                    if( data->path = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
-                        CopyMem(buf, data->path, len);
-                    }
-                }
-                TR_SetAttribute(window, OBJ_TXT_PATH, TRAT_Text, (ULONG)data->path);
-                DB_FreeMem(buf, 1024);
-            }
-
-            FREE_STRING(data->name);
-            len = strlen(fr->rf_File) + 1;
-            if( data->name = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
-                CopyMem(fr->rf_File, data->name, len);
-            }
-            TR_SetAttribute(window, OBJ_STR_NAME, 0L, (ULONG)data->name);
+        TR_SetAttribute(window, OBJ_STR_NAME, 0L, (ULONG)data->name);
                 
-            if( data->diskObj ) {
-                FreeDiskObject(data->diskObj);
-            }
-            load_icon(data);
-            TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_DiskObj, (ULONG)data->diskObj); 
-
+        if( data->diskObj ) {
+            FreeDiskObject(data->diskObj);
         }
-        FreeAslRequest(fr);
-    }
+        load_icon(data);
+        TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_DiskObj, (ULONG)data->diskObj); 
+    }     
+}
 
-    if( freePath ) {
-        DB_FreeMem((VOID *)tags[4].ti_Data, strlen((STRPTR)tags[4].ti_Data) + 1);
+VOID select_brush(struct ButtonGadgetData *data, struct TR_Project *window)
+{
+    STRPTR newPath;
+
+    if( newPath = DB_SelectFile(MSG_FR_ChooseBrush
+                                , MSG_FR_OkText
+                                , MSG_FR_CancelText
+                                , data->brushPath) ) {
+        FREE_STRING(data->brushPath);
+        data->brushPath = newPath;
+        TR_SetAttribute(window, OBJ_STR_BRUSH, 0L, (ULONG)data->brushPath);
+
+        if( data->brushImg ) {
+            DB_FreeBrush(data->brushImg);   
+        }
+        data->brushImg = DB_LoadBrush(data->brushPath, TRUE);
     }
 }
 
-
 ULONG __saveds button_lib_init(struct ButtonLibData* cld)
 {
-    cld->aslBase = NULL;
-    AslBase = NULL;
-
     if( cld->dosBase = OpenLibrary("dos.library", 37) ) {
-        DOSBase = cld->dosBase;
-        if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
-            IconBase = cld->iconBase;
-            if( cld->aslBase = OpenLibrary("asl.library", 37) ) {
-                AslBase = cld->aslBase;
 
-                return 1;
-            }
-            CloseLibrary(cld->iconBase);
+        DOSBase = cld->dosBase;
+
+        if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
+
+            IconBase = cld->iconBase;
+
+            return 1;
         }
         CloseLibrary(cld->dosBase);
     }
     cld->iconBase = NULL;
     cld->dosBase = NULL;
-    cld->aslBase = NULL;
 
     return 0;
 }
@@ -251,10 +215,6 @@ ULONG __saveds button_lib_expunge(struct ButtonLibData *cld)
         CloseLibrary(cld->dosBase);
     }
 
-    if( cld->aslBase ) {
-        CloseLibrary(cld->aslBase);
-    }
-
     return 1;
 }
 
@@ -264,9 +224,14 @@ DB_METHOD_D(DISPOSE)
     FREE_STRING(data->args);
     FREE_STRING(data->con);    
     FREE_STRING(data->hotKey);
+    FREE_STRING(data->brushPath);
 
     if( data->diskObj ) {
         FreeDiskObject(data->diskObj);
+    }
+
+    if( data->brushImg ) {
+        DB_FreeBrush(data->brushImg);
     }
 
     return 1;
@@ -282,14 +247,26 @@ DB_METHOD_DM(DRAW, DockMessageDraw)
         return 1;
     }
 
-    if( data->diskObj ) {
+    if( data->brushImg ) {
+
+        DB_DrawBrush(data->brushImg,
+            msg->rp,
+            0, 0,
+            env.gadgetBounds.x + (env.gadgetBounds.w - data->imageW) / 2, 
+            env.gadgetBounds.y + (env.gadgetBounds.h - data->imageH) / 2,
+            data->imageW, data->imageH);
+
+    }
+    else if( data->diskObj ) {
 
         DrawIconState(msg->rp, data->diskObj, 
                 NULL, 
                 env.gadgetBounds.x + (env.gadgetBounds.w - data->imageW) / 2, 
                 env.gadgetBounds.y + (env.gadgetBounds.h - data->imageH) / 2,
                 data->iconState,
-                ICONDRAWA_Borderless, TRUE, TAG_END); 
+                ICONDRAWA_Borderless, TRUE, 
+                ICONDRAWA_EraseBackground, FALSE,
+                TAG_END); 
     }
 
     if( env.showBorders ) {
@@ -358,9 +335,17 @@ DB_METHOD_DM(GETSIZE,DockMessageGetSize)
     msg->w = DEFAULT_SIZE;
     msg->h = DEFAULT_SIZE;
 
-    if( data->diskObj ) {
+    if( data->brushImg ) {
+
+        DB_GetBrushSize(data->brushImg, &data->imageW, &data->imageH);
+        msg->w = data->imageW + 2;
+        msg->h = data->imageH + 2;     
+
+    } else if( data->diskObj ) {
+
         if( GetIconRectangle(NULL, data->diskObj, NULL, &r,
                 ICONDRAWA_Borderless, TRUE, TAG_END) ) {
+
             msg->w = data->imageW = r.MaxX - r.MinX + 1;
             msg->h = data->imageH = r.MaxY - r.MinY + 1;
         }
@@ -395,6 +380,11 @@ DB_METHOD_DM(READCONFIG,DockMessageConfig)
         else if( IS_KEY(S_HOTKEY, v) ) {
             GET_STRING(v, data->hotKey)
         }
+        else if( IS_KEY(S_BRUSH, v) ) {
+            GET_STRING(v, data->brushPath)
+
+            data->brushImg = DB_LoadBrush(data->brushPath, TRUE);
+        }
     }    
 
     load_icon(data);
@@ -410,6 +400,9 @@ DB_METHOD_DM(WRITECONFIG,DockMessageConfig)
     }
     if( data->path ) {
         DB_WriteSetting(s, S_PATH, data->path);
+    }
+    if( data->brushPath ) {
+        DB_WriteSetting(s, S_BRUSH, data->brushPath);
     }
     if( data->args ) {
         DB_WriteSetting(s, S_ARGS, data->args);
@@ -472,7 +465,17 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                     Space,
                     HorizGroup,
                         StringGadget(data->name, OBJ_STR_NAME),                
-                        GetFileButton(OBJ_BTN_SELECT),
+                        GetFileButton(OBJ_BTN_SELECT_TARGET),
+                    EndGroup,
+                    Space,  
+                EndLine,
+                BeginLine,
+                    Space,
+                    TextN(MSG_UI_Brush),
+                    Space,
+                    HorizGroup,
+                        StringGadget(data->brushPath, OBJ_STR_BRUSH),                
+                        GetFileButton(OBJ_BTN_SELECT_BRUSH),
                     EndGroup,
                     Space,  
                 EndLine,
@@ -532,8 +535,12 @@ DB_METHOD_DM(EDITOREVENT, DockMessageEditorEvent)
 
         case TRMS_ACTION:
             switch( msg->message->trm_ID ) {
-                case OBJ_BTN_SELECT:
-                    select_file(data, msg->window);
+                case OBJ_BTN_SELECT_TARGET:
+                    select_target(data, msg->window);
+                    break;
+            
+                case OBJ_BTN_SELECT_BRUSH:
+                    select_brush(data, msg->window);
                     break;
 
                 default:
@@ -559,11 +566,18 @@ DB_METHOD_DM(EDITORUPDATE, DockMessageEditorUpdate)
     FREE_STRING(data->args)
     FREE_STRING(data->con)
     FREE_STRING(data->hotKey)
+    FREE_STRING(data->brushPath)
 
     str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_NAME, 0);
     if( str && (len = strlen(str)) ) {        
         data->name = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
         CopyMem(str, data->name, len + 1);
+    }
+
+    str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_BRUSH, 0);
+    if( str && (len = strlen(str)) ) {        
+        data->brushPath = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
+        CopyMem(str, data->brushPath, len + 1);
     }
 
     str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_HOTKEY, 0);
@@ -582,8 +596,8 @@ DB_METHOD_DM(EDITORUPDATE, DockMessageEditorUpdate)
     if( str && (len = strlen(str)) ) {        
         data->con = (STRPTR)DB_AllocMem(len + 1, MEMF_ANY);
         CopyMem(str, data->con, len + 1);
-    }
-    
+    }   
+
     data->startType = (UWORD)TR_GetAttribute(proj, OBJ_CYC_START, TRAT_Value);
 
     return 1;

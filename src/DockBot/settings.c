@@ -28,6 +28,16 @@ BOOL load_config(struct DockWindow *dock)
 
             DEBUG(printf(__FUNC__ ":  config read\n"));
 
+            if( dock->cfg.bgBrushPath ) {
+
+                DEBUG(printf(__FUNC__ ":  load background %s...", dock->cfg.bgBrushPath));
+                if( dock->bgBrush = DB_LoadBrush(dock->cfg.bgBrushPath, FALSE) ) {
+                    DEBUG(printf("OK\n"));
+                } else {
+                    DEBUG(printf("FAILED\n"));
+                }
+            }
+
             FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
                 dock_gadget_added(curr->dg, dock->gadgetPort);

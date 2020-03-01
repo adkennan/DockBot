@@ -29,10 +29,27 @@ VOID dock_handle_draw(Class *c, Object *o, struct RastPort *rp)
 {
     struct DockHandleData *dhd;
     struct GadgetEnvironment env;
+    struct Screen *screen;
+    struct DrawInfo *drawInfo;
 
     dhd = INST_DATA(c,o);
 
     DB_GetDockGadgetEnvironment(o, &env);
+
+    if( screen = LockPubScreen(NULL) ) {
+    
+        if( drawInfo = GetScreenDrawInfo(screen) ) {
+
+            SetAPen(rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
+            RectFill(rp, env.gadgetBounds.x, env.gadgetBounds.y, 
+                env.gadgetBounds.x + env.gadgetBounds.w - 1,
+                env.gadgetBounds.y + env.gadgetBounds.h - 1);
+          
+            FreeScreenDrawInfo(screen, drawInfo);
+        }
+
+        UnlockPubScreen(NULL, screen);
+    }     
 
     if( dhd->counter == 0 ) {
         DB_DrawOutsetFrame(rp, &env.gadgetBounds);

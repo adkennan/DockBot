@@ -25,6 +25,8 @@ struct Library *UtilityBase;
 STRPTR positions[] = { 0/*"Left"*/, 0/*"Right"*/, 0/*"Top"*/, 0/*"Bottom"*/, NULL };
 STRPTR alignments[] = { 0/*"Top/Left"*/, 0/*"Center"*/, 0/*"Bottom/Right"*/, NULL };
 
+#define DEFAULT_PATH "SYS:"
+
 #ifdef DEBUG_BUILD
 
 BOOL __DebugEnabled = FALSE;
@@ -48,6 +50,37 @@ VOID parse_args(VOID)
 }
 
 #endif
+
+#define MAX_PATH_LEN 1024
+
+VOID update_background_path(struct DockPrefs *prefs, struct TR_Project *window, STRPTR newPath)
+{
+    FREE_STRING(prefs->cfg.bgBrushPath);
+
+    DEBUG(printf(__FUNC__ ": bgBrushPath = %s\n", newPath));
+
+    if( prefs->cfg.bgBrushPath = DB_AllocMem(strlen(newPath) + 1, MEMF_ANY) ) {
+                  
+        strcpy(prefs->cfg.bgBrushPath, newPath);
+
+        TR_SetAttribute(window, OBJ_BG_BRUSH, 0L, (ULONG)prefs->cfg.bgBrushPath);
+    }
+}
+
+VOID select_background(struct DockPrefs *prefs, struct TR_Project *window)
+{
+    STRPTR newPath;
+
+    if( newPath = DB_SelectFile(MSG_FR_ChooseBackground
+                                , MSG_OK
+                                , MSG_Cancel
+                                , prefs->cfg.bgBrushPath) ) {
+
+        update_background_path(prefs, window, newPath);
+
+        FREE_STRING(newPath);
+    }  
+}
 
 TR_Project *open_main_window(VOID) {
 
@@ -116,6 +149,17 @@ TR_Project *open_main_window(VOID) {
                             Space,
                             CheckBox(OBJ_SHOW_BORDERS),
                             Space,
+                        EndGroup,
+                        Space,
+                    EndLine,
+                    Space,
+                    BeginLine,
+                        Space,
+                        TextN(MSG_MW_Background),
+                        Space,
+                        HorizGroup,
+                            StringGadget(NULL, OBJ_BG_BRUSH),                
+                            GetFileButton(OBJ_BTN_BG_BRUSH),
                         EndGroup,
                         Space,
                     EndLine,
@@ -237,6 +281,10 @@ VOID run_event_loop(struct DockPrefs *prefs)
                                 save_config(prefs, FALSE);
                                 done = TRUE;
                                 break;
+                               
+                            case OBJ_BTN_BG_BRUSH:
+                                select_background(prefs, msgProj);
+                                break;
                         }
                         break;
 
@@ -260,6 +308,10 @@ VOID run_event_loop(struct DockPrefs *prefs)
 
                             case OBJ_SHOW_BORDERS:
                                 prefs->cfg.showGadgetBorders = (BOOL)msgData;
+                                break;
+
+                            case OBJ_BG_BRUSH:
+                                update_background_path(prefs, msgProj, (STRPTR)msgData);
                                 break;
                         }
                         break;
@@ -412,21 +464,23 @@ int main(char **argv, int argc)
                 prefs.cfg.pos = DP_RIGHT;
                 prefs.cfg.showGadgetLabels = TRUE;
                 prefs.cfg.showGadgetBorders = TRUE;
-
+                prefs.cfg.bgBrushPath = NULL;
+    
                 NewList(&prefs.cfg.gadgets);
                 NewList(&prefs.gadLabels);
                 NewList(&prefs.classes);
 
                 if( prefs.mainWindow = open_main_window() ) {
-
+    
                     if( load_config(&prefs) ) {
-
+    
                         if( DB_ListClasses(&prefs.classes) ) {
 
                             TR_SetAttribute(prefs.mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
                             TR_SetAttribute(prefs.mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
                             TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
                             TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_BORDERS, TRAT_Value, (ULONG)prefs.cfg.showGadgetBorders);
+                            TR_SetAttribute(prefs.mainWindow, OBJ_BG_BRUSH, 0L, (ULONG)prefs.cfg.bgBrushPath);
         
                             update_gadget_list(&prefs);
 
@@ -434,21 +488,20 @@ int main(char **argv, int argc)
 
                             run_event_loop(&prefs);
                                
-                            remove_dock_gadgets(&prefs);
-                            free_gadget_list(&prefs);
+                            free_config(&prefs);
 
-                            free_plugins(&prefs);
                         } else {
                             DB_ShowError((STRPTR)MSG_ERR_ClassList);
                         }
 
                     } else {
                         DB_ShowError((STRPTR)MSG_ERR_LoadConfig);
-                    }
+                        }
                     TR_CloseProject(prefs.mainWindow);            
                 } else { 
                     DB_ShowError((STRPTR)MSG_ERR_OpenWindow);
                 }
+
                 close_lib("utility.library", UtilityBase);
             }
             TR_CloseTriton();

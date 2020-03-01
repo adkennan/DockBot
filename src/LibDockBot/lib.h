@@ -38,10 +38,13 @@ struct DockBotLibrary {
     struct Library          *l_IntuitionBase;
     struct Library          *l_DOSBase;
     struct Library          *l_GfxBase;
+    struct Library          *l_DataTypesBase;
+    struct Library          *l_AslBase;
 
     struct MemoryControl    l_MemControl;
     struct IClass *         l_GadgetClass;
     struct MinList          l_ClassLibs;
+    struct List             l_Brushes;
     BPTR                    l_DebugOutput;
 };
 
@@ -59,7 +62,11 @@ VOID FreeGadgetClass(struct DockBotLibrary *lib);
 
 VOID ShowErrorInternal(STRPTR message);
 
+#ifdef DEBUG_BUILD
+
 VOID DebugLog(STRPTR fmt, ...);
+
+#endif
 
 #endif
 

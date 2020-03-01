@@ -14,7 +14,7 @@ Preferences editor for DockBot
 ; Generic
 ;
 MSG_OK (//)
-_OK
+OK
 MSG_Cancel (//)
 Cancel
 ;
@@ -100,6 +100,9 @@ Show Labels
 MSG_MW_ShowBorders (//)
 Show Borders
 ;
+MSG_MW_Background (//)
+Background Image
+;
 MSG_MW_Gadgets (//)
 Gadgets
 ;
@@ -137,4 +140,9 @@ Are you sure you want to delete this gadget?
 ;
 MSG_DEL_Buttons (//)
 _OK|Cancel
+;
+; Background image selector
+;
+MSG_FR_ChooseBackground (//)
+Choose a background
 ;

@@ -52,7 +52,7 @@ VOID layout_gadgets(struct DockWindow *dock)
     if( screen = LockPubScreen(NULL)) {
 
         if( ! dock->cfg.showGadgetBorders ) {
-            size = 2;   
+            size = 1;   
             x = 1;
             y = 1;                    
         } else {
@@ -98,8 +98,8 @@ VOID layout_gadgets(struct DockWindow *dock)
                 env.gadgetBounds.y = 0;
 
                 if( ! dock->cfg.showGadgetBorders ) {
-                    y += 3;
-                    env.gadgetBounds.y = 2;
+                    y += 1;
+                    env.gadgetBounds.y = 1;
                 }
                 
                 env.windowBounds.x = wx;
@@ -147,8 +147,8 @@ VOID layout_gadgets(struct DockWindow *dock)
                 env.gadgetBounds.x = 0;
 
                 if( ! dock->cfg.showGadgetBorders ) {
-                    x += 3;
-                    env.gadgetBounds.x = 2;
+                    x += 1;
+                    env.gadgetBounds.x = 1;
                 }
                 
                 env.windowBounds.x = wx;

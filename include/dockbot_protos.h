@@ -772,6 +772,12 @@ BOOL __asm __saveds DB_ListClasses(
 VOID __asm __saveds DB_ShowError(
     register __a0 STRPTR message);
 
+STRPTR __asm __saveds DB_SelectFile(
+    register __a0 STRPTR title,
+    register __a1 STRPTR okText,
+    register __a2 STRPTR cancelText,
+    register __a3 STRPTR path);
+
 /****** dockbot.library/DB_RegisterPort ************************************
 *
 *   NAME
@@ -877,5 +883,27 @@ VOID __asm __saveds DB_RegisterDebugStream(
 VOID __asm __saveds DB_DebugLog(
 	register __a0 STRPTR fmt,
 	register __a1 LONG *argv);
+
+APTR __asm __saveds DB_LoadBrush(
+    register __a0 STRPTR fileName,
+    register __d0 BOOL createMask);
+
+VOID __asm __saveds DB_FreeBrush(
+    register __a0 APTR brush);
+
+VOID __asm __saveds DB_DrawBrush(
+    register __a0 APTR brush,
+    register __a1 struct RastPort *rp,
+    register __d0 UWORD srcX,
+    register __d1 UWORD srcY,
+    register __d2 UWORD dstX,
+    register __d3 UWORD dstY,
+    register __d4 UWORD w,
+    register __d5 UWORD h);
+
+VOID __asm __saveds DB_GetBrushSize(
+    register __a0 APTR brush,
+    register __a1 UWORD *w,
+    register __a2 UWORD *h);
 
 #endif

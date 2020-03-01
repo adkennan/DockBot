@@ -473,6 +473,10 @@ BOOL __asm __saveds DB_ReadConfig(
                 else if( IS_KEY(S_BORDERS, v) ) {
                     GET_VALUE(v, BooleanValues, vals, l, cfg->showGadgetBorders)
                 }
+
+                else if( IS_KEY(S_BACKGROUND, v) ) {
+                    GET_STRING(v, cfg->bgBrushPath)
+                }
             }
         }
     }
@@ -502,6 +506,10 @@ BOOL __asm __saveds DB_WriteConfig(
         }
 
         if( ! DB_WriteSetting(settings, S_BORDERS, get_name(BooleanValues, cfg->showGadgetBorders) ) ) {
+            goto error;
+        }
+
+        if( cfg->bgBrushPath && ! DB_WriteSetting(settings, S_BACKGROUND, cfg->bgBrushPath) ) {
             goto error;
         }
 
@@ -546,8 +554,6 @@ struct DgNode * __asm __saveds DB_AllocGadget(
     struct DgNode *n;
     UWORD l;
     STRPTR nc;
-
-    DebugLog(__FUNC__ ": %s\n", name);
 
     l = strlen(name) + 1;
     if( nc = AllocMemInternal(DockBotBaseFull, l, MEMF_CLEAR) ) {

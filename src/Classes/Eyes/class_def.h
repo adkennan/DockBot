@@ -83,6 +83,7 @@ struct EyesGadgetData
 	struct AreaInfo ai;     //   > For off-screen drawing |
 	struct TmpRas tr;       //  /                         |
 	UBYTE *aiBuf, *trBuf;   // /                          |
+    struct BitMap *mask;
 	BOOL initialized;
     BOOL needsRedraw;
 };

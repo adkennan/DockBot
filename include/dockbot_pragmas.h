@@ -46,3 +46,10 @@
 /* Debug Logging*/
 #pragma libcall DockBotBase DB_RegisterDebugStream cc 801
 #pragma libcall DockBotBase DB_DebugLog d2 9802
+/* Brushes*/
+#pragma libcall DockBotBase DB_LoadBrush d8 0802
+#pragma libcall DockBotBase DB_FreeBrush de 801
+#pragma libcall DockBotBase DB_DrawBrush e4 5432109808
+#pragma libcall DockBotBase DB_GetBrushSize ea A9803
+/* File Requester*/
+#pragma libcall DockBotBase DB_SelectFile f0 BA9804
