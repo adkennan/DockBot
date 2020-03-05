@@ -77,6 +77,7 @@ enum {
 
 struct Library *DOSBase;
 struct Library *IconBase;
+struct Library *GfxBase;
 struct ButtonLibData *StaticData;
 
 VOID dock_button_launch(Object *o, struct ButtonGadgetData *dbd, Msg msg, STRPTR* dropNames, UWORD dropCount) 
@@ -111,11 +112,15 @@ VOID dock_button_launch(Object *o, struct ButtonGadgetData *dbd, Msg msg, STRPTR
     DB_RequestLaunch(o, dbd->path, args, dbd->con, dbd->startType == ST_WB ? TRUE : FALSE);
 }
 
-VOID load_icon(struct ButtonGadgetData *data)
+VOID load_icon(struct ButtonGadgetData *data, STRPTR path)
 {
     struct Screen *screen;
+
+    if( data->diskObj ) {
+        FreeDiskObject(data->diskObj);
+    }
     
-    if( data->diskObj = GetDiskObjectNew(data->path) ) {
+    if( data->diskObj = GetDiskObjectNew(path) ) {
         if( screen = LockPubScreen(NULL) ) {
 
             LayoutIconA(data->diskObj, screen, NULL);
@@ -138,51 +143,83 @@ STRPTR get_start_type(struct Values *values, UWORD val) {
 
 VOID select_target(struct ButtonGadgetData *data, struct TR_Project *window)
 {
-    STRPTR newPath, newName;
-    UWORD len;
+    STRPTR oldPath, newPath, newName;
+    UWORD l;
 
-    if( newPath = DB_SelectFile(MSG_FR_ChooseApplication
-                                , MSG_FR_OkText
-                                , MSG_FR_CancelText
-                                , data->path) ) {
-        FREE_STRING(data->path);
-        data->path = newPath;
+    oldPath = data->selectedPath == NULL ? data->path : data->selectedPath;
 
-        TR_SetAttribute(window, OBJ_TXT_PATH, TRAT_Text, (ULONG)data->path);
+    if( newPath = DB_SelectFile((STRPTR)MSG_FR_ChooseApplication
+                                , (STRPTR)MSG_FR_OkText
+                                , (STRPTR)MSG_FR_CancelText
+                                , oldPath) ) {
 
-        FREE_STRING(data->name);
-        newName = FilePart(newPath);
-        len = strlen(newName) + 1;
-        if( data->name = (STRPTR)DB_AllocMem(len, MEMF_CLEAR) ) {
-            CopyMem(newName, data->name, len);
-        }
-        TR_SetAttribute(window, OBJ_STR_NAME, 0L, (ULONG)data->name);
+        FREE_STRING(data->selectedPath);
+
+        l = strlen(newPath) + 1;        
+        if( data->selectedPath = (STRPTR)DB_AllocMem(l, MEMF_CLEAR) ) {
+    
+            CopyMem(newPath, data->selectedPath, l);
+            TR_SetAttribute(window, OBJ_TXT_PATH, TRAT_Text, (ULONG)data->selectedPath);
+
+            newName = FilePart(data->selectedPath);
+            TR_SetAttribute(window, OBJ_STR_NAME, 0L, (ULONG)newName);
                 
-        if( data->diskObj ) {
-            FreeDiskObject(data->diskObj);
+            load_icon(data, data->selectedPath);
+            TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_DiskObj, (ULONG)data->diskObj); 
         }
-        load_icon(data);
-        TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_DiskObj, (ULONG)data->diskObj); 
+
+        FREE_STRING(newPath);
     }     
 }
 
-VOID select_brush(struct ButtonGadgetData *data, struct TR_Project *window)
+BOOL set_brush(struct ButtonGadgetData *data, struct TR_Project *window, STRPTR newPath)
 {
-    STRPTR newPath;
-
-    if( newPath = DB_SelectFile(MSG_FR_ChooseBrush
-                                , MSG_FR_OkText
-                                , MSG_FR_CancelText
-                                , data->brushPath) ) {
-        FREE_STRING(data->brushPath);
-        data->brushPath = newPath;
-        TR_SetAttribute(window, OBJ_STR_BRUSH, 0L, (ULONG)data->brushPath);
+    DEBUG(DB_Printf(__METHOD__ "newPath = %s\n", newPath));
+    
+    if( newPath ) {
 
         if( data->brushImg ) {
             DB_FreeBrush(data->brushImg);   
         }
-        data->brushImg = DB_LoadBrush(data->brushPath, TRUE);
+
+        data->brushImg = DB_LoadBrush(newPath, TRUE);
+
+        TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_Brush, (ULONG)data->brushImg);
+
+        return TRUE;
     }
+
+    return FALSE;
+}
+
+VOID select_brush(struct ButtonGadgetData *data, struct TR_Project *window)
+{
+    STRPTR oldPath, newPath;
+    
+    DEBUG(DB_Printf(__METHOD__ "\n"));
+
+    oldPath = (STRPTR)TR_GetAttribute(window, OBJ_STR_BRUSH, 0L);
+
+    if( newPath = DB_SelectFile((STRPTR)MSG_FR_ChooseBrush
+                                , (STRPTR)MSG_FR_OkText
+                                , (STRPTR)MSG_FR_CancelText
+                                , oldPath) ) {
+
+        DEBUG(DB_Printf(__METHOD__ "newPath = %s\n", newPath));
+
+        if( set_brush(data, window, newPath) ) {
+    
+            DEBUG(DB_Printf(__METHOD__ "Set UI brush path\n"));            
+
+            TR_SetAttribute(window, OBJ_STR_BRUSH, 0L, (ULONG)newPath);
+        }
+
+        DEBUG(DB_Printf(__METHOD__, "Free path string\n"));
+
+        FREE_STRING(newPath);
+    }
+
+    DEBUG(DB_Printf(__METHOD__ "Done\n"));    
 }
 
 ULONG __saveds button_lib_init(struct ButtonLibData* cld)
@@ -191,11 +228,17 @@ ULONG __saveds button_lib_init(struct ButtonLibData* cld)
 
         DOSBase = cld->dosBase;
 
-        if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
+        if( cld->gfxBase = OpenLibrary("graphics.library", 37) ) {
 
-            IconBase = cld->iconBase;
+            GfxBase = cld->gfxBase;
 
-            return 1;
+            if( cld->iconBase = OpenLibrary("icon.library", 46) ) {
+
+                IconBase = cld->iconBase;
+
+                return 1;
+            }
+            CloseLibrary(cld->gfxBase);
         }
         CloseLibrary(cld->dosBase);
     }
@@ -209,6 +252,10 @@ ULONG __saveds button_lib_expunge(struct ButtonLibData *cld)
 {
     if( cld->iconBase ) {
         CloseLibrary(cld->iconBase);
+    }
+
+    if( cld->gfxBase ) {
+        CloseLibrary(cld->gfxBase);
     }
 
     if( cld->dosBase ) {
@@ -387,7 +434,7 @@ DB_METHOD_DM(READCONFIG,DockMessageConfig)
         }
     }    
 
-    load_icon(data);
+    load_icon(data, data->path);
 
     return 1;
 }
@@ -438,6 +485,12 @@ DB_METHOD_M(CANEDIT, DockMessageCanEdit)
 
 DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
 
+    struct IconInit *ii = NULL;
+
+    if( ii = (struct IconInit *)DB_AllocMem(sizeof(struct IconInit), MEMF_ANY) ) {
+        ii->DiskObj = data->diskObj;
+        ii->Brush = data->brushImg;
+    }
 
     startTypes[0] = (STRPTR)MSG_ST_Workbench;
     startTypes[1] = (STRPTR)MSG_ST_Shell;
@@ -447,7 +500,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
             Space,
             HorizGroupC,
                 Space,
-                TROB_Icon, data->diskObj, ID(OBJ_ICON),
+                TROB_Icon, ii, ID(OBJ_ICON),
                 Space,
             EndGroup,
             Space,
@@ -469,6 +522,7 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
                     EndGroup,
                     Space,  
                 EndLine,
+                Space,
                 BeginLine,
                     Space,
                     TextN(MSG_UI_Brush),
@@ -528,6 +582,10 @@ DB_METHOD_DM(EDITOREVENT, DockMessageEditorEvent)
                     TR_SetAttribute(msg->window, OBJ_STR_CON, TRAT_Disabled, msg->message->trm_Data == ST_WB);
                     break;
 
+                case OBJ_STR_BRUSH:
+                    set_brush(data, msg->window, (STRPTR)msg->message->trm_Data);
+                    break;
+
                 default:
                     break;
             }
@@ -567,6 +625,12 @@ DB_METHOD_DM(EDITORUPDATE, DockMessageEditorUpdate)
     FREE_STRING(data->con)
     FREE_STRING(data->hotKey)
     FREE_STRING(data->brushPath)
+
+    if( data->selectedPath ) {
+        FREE_STRING(data->path)
+        data->path = data->selectedPath;
+        data->selectedPath = NULL;
+    }
 
     str = (STRPTR)TR_GetAttribute(proj, OBJ_STR_NAME, 0);
     if( str && (len = strlen(str)) ) {        
@@ -637,7 +701,7 @@ DB_METHOD_DM(INITBUTTON,DockMessageInitButton)
     data->hotKey = NULL;
     data->con = NULL;
 
-    load_icon(data);
+    load_icon(data, data->path);
 
     return 1;
 }

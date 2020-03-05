@@ -17,6 +17,7 @@ The main DockBot window is called the Dock. It contains a number of "gadgets" th
 @{"TODO" link todo}
 @{"Contact Me" link contact}
 @{"Thanks" link thanks}
+@{"History" link history}
 
 DockBot is free software released under the @{"MIT licence" link licence}.
 
@@ -86,6 +87,10 @@ Alignment can be one of Top/Left, Centre or Bottom/Right. This lets you control 
 
 When checked, the Show Labels checkbox will cause a tooltip to be displayed next to gadgets when the mouse is hovered over the window.
 
+The Show Borders checkbox controls whether individual gadgets will draw borders around themselves.
+
+Background Image selects a picture to display behind the gadgets. Any image format you have a DataType for can be used.
+
 There are two ways to add a gadget to the dock:
 
 - You can drag an icon from a Workbench window onto the DockBotPrefs window.
@@ -115,6 +120,7 @@ A Button in DockBot represents an executable file. DockBot will display the icon
 Buttons have the following options:
 
 - Name - a label for the button. Defaults to the name of the application.
+- Image - selects an image to display instead of the application's icon. Can be any format you have a DataType for.
 - Arguments - command line arguments to pass to the application. 
 - Key - A global hotkey to use for launching the application. See the section on CS_POPKEY in the Workbench User's Guide for acceptable key combinations.
 - Start Type - Either Workbench or Shell. Select Workbench for applications that are started by double-clicking an icon. Use Shell for applications started from the CLI.
@@ -367,3 +373,54 @@ I'd like to thank the following people for their contributions to DockBot:
 Your suggestions and contributions make me want to keep developing DockBot.
 
 @endnode
+
+@node history "History - The DockBot Manual"
+
+
+Version 1.8 (05-Mar-2020):
+
+* Button gadget can now use any image, not just the icon of the file.
+* A background image can be set for the Dock.
+
+Version 1.7 (07-Feb-2020):
+
+* Fixed bug in Eyes that crashed when the Dock is horizontal.
+* Improved keyboard response in Switcher.
+* Added option to hide icon borders.
+
+Version 1.6 (27-Jan-2020):
+
+* New Window Switcher and Eyes gadgets.
+* Clicking the Clock gadget will launch the Time prefs.
+* French translation from flype.
+* Fixed a few bugs around memory usage.
+
+Version 1.5 (21-Dec-2019):
+
+* Added support for screennotify.library. Thanks flype!
+* Moved all strings to translatable catalogs. 
+* Added Spanish catalog. Thanks Gulliver!
+* Changed styling of Memory Meter gadget.
+* Reworked Clock Gadget to handle linefeeds in format string.
+
+Version 1.2 (17-Aug-2019):
+
+* Fixed bug in horizontal alignment of main window.
+* Cancel in Prefs window now reverts to last saved config.
+
+Version 1.1 (21-Jun-2019):
+
+* Fixed issues with the installer that prevented DockBot from running.
+
+Version 1.0 (20-Jun-2019):
+
+* Initial version with a broken installer.
+
+Prehistory:
+
+I initially worked on DockBot from around April 2016 to February 2017 before getting distracted by other things.
+
+In June 2019 I decided to finally get it into shape for release.
+
+@endnode
+

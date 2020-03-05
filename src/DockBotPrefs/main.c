@@ -55,15 +55,13 @@ VOID parse_args(VOID)
 
 VOID update_background_path(struct DockPrefs *prefs, struct TR_Project *window, STRPTR newPath)
 {
+    UWORD l;
+
     FREE_STRING(prefs->cfg.bgBrushPath);
 
-    DEBUG(printf(__FUNC__ ": bgBrushPath = %s\n", newPath));
-
-    if( prefs->cfg.bgBrushPath = DB_AllocMem(strlen(newPath) + 1, MEMF_ANY) ) {
-                  
-        strcpy(prefs->cfg.bgBrushPath, newPath);
-
-        TR_SetAttribute(window, OBJ_BG_BRUSH, 0L, (ULONG)prefs->cfg.bgBrushPath);
+    l = strlen(newPath) + 1;
+    if( prefs->cfg.bgBrushPath = (STRPTR)DB_AllocMem(l, MEMF_CLEAR) ) {
+        CopyMem(newPath, prefs->cfg.bgBrushPath, l);
     }
 }
 
@@ -71,12 +69,14 @@ VOID select_background(struct DockPrefs *prefs, struct TR_Project *window)
 {
     STRPTR newPath;
 
-    if( newPath = DB_SelectFile(MSG_FR_ChooseBackground
-                                , MSG_OK
-                                , MSG_Cancel
+    if( newPath = DB_SelectFile((STRPTR)MSG_FR_ChooseBackground
+                                , (STRPTR)MSG_OK
+                                , (STRPTR)MSG_Cancel
                                 , prefs->cfg.bgBrushPath) ) {
 
         update_background_path(prefs, window, newPath);
+
+        TR_SetAttribute(window, OBJ_BG_BRUSH, 0L, (ULONG)prefs->cfg.bgBrushPath);
 
         FREE_STRING(newPath);
     }  
@@ -158,7 +158,7 @@ TR_Project *open_main_window(VOID) {
                         TextN(MSG_MW_Background),
                         Space,
                         HorizGroup,
-                            StringGadget(NULL, OBJ_BG_BRUSH),                
+                            StringGadget(NULL, OBJ_BG_BRUSH),
                             GetFileButton(OBJ_BTN_BG_BRUSH),
                         EndGroup,
                         Space,

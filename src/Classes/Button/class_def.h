@@ -55,6 +55,7 @@ struct ButtonLibData
 {
 	struct Library *iconBase;
 	struct Library *dosBase;
+    struct Library *gfxBase;
 };
 
 struct ButtonGadgetData
@@ -72,7 +73,7 @@ struct ButtonGadgetData
     UWORD startType;
     UWORD counter;
     UWORD iconState;
-    STRPTR lastPath;
+    STRPTR selectedPath;
 };
 
 #endif

@@ -18,6 +18,11 @@ This archive includes source code and binaries compiled for 68000, 68020 and
 
 Changes:
 
+Version 1.8:
+
+* Button gadget can now use any image, not just the icon of the file.
+* A background image can be set for the Dock.
+
 Version 1.7:
 
 * Fixed bug in Eyes that crashed when the Dock is horizontal.

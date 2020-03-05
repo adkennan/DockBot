@@ -129,7 +129,7 @@ PLANEPTR CreateMaskPlane(struct BitMap *bm)
         stride = bpr * (d - 1);    // Step between each row.
     }
 
-    if( mask = DB_AllocMem(bm->BytesPerRow * bm->Rows, MEMF_CHIP|MEMF_CLEAR)) {
+    if( mask = AllocMemInternal(DockBotBaseFull, bm->BytesPerRow * bm->Rows, MEMF_CHIP|MEMF_CLEAR)) {
 
         byte = mask;
 
@@ -174,10 +174,11 @@ APTR __asm __saveds DB_LoadBrush(
     struct Brush *b;
     APTR img;
     struct Screen *screen;
-    struct dtFrameBox fb;
-    struct FrameInfo fi;
+//    struct dtFrameBox fb;
+//    struct FrameInfo fi;
     struct gpLayout lo;
     struct BitMap *bm;
+    struct BitMapHeader *bmhd;
 
     UWORD l = strlen(fileName) + 1;
 
@@ -205,7 +206,7 @@ APTR __asm __saveds DB_LoadBrush(
                 CopyMem(fileName, b->n.ln_Name, l);
 
                 b->image = img;
-
+/*
                 fb.MethodID = DTM_FRAMEBOX;
                 fb.dtf_GInfo = NULL;
                 fb.dtf_ContentsInfo = NULL; 
@@ -217,15 +218,20 @@ APTR __asm __saveds DB_LoadBrush(
 
                 b->w = fi.fri_Dimensions.Width;
                 b->h = fi.fri_Dimensions.Height;
-
+*/
                 lo.MethodID = DTM_PROCLAYOUT;
                 lo.gpl_GInfo = NULL;
                 lo.gpl_Initial = 1L;
 
                 if( DoMethodA(img, (Msg)&lo) ) {
 
-                    GetDTAttrs(img, PDTA_BitMap, &bm, TAG_END);
-                    b->bm = bm;
+                    GetDTAttrs(img, 
+                        PDTA_BitMapHeader, &bmhd,
+                        PDTA_BitMap, &b->bm, 
+                        TAG_END);
+
+                    b->w = bmhd->bmh_Width;
+                    b->h = bmhd->bmh_Height;
 
                     if( createMask ) {
                         b->maskPlane = CreateMaskPlane(b->bm);
@@ -260,7 +266,7 @@ VOID __asm __saveds DB_FreeBrush(
     struct Brush *b = (struct Brush *)brush;
 
     if( b->maskPlane ) {
-        DB_FreeMem(b->maskPlane, b->bm->BytesPerRow * b->bm->Rows);
+        FreeMemInternal(DockBotBaseFull, b->maskPlane, b->bm->BytesPerRow * b->bm->Rows);
     }
 
     if( b->image ) {

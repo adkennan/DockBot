@@ -18,6 +18,8 @@
 
 #include <string.h>
 
+#include "dockbot.h"
+
 #include "lib.h"
 
 #define DEFAULT_PATH "SYS:"
@@ -73,7 +75,7 @@ STRPTR __asm __saveds DB_SelectFile(
         initialLen = strlen(path) + 1;
         if( initialDir = AllocMemInternal(DockBotBaseFull, initialLen, MEMF_CLEAR) ) {
 
-            strcpy(initialDir, path);
+            CopyMem(path, initialDir, initialLen);
 
             initialFile = FilePart(initialDir);
             *(initialFile - 1) = '\0';
@@ -93,18 +95,24 @@ STRPTR __asm __saveds DB_SelectFile(
         if( AslRequest(fr, NULL) ) {
 
             selectedLen = strlen(fr->rf_Dir) + strlen(fr->rf_File) + 2;
-            if( selectedFile = AllocMemInternal(DockBotBaseFull, selectedLen, MEMF_ANY) ) {
+
+            DEBUG(DebugLog(" selectedLen = %ld, rf_Dir = %s, rf->File = %s\n",
+                (LONG)selectedLen, fr->rf_Dir, fr->rf_File));
+
+            if( selectedFile = AllocMemInternal(DockBotBaseFull, selectedLen, MEMF_CLEAR) ) {
               
-                strcpy(selectedFile, fr->rf_Dir);
+                CopyMem(fr->rf_Dir, selectedFile, strlen(fr->rf_Dir));
 
                 AddPart(selectedFile, fr->rf_File, selectedLen);
+
+                DEBUG(DebugLog(" selectedFile = %s\n", selectedFile));
             }
         }
         FreeAslRequest(fr);
     }
 
     if( freeInitial ) {
-        FreeMemInternal(DockBotBaseFull, (VOID *)tags[4].ti_Data, initialLen);
+        FreeMemInternal(DockBotBaseFull, initialDir, initialLen);
     }
 
     return selectedFile;
