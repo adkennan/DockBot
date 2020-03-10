@@ -76,6 +76,11 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
     struct TextAttr ta;
     BYTE buf[32];
     struct Rect frame;
+
+    if( total > 2 << 25 ) {
+        total /= 100;
+        free /= 100;
+    }
     
     frame.x = bounds->x;
     frame.h = bounds->h / 2;
@@ -96,7 +101,7 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
 
     frame.x += 1;
     frame.y += 1;
-    frame.w = (((((total - free) * 100) / total) * frame.w) / 100) - 2;
+    frame.w = (((((total - free) * 100L) / total) * frame.w) / 100L) - 2;
     frame.h -= 2;
 
     SetAPen(rp, di->dri_Pens[FILLPEN]);
@@ -104,7 +109,7 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
 
     DB_DrawOutsetFrame(rp, &frame);
     
-    sprintf((STRPTR)&buf, label, (free * 100) / total);
+    sprintf((STRPTR)&buf, label, (free * 100L) / total);
 
     text.ITextFont = &ta;
     text.ITextFont->ta_Name = di->dri_Font->tf_Message.mn_Node.ln_Name;

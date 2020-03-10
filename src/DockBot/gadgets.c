@@ -209,6 +209,7 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
     struct Window *win;
     struct RastPort *rp;
     struct GadgetEnvironment env;
+    struct Rect r;
 
     if( dock->win ) {
     
@@ -220,6 +221,16 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
         fill_background(dock, rp, &env.gadgetBounds);
 
         dock_gadget_draw(gadget, rp);
+
+        if( ! dock->cfg.showGadgetBorders ) {
+
+            r.x = 0;
+            r.y = 0;
+            r.w = win->Width;
+            r.h = win->Height;
+
+            DB_DrawOutsetFrame(rp, &r);
+        }
     }
 }
 

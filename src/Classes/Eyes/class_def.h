@@ -19,8 +19,8 @@
 // Class Information
 #define CLASS_NAME      "Eyes"
 #define CLASS_VERSION   1
-#define CLASS_REVISION  0
-#define CLASS_VER_STR   "1.0 (" DS ")"
+#define CLASS_REVISION  1
+#define CLASS_VER_STR   "1.1 (" DS ")"
 #define CLASS_COPYRIGHT "© 2020 Andrew Kennan"
 
 // Global data struct

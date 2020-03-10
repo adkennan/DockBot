@@ -14,9 +14,9 @@
 
 #define CLASS_NAME      "DockButton"
 #define CLASS_VERSION   1
-#define CLASS_REVISION  2
-#define CLASS_VER_STR   "1.2 (" DS ")"
-#define CLASS_COPYRIGHT "© 2019 Andrew Kennan"
+#define CLASS_REVISION  3
+#define CLASS_VER_STR   "1.3 (" DS ")"
+#define CLASS_COPYRIGHT "© 2020 Andrew Kennan"
 #define PRIVATE_DATA    ButtonGadgetData
 #define PARENT_CLASS    DB_ROOT_CLASS
 

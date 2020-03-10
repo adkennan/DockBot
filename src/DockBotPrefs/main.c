@@ -158,7 +158,7 @@ TR_Project *open_main_window(VOID) {
                         TextN(MSG_MW_Background),
                         Space,
                         HorizGroup,
-                            StringGadget(NULL, OBJ_BG_BRUSH),
+                            StringGadget(NULL, OBJ_BG_BRUSH),TRAT_Value,200L,
                             GetFileButton(OBJ_BTN_BG_BRUSH),
                         EndGroup,
                         Space,

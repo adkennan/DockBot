@@ -24,9 +24,9 @@
 
 #define CLASS_NAME      "Switcher"
 #define CLASS_VERSION   1
-#define CLASS_REVISION  0
-#define CLASS_VER_STR   "1.0 (" DS ")"
-#define CLASS_COPYRIGHT "© 2019 Andrew Kennan"
+#define CLASS_REVISION  1
+#define CLASS_VER_STR   "1.1 (" DS ")"
+#define CLASS_COPYRIGHT "© 2020 Andrew Kennan"
 #define PRIVATE_DATA    SwitcherGadgetData
 #define PARENT_CLASS    DB_ROOT_CLASS
 
