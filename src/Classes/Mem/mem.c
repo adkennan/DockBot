@@ -77,7 +77,7 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
     BYTE buf[32];
     struct Rect frame;
 
-    if( total > 2 << 25 ) {
+    while( total > 2 << 25 ) {
         total /= 100;
         free /= 100;
     }

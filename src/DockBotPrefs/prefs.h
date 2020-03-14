@@ -91,6 +91,8 @@ struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *btn, STRPTR name
 
 VOID remove_dock_gadget(struct DgNode *dg);
 
+VOID init_config(struct DockPrefs *prefs);
+
 BOOL load_config(struct DockPrefs *prefs);
 
 BOOL save_config(struct DockPrefs *prefs, BOOL permanent);

@@ -77,6 +77,21 @@ VOID free_plugins(struct DockPrefs *prefs)
     }
 }
 
+VOID init_config(struct DockPrefs *prefs)
+{
+    DEBUG(printf(__FUNC__ "\n"));
+
+    prefs->cfg.align = DA_CENTER;
+    prefs->cfg.pos = DP_RIGHT;
+    prefs->cfg.showGadgetLabels = TRUE;
+    prefs->cfg.showGadgetBorders = TRUE;
+    prefs->cfg.bgBrushPath = NULL;
+    
+    NewList(&prefs->cfg.gadgets);
+    NewList(&prefs->gadLabels);
+    NewList(&prefs->classes);
+}
+
 VOID free_config(struct DockPrefs *prefs) 
 {
     DEBUG(printf(__FUNC__ "\n"));
@@ -87,6 +102,7 @@ VOID free_config(struct DockPrefs *prefs)
 
     free_plugins(prefs);
 
+    DEBUG(printf(__FUNC__ ": Freeing %s\n", prefs->cfg.bgBrushPath));
     FREE_STRING(prefs->cfg.bgBrushPath);
 }
 

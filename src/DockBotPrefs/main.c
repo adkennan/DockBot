@@ -460,15 +460,7 @@ int main(char **argv, int argc)
 
             if( UtilityBase = open_lib("utility.library", 37) ) {
 
-                prefs.cfg.align = DA_CENTER;
-                prefs.cfg.pos = DP_RIGHT;
-                prefs.cfg.showGadgetLabels = TRUE;
-                prefs.cfg.showGadgetBorders = TRUE;
-                prefs.cfg.bgBrushPath = NULL;
-    
-                NewList(&prefs.cfg.gadgets);
-                NewList(&prefs.gadLabels);
-                NewList(&prefs.classes);
+                init_config(&prefs);
 
                 if( prefs.mainWindow = open_main_window() ) {
     

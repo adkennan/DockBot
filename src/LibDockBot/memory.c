@@ -172,9 +172,9 @@ VOID FreeMemInternal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSi
 
         DebugLog("MEMORY ERROR! block = %08lx, PREFIX %08lx %08lx, SIZE %ld %ld SUFFIX %08lx, %08lx\n", 
             memoryBlock, MEM_PREFIX, prefix, byteSize, size, MEM_SUFFIX, suffix);
+    } else {
+        FreeMemInternalReal(lib, m, actualSize);
     }
-
-    FreeMemInternalReal(lib, m, actualSize);
 }
 
 VOID FreeMemInternalReal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG byteSize)

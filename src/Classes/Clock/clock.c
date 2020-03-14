@@ -216,9 +216,13 @@ ULONG __saveds clock_lib_expunge(struct ClockLibData *cld)
 
 DB_METHOD_D(NEW)
 
+    DEBUG(DB_Printf(__METHOD__ "\n"));
+
+    NewList((struct List *)&data->lines);
+
     if( data->locale = OpenLocale(NULL) ) {
 
-        NewList((struct List *)&data->lines);
+        DEBUG(DB_Printf(__METHOD__ " Got Locale\n"));
 
         return 1;
     }
@@ -227,19 +231,32 @@ DB_METHOD_D(NEW)
 
 DB_METHOD_D(DISPOSE)
 
+    DEBUG(DB_Printf(__METHOD__ "\n"));
+
     if( data->locale ) {
+        DEBUG(DB_Printf(__METHOD__ " CloseLocale\n"));
         CloseLocale(data->locale);
     }
     
     while( ! IsListEmpty((struct List *)&data->lines) ) {
-        DB_FreeMem(RemHead((struct List *)&data->lines), sizeof(struct TextLine));
+
+        DEBUG(DB_Printf(__METHOD__ " Free Line\n"));
+
+        DB_FreeMem(RemTail((struct List *)&data->lines), sizeof(struct TextLine));
     }
 
     if( data->splitFormat ) {
+
+        DEBUG(DB_Printf(__METHOD__ " Free splitFormat\n"));
+
         DB_FreeMem(data->splitFormat, strlen(data->format) + 1);
     }
 
+    DEBUG(DB_Printf(__METHOD__ " Free format\n"));
+
     FREE_STRING(data->format);
+
+    DEBUG(DB_Printf(__METHOD__ " Done\n"));
 
     return 1;
 }

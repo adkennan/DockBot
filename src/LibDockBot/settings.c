@@ -586,6 +586,8 @@ VOID __asm __saveds DB_FreeGadget(
 {
     struct PortReg *pr;
 
+    DEBUG(DebugLog(__FUNC__ ": Freeing %s\n", dg->n.ln_Name));
+   
     FREE_STRING(dg->n.ln_Name);
 
     DB_DisposeDockGadget(dg->dg);
@@ -599,6 +601,8 @@ VOID __asm __saveds DB_FreeGadget(
     }
 
     FreeMemInternal(DockBotBaseFull, dg, sizeof(struct DgNode));    
+
+    DEBUG(DebugLog(__FUNC__ ": Done.\n"));
 }
 
 VOID __asm __saveds DB_DisposeConfig(

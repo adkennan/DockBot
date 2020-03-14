@@ -34,11 +34,12 @@ struct Brush {
     struct BitMap *bm;
     PLANEPTR maskPlane;
     UWORD w, h, d;
+    UWORD refCount;
     BOOL interleaved;
     BOOL freeMask;
 };
 
-static VOID draw_frame(struct RastPort *rp, struct Rect* b, int p1, int p2)
+static VOID DrawFrame(struct RastPort *rp, struct Rect* b, int p1, int p2)
 {
     struct Screen *screen;
     struct DrawInfo *di;
@@ -92,29 +93,27 @@ VOID __asm __saveds DB_DrawOutsetFrame(
 	register __a0 struct RastPort *rp, 
 	register __a1 struct Rect *bounds)
 {
-    draw_frame(rp, bounds, SHADOWPEN, SHINEPEN);
+    DrawFrame(rp, bounds, SHADOWPEN, SHINEPEN);
 }
 
 VOID __asm __saveds DB_DrawInsetFrame(
 	register __a0 struct RastPort *rp,  
 	register __a1 struct Rect *bounds)
 {
-    draw_frame(rp, bounds, SHINEPEN, SHADOWPEN);
+    DrawFrame(rp, bounds, SHINEPEN, SHADOWPEN);
 }
 
 PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL interleaved)
 {
     struct RastPort srcRp;
     PLANEPTR mask = NULL, byte, plane;
-    UWORD x, y, p, bit, stride, bpr;
+    UWORD x, y, p, bit, stride = 0, bpr, rep = 1;
     UBYTE v = 0;
 
     InitRastPort(&srcRp);
     srcRp.BitMap = bm;
     
-    stride = 0;    
     bpr = bm->BytesPerRow;
-
     if( interleaved ) {
 
         /* ILBMs man...
@@ -126,6 +125,7 @@ PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL inte
         */
         bpr = bm->BytesPerRow / d; // Number of _actual_ bytes per row.
         stride = bpr * (d - 1);    // Step between each row.
+        rep = d;
     }
 
     if( mask = AllocMemInternal(DockBotBaseFull, bm->BytesPerRow * bm->Rows, MEMF_CHIP|MEMF_CLEAR)) {
@@ -146,7 +146,7 @@ PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL inte
                 if( bit == 0 ) {
 
                     // Copy the byte to each plane.
-                    for( p = 0, plane = byte; p < d; p++, plane += bpr ) {
+                    for( p = 0, plane = byte; p < rep; p++, plane += bpr ) {
                         *plane = v;
                     }
 
@@ -182,6 +182,7 @@ APTR __asm __saveds DB_LoadBrush(
          b = (struct Brush *)b->n.ln_Succ ) {
     
         if( strcmp(fileName, b->n.ln_Name) == 0 ) {
+            b->refCount++;
             return b;
         }
     }
@@ -191,7 +192,7 @@ APTR __asm __saveds DB_LoadBrush(
         if( img = NewDTObject(fileName, DTA_GroupID, GID_PICTURE, 
                                         PDTA_Remap, FALSE,
                                         PDTA_Screen, screen, 
-                                        OBP_Precision, PRECISION_GUI,
+                                        OBP_Precision, PRECISION_EXACT,
                                         OBP_FailIfBad, FALSE,
                                         PDTA_FreeSourceBitMap, TRUE,
                                         PDTA_DestMode, 1L, // PMODE_V43
@@ -234,6 +235,8 @@ APTR __asm __saveds DB_LoadBrush(
 
                     AddTail(&DockBotBaseFull->l_Brushes, (struct Node *)b);
 
+                    b->refCount = 1;
+
                     return b;
                 } else {
                     DEBUG(DebugLog("DTM_PROCLAYOUT failed\n"));
@@ -260,17 +263,24 @@ VOID __asm __saveds DB_FreeBrush(
 {
     struct Brush *b = (struct Brush *)brush;
 
-    if( b->maskPlane && b->freeMask ) {
-        FreeMemInternal(DockBotBaseFull, b->maskPlane, b->bm->BytesPerRow * b->bm->Rows);
+    if( b->refCount > 1 ) {
+
+        b->refCount--;
+
+    } else if( b->refCount == 1 ) {
+
+        if( b->maskPlane && b->freeMask ) {
+            FreeMemInternal(DockBotBaseFull, b->maskPlane, b->bm->BytesPerRow * b->bm->Rows);
+        }
+
+        if( b->image ) {
+            DisposeDTObject(b->image);
+        }
+
+        Remove(&b->n);
+
+        FreeMemInternal(DockBotBaseFull, b, sizeof(struct Brush) + strlen(b->n.ln_Name) + 1);
     }
-
-    if( b->image ) {
-        DisposeDTObject(b->image);
-    }
-
-    Remove(&b->n);
-
-    FreeMemInternal(DockBotBaseFull, b, sizeof(struct Brush) + strlen(b->n.ln_Name) + 1);
 }
 
 VOID __asm __saveds DB_DrawBrush(
