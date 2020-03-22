@@ -1,15 +1,15 @@
-## version $VER: DockMem.catalog 1.0 (2019-11-26)
-## language español
+## version $VER: DockMem.catalog 1.0 (2020-03-22)
+## language français
 ## codeset 0
 ;
 ;#language english
 ;#version 1
 ;
-; DockClock
+; DockMem
 ;
 ;
 MSG_Description
-Un medidor de memoria para DockBot
+Un moniteur de mémoire pour DockBot
 ; A memory meter for DockBot
 ;
 MSG_LBL_Chip
@@ -17,6 +17,6 @@ Chip %d%%
 ; Chip %d%%
 ;
 MSG_LBL_Fast
-Rápida %d%%
+Fast %d%%
 ; Fast %d%%
 ;

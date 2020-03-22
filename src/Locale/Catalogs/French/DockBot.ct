@@ -1,5 +1,5 @@
-## version $VER: DockBot.catalog 1.0 (2019-11-26)
-## language español
+## version $VER: DockBot.catalog 1.0 (2020-03-22)
+## language français
 ## codeset 0
 ;
 ;#language english
@@ -19,55 +19,55 @@ OK
 ; Error returned when OpenLibrary fails.
 ;
 MSG_ERR_OpenLibrary
-No es posible abrir version %d de %s.
+Impossible d'ouvrir la version %d de %s.
 ; Unable to open version %d of %s.
 ; Menu Strings
 MSG_MENU_Project
-Proyecto
+Projet
 ; Project
 ;
 MSG_MENU_Settings
-Configuraciones...
+Préférences...
 ; Settings...
 MSG_KEY_Settings
-C
+S
 ; S
 ;
 MSG_MENU_About
-Acerca de...
+A propos...
 ; About...
 MSG_KEY_About
 ?
 ; ?
 ;
 MSG_MENU_Help
-Ayuda
+Aide
 ; Help
 ;
 MSG_MENU_Iconify
-Iconificar
+Iconifier
 ; Iconify
 MSG_KEY_Iconify
 I
 ; I
 ;
 MSG_MENU_Quit
-Salir
+Quitter
 ; Quit
 MSG_KEY_Quit
-S
+Q
 ; Q
 ; About Dialog
 MSG_ABOUT_Title
-Acerca de DockBot
+A propos de DockBot
 ; About DockBot
 ;
 MSG_ABOUT_Text
-DockBot Version %s\n\nUna barra para AmigaOS 3\n\n© Andrew Kennan\n\n%s
+Version de DockBot %s\n\nUn Dock pour AmigaOS 3\n\n© Andrew Kennan\n\n%s
 ; DockBot Version %s\n\nA Dock For AmigaOS 3\n\n© Andrew Kennan\n\n%s
 ;
 MSG_CX_Description
-Una barra para AmigaOS 3
+Un Dock pour AmigaOS 3
 ; A Dock For AmigaOS 3
 ; 
 ;

@@ -32,7 +32,7 @@ clean:
 
 catalog: /Locale/Catalogs/DockBotPrefs.cd
 	@Execute << 
-		flexcat /Locale/Catalogs/DockBotPrefs.cd dockbotprefs_cat.c=C_c.sd NOBEEP
-		flexcat /Locale/Catalogs/DockBotPrefs.cd dockbotprefs_cat.h=C_h.sd NOBEEP
+		flexcat /Locale/Catalogs/DockBotPrefs.cd dockbotprefs_cat.c=/Locale/App_c.sd NOBEEP
+		flexcat /Locale/Catalogs/DockBotPrefs.cd dockbotprefs_cat.h=/Locale/App_h.sd NOBEEP
 		echo "Catalog Updated"
 	<

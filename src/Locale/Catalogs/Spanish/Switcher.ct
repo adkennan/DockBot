@@ -1,0 +1,27 @@
+## version $VER: switcher.catalog 1.0 (15.03.2020)
+## language español
+## codeset 0
+;
+;#basename switcher
+;#language english
+;#version 0
+;
+; DockBot Window Switcher
+;
+;
+MSG_Description
+Window and screen switcher for DockBot
+; Window and screen switcher for DockBot
+;
+MSG_POS_Dock
+Dock Window
+; Dock Window
+MSG_POS_Screen
+Screen Centre
+; Screen Centre
+MSG_UI_Position
+Position
+; Position
+MSG_UI_Key
+Key
+; Key

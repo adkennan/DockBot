@@ -1,5 +1,5 @@
-## version $VER: DockButton.catalog 1.0 (2019-11-26)
-## language español
+## version $VER: DockButton.catalog 1.0 (2020-03-22)
+## language français
 ## codeset 0
 ;
 ;#language english
@@ -9,7 +9,7 @@
 ;
 ;
 MSG_Description
-Un botón para DockBot
+Un gadget Bouton pour DockBot
 ; A button for DockBot
 ;
 ;
@@ -26,45 +26,45 @@ Shell
 ; File Requester
 ;
 MSG_FR_ChooseApplication
-Escoge una aplicación
+Choisir une application
 ; Choose an application
 ;
 MSG_FR_ChooseBrush
-Elige una imagen
+Choisir une image
 ; Choose an image
 ;
 MSG_FR_OkText
-Seleccionar
+Sélectionner
 ; Select
 ;
 MSG_FR_CancelText
-Cancelar
+Annuler
 ; Cancel
 ;
 ;
 ; Editor UI
 ;
 MSG_UI_Name
-Nombre
+Nom
 ; Name
 ;
 MSG_UI_Brush
-Imagen
+Image
 ; Image
 ;
 MSG_UI_Args
-Argumentos
+Arguments
 ; Arguments
 ;
 MSG_UI_Key
-llave
+Raccourci
 ; Key
 ;
 MSG_UI_StartType
-Tipo de inicio
+Démarrage
 ; Start Type
 ;
 MSG_UI_Console
-Consola
+Console
 ; Console
 ;

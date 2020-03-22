@@ -1,0 +1,17 @@
+## version $VER: Eyes.catalog 1.0 (2020-03-22)
+## language français
+## codeset 0
+;
+;#language english
+;#version 1
+;
+; Eyes
+;
+;
+MSG_Description
+Des yeux qui suivent le pointeur de votre souris 
+; Eyes that follow your mouse pointer
+;
+MSG_UI_NumEyes
+Combien d'yeux?
+; How many eyes?

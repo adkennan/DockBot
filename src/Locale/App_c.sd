@@ -33,9 +33,9 @@ VOID open_catalog(VOID)
     struct FC_String *fc;
 	UWORD i;
 
-	DEBUG(printf("open_catalog: %b.catalog\\n"));
+	DEBUG(printf(__FUNC__ ": %b.catalog\\n"));
 	if( ! LocaleBase ) {
-		DEBUG(printf("  Locale library not found.\\n"));
+		DEBUG(printf(__FUNC__ ": Locale library not found.\\n"));
 		return;
 	}
 
@@ -43,7 +43,7 @@ VOID open_catalog(VOID)
 			 			 		     OC_BuiltInLanguage, %l,
 								     OC_Version, %v,
 								     TAG_DONE))) {
-		DEBUG(printf("  Unable to open catalog.\\n"));
+		DEBUG(printf(__FUNC__ ": Unable to open catalog.\\n"));
 		return;
 	}
 
@@ -55,9 +55,9 @@ VOID open_catalog(VOID)
 
 VOID close_catalog(VOID) 
 {
-	DEBUG(printf("close_catalog: %b.catalog\\n"));
+	DEBUG(printf(__FUNC__ ": %b.catalog\\n"));
 	if( ! %bCatalog ) {
-		DEBUG(printf(" Catalog not open.\\n"));
+		DEBUG(printf(__FUNC__ ": Catalog not open.\\n"));
 		return;
 	}
 

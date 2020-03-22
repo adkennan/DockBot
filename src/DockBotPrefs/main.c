@@ -448,6 +448,8 @@ int main(char **argv, int argc)
 
 #endif
 
+    open_catalog();
+
     if( DockBotBase = OpenLibrary("PROGDIR:dockbot.library", 1) ) {
 
         DEBUG(DB_RegisterDebugStream(Output()));
@@ -503,5 +505,7 @@ int main(char **argv, int argc)
             
         close_lib("PROGDIR:dockbot.library", DockBotBase);
     }
+
+    close_catalog();
 }
 

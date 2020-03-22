@@ -11,24 +11,12 @@
 #ifndef DockBotPrefs_CAT_H
 #define DockBotPrefs_CAT_H
 
-
-#ifndef EXEC_TYPES_H
 #include <exec/types.h>
-#endif
+#include <libraries/locale.h>
 
+VOID open_catalog(VOID);
 
-/*
-**  Prototypes
-*/
-#if !defined(__GNUC__)  && !defined(__SASC)  &&  !defined(_DCC)
-extern VOID OpenDockBotPrefsCatalog(VOID);
-extern VOID CloseDockBotPrefsCatalog(VOID);
-#endif
-#ifdef LOCALIZE_V20
-extern void InitDockBotPrefsCatalog(STRPTR);
-#endif
-
-
+VOID close_catalog(VOID);
 
 struct FC_String {
     const UBYTE *msg;

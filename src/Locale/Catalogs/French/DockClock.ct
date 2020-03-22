@@ -1,5 +1,5 @@
-## version $VER: DockBotClock.catalog 1.0 (2019-11-26)
-## language español
+## version $VER: DockClock.catalog 1.0 (2020-03-22)
+## language  français
 ## codeset 0
 ;
 ;#language english
@@ -9,11 +9,11 @@
 ;
 ;
 MSG_Description
-Un gadget de reloj para DockBot
+Un gadget Horloge pour DockBot
 ; A clock gadget for DockBot
 ;
 ;
 MSG_UI_Format
-Formato
+Format
 ; Format
 ;
