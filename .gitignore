@@ -37,4 +37,7 @@ Makefile.info
 Compile*.info
 *.c.info
 *.h.info
+
 *.tmp
+
+*.uaem

@@ -273,7 +273,7 @@ VOID handle_window_event(struct DockWindow *dock)
                             break;
 
                        case MI_HIDE:
-                            dock->runState = RS_HIDING;
+                            dock->runState = RS_ICONIFYING;
                             break;
 
                        case MI_SETTINGS:

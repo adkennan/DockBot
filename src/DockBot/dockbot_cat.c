@@ -44,9 +44,9 @@ VOID open_catalog(VOID)
     struct FC_String *fc;
 	UWORD i;
 
-	DEBUG(printf("open_catalog: DockBot.catalog\n"));
+	DEBUG(printf(__FUNC__ ": DockBot.catalog\n"));
 	if( ! LocaleBase ) {
-		DEBUG(printf("  Locale library not found.\n"));
+		DEBUG(printf(__FUNC__ ": Locale library not found.\n"));
 		return;
 	}
 
@@ -54,7 +54,7 @@ VOID open_catalog(VOID)
 			 			 		     OC_BuiltInLanguage, "english",
 								     OC_Version, 1,
 								     TAG_DONE))) {
-		DEBUG(printf("  Unable to open catalog.\n"));
+		DEBUG(printf(__FUNC__ ": Unable to open catalog.\n"));
 		return;
 	}
 
@@ -66,9 +66,9 @@ VOID open_catalog(VOID)
 
 VOID close_catalog(VOID) 
 {
-	DEBUG(printf("close_catalog: DockBot.catalog\n"));
+	DEBUG(printf(__FUNC__ ": DockBot.catalog\n"));
 	if( ! DockBotCatalog ) {
-		DEBUG(printf(" Catalog not open.\n"));
+		DEBUG(printf(__FUNC__ ": Catalog not open.\n"));
 		return;
 	}
 
