@@ -2,7 +2,7 @@ Short:        A program launcher for OS 3.
 Uploader:     adkennan@gmail.com (Andrew Kennan)
 Author:       Andrew Kennan
 Type:         util/wb
-Version:      1.7
+Version:      1.8
 Architecture: m68k-amigaos >= 3.0
 Requires:     util/libs/IconLib_46.4.lha
 
@@ -15,6 +15,8 @@ it are clock, memory meter and window switcher gadgets.
 
 This archive includes source code and binaries compiled for 68000, 68020 and
 68040 CPUs.
+
+The source repository can be found at https://github.com/adkennan/DockBot.
 
 Changes:
 

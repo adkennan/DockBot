@@ -377,7 +377,7 @@ Your suggestions and contributions make me want to keep developing DockBot.
 @node history "History - The DockBot Manual"
 
 
-Version 1.8 (05-Mar-2020):
+Version 1.8 (23-Mar-2020):
 
 * Button gadget can now use any image, not just the icon of the file.
 * A background image can be set for the Dock.
