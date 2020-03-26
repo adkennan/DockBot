@@ -116,6 +116,8 @@ VOID load_icon(struct ButtonGadgetData *data, STRPTR path)
 {
     struct Screen *screen;
 
+    DEBUG(DB_Printf(__METHOD__ "path = %s\n", path));
+
     if( data->diskObj ) {
         FreeDiskObject(data->diskObj);
     }
@@ -487,6 +489,8 @@ DB_METHOD_DM(GETEDITOR, DockMessageGetEditor)
 
     struct IconInit *ii = NULL;
 
+    DEBUG(DB_Printf(__METHOD__ "name = %s, path = %s\n", data->name, data->path));
+
     if( ii = (struct IconInit *)DB_AllocMem(sizeof(struct IconInit), MEMF_ANY) ) {
         ii->DiskObj = data->diskObj;
         ii->Brush = data->brushImg;
@@ -696,6 +700,8 @@ DB_METHOD_DM(INITBUTTON,DockMessageInitButton)
         return 0;
     }
     CopyMem(msg->path, data->path, len);
+
+    DEBUG(DB_Printf(__METHOD__ "name = %s, path = %s\n", data->name, data->path));
 
     data->args = NULL;
     data->hotKey = NULL;

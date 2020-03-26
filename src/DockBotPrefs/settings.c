@@ -34,6 +34,8 @@ struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR nam
 
     if( dg = DB_AllocGadget(name) ) {
 
+        dg->dg = obj;
+
         AddTail((struct List *)&prefs->cfg.gadgets, (struct Node *)dg);
 
         dock_gadget_init_edit(dg->dg, Application);
