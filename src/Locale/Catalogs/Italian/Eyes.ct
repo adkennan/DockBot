@@ -1,0 +1,18 @@
+## version $VER: Eyes.catalog 1.0 (24.03.2020)
+## language italiano
+## codeset 0
+;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
+;#language english
+;#version 1
+;
+; Eyes
+;
+;
+MSG_Description
+Occhi che seguono il puntatore del mouse
+; Eyes that follow your mouse pointer
+;
+MSG_UI_NumEyes
+Quanti occhi?
+; How many eyes?

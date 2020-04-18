@@ -1,0 +1,71 @@
+## version $VER: DockButton.catalog 1.0 (24.03.2020)
+## language italiano
+## codeset 0
+;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
+;#language english
+;#version 1
+;
+; DockButton
+;
+;
+MSG_Description
+Bottone per DockBot
+; A button for DockBot
+;
+;
+; Start Types
+;
+MSG_ST_Workbench
+Workbench
+; Workbench
+;
+MSG_ST_Shell
+Shell
+; Shell
+;
+; File Requester
+;
+MSG_FR_ChooseApplication
+Seleziona un'applicazione
+; Choose an application
+;
+MSG_FR_ChooseBrush
+Seleziona un'immagine
+; Choose an image
+;
+MSG_FR_OkText
+Seleziona
+; Select
+;
+MSG_FR_CancelText
+Annulla
+; Cancel
+;
+;
+; Editor UI
+;
+MSG_UI_Name
+Nome
+; Name
+;
+MSG_UI_Brush
+Immagine
+; Image
+;
+MSG_UI_Args
+Argomenti
+; Arguments
+;
+MSG_UI_Key
+Tasto
+; Key
+;
+MSG_UI_StartType
+Tipo di avvio
+; Start Type
+;
+MSG_UI_Console
+Console
+; Console
+;

@@ -175,6 +175,16 @@
            (help copyfiles-help)
            (infos)
 )
+(complete 65)
+
+(copyfiles (source "src/Images/icons_hi")
+		   (dest #app-dir)
+		   (help copyfiles-help)
+)
+(copyfiles (source "src/Images/icons_med")
+		   (dest #app-dir)
+		   (help copyfiles-help)
+)
 (complete 75)
 
 (makedir (tackon #app-dir "Catalogs"))
@@ -194,6 +204,15 @@
 )
 
 (complete 85)
+(makedir (tackon #app-dir "Catalogs/Italiano"))
+(copyfiles (source "src/Locale/Catalogs/Italian")
+		   (dest (tackon #app-dir "Catalogs/Italiano"))
+		   (pattern "#?.catalog")
+		   (help copyfiles-help)
+)
+
+
+(complete 90)
 (if (= #run-on-start 0 )
 	(
 	    (set #launcher-dir #app-dir)

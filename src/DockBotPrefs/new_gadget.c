@@ -18,10 +18,7 @@ VOID create_new_gadget(struct DockPrefs *prefs)
 {
     struct Node *curr;
     ULONG gadCount = 0, index;
-    Object *g;
     struct DgNode *dg;
-    STRPTR gadName;
-    UWORD len;
 
     DEBUG(printf("create_new_gadget\n"));
 
@@ -30,27 +27,16 @@ VOID create_new_gadget(struct DockPrefs *prefs)
     for( curr = prefs->classes.lh_Head; curr->ln_Succ; curr = curr->ln_Succ ) {
         if( gadCount == index ) {
 
-            len = strlen(curr->ln_Name) + 1;
-            if( gadName = DB_AllocMem(len, MEMF_CLEAR) ) {
-                CopyMem(curr->ln_Name, gadName, len);
+            if( dg = add_dock_gadget(prefs, curr->ln_Name) ) {
 
-                if( g = DB_CreateDockGadget(gadName) ) {
-                    if( dg = add_dock_gadget(prefs, g, gadName) ) {
-
-                        update_gadget_list(prefs);
+                update_gadget_list(prefs);
     
-                        if( dock_gadget_can_edit(g) ) {
+                if( dock_gadget_can_edit(dg->dg) ) {
 
-                            edit_gadget(prefs, dg);
+                    edit_gadget(prefs, dg);
     
-                            prefs->editGadgetIsNew = TRUE;
-                        }
-
-                        break;
-                    }
-                    DisposeObject(g);
+                    prefs->editGadgetIsNew = TRUE;
                 }
-                DB_FreeMem(gadName, len);
             }
 
             break;
@@ -166,11 +152,8 @@ VOID open_new_gadget_dialog(struct DockPrefs *prefs)
 VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
 {
     STRPTR path;
-    STRPTR gadName;
     BPTR lock;
     struct FileInfoBlock *fib;
-    Object *btn;
-    UWORD len;
     struct DgNode *dg;
 
     DEBUG(printf("add_dropped_icon\n"));
@@ -193,33 +176,17 @@ VOID add_dropped_icon(struct DockPrefs *prefs, struct AppMessage *msg)
     
                         // A file was dropped. Create a new DockButton.
 
-                        len = strlen(DB_BUTTON_CLASS) + 1;
+                        if( dg = add_dock_gadget(prefs, DB_BUTTON_CLASS) ) {
 
-                        if( btn = DB_CreateDockGadget(DB_BUTTON_CLASS) ) {                 
+                            dock_gadget_init_button(dg->dg, msg->am_ArgList->wa_Name, path);
 
-                            dock_gadget_init_button(btn, msg->am_ArgList->wa_Name, path);
+                            update_gadget_list(prefs);
 
-                            if( gadName = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) {                
+                            edit_gadget(prefs, dg);                                    
 
-                                CopyMem(DB_BUTTON_CLASS, gadName, len);
-
-                                if( dg = add_dock_gadget(prefs, btn, gadName) ) {
-
-                                    update_gadget_list(prefs);
-
-                                    edit_gadget(prefs, dg);                                    
-
-                                    prefs->editGadgetIsNew = TRUE;
-
-                                } else {
-                                    DB_FreeMem(gadName, len);
-                                    DisposeObject(btn);
-                                }                
-                            } else {
-                                DisposeObject(btn);
-                            }
+                            prefs->editGadgetIsNew = TRUE;
                         }
-                        
+
                     } else {
                         TR_EasyRequestTags(Application,
                             (STRPTR)MSG_ERR_CantAddDirectory,

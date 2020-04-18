@@ -1,0 +1,20 @@
+assign sc:         DEV:SasC
+assign lib:        sc:lib
+assign include:    sc:include
+assign cxxinclude: sc:cxxinclude
+
+assign lib:     DEV:Triton/lib     ADD
+assign include: DEV:Triton/include ADD
+
+assign include: DEV:ScreenNotify/include ADD
+
+path   sc:c        ADD QUIET
+path   DEV:flexcat ADD QUIET
+path   DEV:c       ADD QUIET
+
+avail  flush >NIL:
+
+cd DOCKBOT:src
+c:newshell WINDOW KCON:0/384/724/181/Shell/CLOSE/JUMP/SHOWDIR/AUTOICONIFY/FASTUPDATE
+cd DOCKBOT:bin/debug
+c:newshell WINDOW KCON:0/203/724/181/Shell/CLOSE/JUMP/SHOWDIR/AUTOICONIFY/FASTUPDATE

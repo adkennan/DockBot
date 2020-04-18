@@ -38,6 +38,8 @@ extern BOOL __DebugEnabled;
 
 #endif
 
+#define DB_BUTTON_CLASS "DockButton"
+
 typedef enum
 {
 	DA_LEFT,
@@ -52,6 +54,13 @@ typedef enum
 	DP_TOP,
 	DP_BOTTOM	
 } DockPosition;
+
+typedef enum
+{
+    BF_NONE        = 0,
+    BF_CREATE_MASK = 2 << 0,
+    BF_TRIM        = 2 << 1
+} BrushFlags;
 
 struct DockConfig
 {
@@ -152,7 +161,9 @@ struct GadgetEnvironment {
     struct Rect windowBounds;
 	UWORD align;
 	UWORD pos;
+    UWORD index;
 	BOOL showBorders;
+    BOOL isLast;
 };
 
 struct DockMessageAdded

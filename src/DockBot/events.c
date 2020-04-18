@@ -46,14 +46,17 @@ VOID run_event_loop(struct DockWindow *dock)
                 }
                 remap_gadgets(dock);
                 enable_layout(dock);
+                draw_gadgets(dock);
                 set_timer(dock, TIMER_INTERVAL);
                 dock->runState = RS_RUNNING;
+                update_settings_menu(dock);
+                enable_notification(dock);
                 break;
 
             case RS_LOADING:
                 DEBUG(printf("runState = RS_LOADING\n"));
+                disable_notification(dock);
                 disable_layout(dock);
-                hide_dock_window(dock);
                 remove_dock_gadgets(dock);
                 if( ! create_dock_handle(dock) ) {
                     return;
@@ -64,12 +67,12 @@ VOID run_event_loop(struct DockWindow *dock)
                 if( ! init_cx_broker(dock) ) {
                     return;
                 }
-                if( ! show_dock_window(dock) ) {
-                    return;
-                }
                 remap_gadgets(dock);
                 enable_layout(dock);
+                draw_gadgets(dock);
                 dock->runState = RS_RUNNING;
+                update_settings_menu(dock);
+                enable_notification(dock);
                 break;
 
             case RS_ICONIFYING:
@@ -110,6 +113,28 @@ VOID run_event_loop(struct DockWindow *dock)
                 dock->runState = RS_RUNNING;
                 break;
 
+            case RS_START_EDIT:
+                DEBUG(printf("runState = RS_START_EDIT\n"));    
+                disable_notification(dock);
+                load_icon_brushes(dock);
+                dock->runState = RS_EDITING;
+                update_settings_menu(dock);
+                disable_layout(dock);
+                draw_gadgets(dock);
+                enable_layout(dock);
+                break;
+
+            case RS_STOP_EDIT:
+                DEBUG(printf("runState = RS_STOP_EDIT\n"));
+                dock->runState = RS_RUNNING;
+                update_settings_menu(dock);
+                disable_layout(dock);
+                draw_gadgets(dock);
+                enable_layout(dock);
+                enable_notification(dock);
+                break;
+
+            case RS_EDITING:
             case RS_RUNNING:
             case RS_QUITTING:
                 winsig      = WIN_SIG(dock);
@@ -124,6 +149,8 @@ VOID run_event_loop(struct DockWindow *dock)
                 totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | cxsig | screensig | SIGBREAKF_CTRL_C;
 
                 while( dock->runState == RS_RUNNING || 
+                       dock->runState == RS_EDITING ||   
+                        dock->runState == RS_CHANGING ||                    
                         dock->runState == RS_QUITTING ) {
 
                     customsig = get_custom_sigs(dock);

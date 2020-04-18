@@ -29,12 +29,10 @@ extern struct Library *IntuitionBase;
 extern struct DockBotLibrary *DockBotBaseFull;
 
 struct Brush {
-    struct Node n;
     APTR image;
     struct BitMap *bm;
     PLANEPTR maskPlane;
     UWORD w, h, d;
-    UWORD refCount;
     BOOL interleaved;
     BOOL freeMask;
 };
@@ -103,12 +101,14 @@ VOID __asm __saveds DB_DrawInsetFrame(
     DrawFrame(rp, bounds, SHINEPEN, SHADOWPEN);
 }
 
-PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL interleaved)
+PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL interleaved, UWORD tc)
 {
     struct RastPort srcRp;
     PLANEPTR mask = NULL, byte, plane;
     UWORD x, y, p, bit, stride = 0, bpr, rep = 1;
     UBYTE v = 0;
+
+    DEBUG(DebugLog(__FUNC__ "\n"));
 
     InitRastPort(&srcRp);
     srcRp.BitMap = bm;
@@ -128,6 +128,11 @@ PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL inte
         rep = d;
     }
 
+    DEBUG(DebugLog(__FUNC__ ": Mask size: %ld * %ld = %ld\n",
+        bm->BytesPerRow, bm->Rows, bm->BytesPerRow * bm->Rows));
+    DEBUG(DebugLog(__FUNC__ ": w = %ld, h = %ld, bpr = %ld, stride = %ld, rep = %ld\n",
+        (ULONG)w, (ULONG)h, (ULONG)bpr, (ULONG)stride, (ULONG)rep));
+
     if( mask = AllocMemInternal(DockBotBaseFull, bm->BytesPerRow * bm->Rows, MEMF_CHIP|MEMF_CLEAR)) {
 
         byte = mask;
@@ -139,7 +144,7 @@ PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL inte
 
             for( x = 0; x < w; x++ ) {
 
-                if( ReadPixel(&srcRp, x, y) ) {
+                if( ReadPixel(&srcRp, x, y) != tc ) {
                     v |= (1 << bit);
                 }
 
@@ -166,45 +171,57 @@ PLANEPTR CreateMaskPlane(struct BitMap *bm, UWORD w, UWORD h, UWORD d, BOOL inte
     return mask;
 }
 
+VOID TrimBrush(struct Brush *b, UWORD tc)
+{
+    UWORD x, y, mx = 0, my = 0;
+    struct RastPort rp;
+
+    InitRastPort(&rp);
+    rp.BitMap = b->bm;
+
+    for( y = 0; y < b->h; y++ ) {
+        for( x = 0; x < b->w; x++ ) {
+            if( ReadPixel(&rp, x, y) != tc ) {
+                if( x > mx ) {
+                    mx = x;
+                }
+                if( y > my ) {
+                    my = y;
+                }
+            }
+        }
+    }
+
+    b->w = mx;
+    b->h = my;
+}
+
 APTR __asm __saveds DB_LoadBrush(
     register __a0 STRPTR fileName,
-    register __d0 BOOL createMask)
+    register __d0 UWORD flags)
 {
     struct Brush *b;
     APTR img;
     struct Screen *screen;
     struct gpLayout lo;
+    struct BitMapHeader *bmh;
 
-    UWORD l = strlen(fileName) + 1;
-
-    for( b = (struct Brush *)DockBotBaseFull->l_Brushes.lh_Head;
-         b->n.ln_Succ;
-         b = (struct Brush *)b->n.ln_Succ ) {
-    
-        if( strcmp(fileName, b->n.ln_Name) == 0 ) {
-            b->refCount++;
-            return b;
-        }
-    }
+    DEBUG(DebugLog("Load Brush %s\n", fileName));
 
     if( screen = LockPubScreen(NULL) ) {    
 
         if( img = NewDTObject(fileName, DTA_GroupID, GID_PICTURE, 
-                                        PDTA_Remap, FALSE,
+                                        PDTA_Remap, TRUE,
                                         PDTA_Screen, screen, 
-                                        OBP_Precision, PRECISION_EXACT,
-                                        OBP_FailIfBad, FALSE,
+                                        OBP_Precision, PRECISION_IMAGE,
+                                        OBP_FailIfBad, TRUE,
                                         PDTA_FreeSourceBitMap, TRUE,
                                         PDTA_DestMode, 1L, // PMODE_V43
                                         TAG_END) ) {
 
             if( b = (struct Brush *)AllocMemInternal(DockBotBaseFull,
-                                        sizeof(struct Brush) + l,
+                                        sizeof(struct Brush),
                                          MEMF_ANY | MEMF_CLEAR) ) {
-
-                b->n.ln_Name = ((UBYTE *)b) + sizeof(struct Brush);
-                CopyMem(fileName, b->n.ln_Name, l);
-
                 b->image = img;
 
                 lo.MethodID = DTM_PROCLAYOUT;
@@ -215,6 +232,7 @@ APTR __asm __saveds DB_LoadBrush(
 
                     GetDTAttrs(img, 
                         PDTA_BitMap, &b->bm, 
+                        PDTA_BitMapHeader, &bmh,
                         TAG_END);
 
                     b->w = GetBitMapAttr(b->bm, BMA_WIDTH);
@@ -222,20 +240,24 @@ APTR __asm __saveds DB_LoadBrush(
                     b->d = GetBitMapAttr(b->bm, BMA_DEPTH);
                     b->interleaved = GetBitMapAttr(b->bm, BMA_FLAGS) & BMF_INTERLEAVED;
 
-                    if( createMask ) {
+                    if( flags & BF_CREATE_MASK ) {
                         GetDTAttrs(img,
                             PDTA_MaskPlane, &b->maskPlane,
                             TAG_END);
 
                         if( ! b->maskPlane ) {
                             b->freeMask = TRUE;
-                            b->maskPlane = CreateMaskPlane(b->bm, b->w, b->h, b->d, b->interleaved);
+                            b->maskPlane = CreateMaskPlane(b->bm, b->w, b->h, b->d, b->interleaved, bmh->bmh_Transparent);
                         }
                     }
 
-                    AddTail(&DockBotBaseFull->l_Brushes, (struct Node *)b);
+                    b->w = bmh->bmh_Width;
+                    b->h = bmh->bmh_Height;
+                    b->d = bmh->bmh_Depth;
 
-                    b->refCount = 1;
+                    if( flags & BF_TRIM ) {   
+                        TrimBrush(b, bmh->bmh_Transparent);
+                    }                    
 
                     return b;
                 } else {
@@ -263,24 +285,20 @@ VOID __asm __saveds DB_FreeBrush(
 {
     struct Brush *b = (struct Brush *)brush;
 
-    if( b->refCount > 1 ) {
+    DEBUG(DebugLog("Free %lx\n", b));
 
-        b->refCount--;
-
-    } else if( b->refCount == 1 ) {
-
-        if( b->maskPlane && b->freeMask ) {
-            FreeMemInternal(DockBotBaseFull, b->maskPlane, b->bm->BytesPerRow * b->bm->Rows);
-        }
-
-        if( b->image ) {
-            DisposeDTObject(b->image);
-        }
-
-        Remove(&b->n);
-
-        FreeMemInternal(DockBotBaseFull, b, sizeof(struct Brush) + strlen(b->n.ln_Name) + 1);
+    if( b->maskPlane && b->freeMask ) {
+        DEBUG(DebugLog("  Mask Plane %ld bytes\n", b->bm->BytesPerRow * b->bm->Rows));
+        FreeMemInternal(DockBotBaseFull, b->maskPlane, b->bm->BytesPerRow * b->bm->Rows);
     }
+
+    if( b->image ) {
+        DEBUG(DebugLog("  DT Object\n"));
+        DisposeDTObject(b->image);
+    }
+
+    DEBUG(DebugLog("  Brush\n"));    
+    FreeMemInternal(DockBotBaseFull, b, sizeof(struct Brush));
 }
 
 VOID __asm __saveds DB_DrawBrush(
@@ -297,6 +315,14 @@ VOID __asm __saveds DB_DrawBrush(
 
     if( ! b->bm ) {
         return;
+    }
+
+    if( w == 0 ) {
+        w = b->w;
+    }
+
+    if( h == 0 ) {
+        h = b->h;
     }
 
     if( b->maskPlane ) {

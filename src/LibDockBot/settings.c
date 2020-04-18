@@ -515,6 +515,10 @@ BOOL __asm __saveds DB_WriteConfig(
 
         FOR_EACH_GADGET(&cfg->gadgets, curr) {
 
+            if( DoMethod(curr->dg, DM_BUILTIN) ) {
+                continue;
+            }
+
             if( ! DB_WriteBeginBlock(settings) ) {
                 goto error;
             }

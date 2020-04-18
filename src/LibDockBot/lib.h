@@ -44,7 +44,6 @@ struct DockBotLibrary {
     struct MemoryControl    l_MemControl;
     struct IClass *         l_GadgetClass;
     struct MinList          l_ClassLibs;
-    struct List             l_Brushes;
     BPTR                    l_DebugOutput;
 };
 

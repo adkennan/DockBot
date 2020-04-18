@@ -58,6 +58,7 @@ struct ClockGadgetData
     STRPTR splitFormat;   
     ULONG counter;
 	BOOL clicked;
+    UWORD formatLen;
 };
 
 #endif

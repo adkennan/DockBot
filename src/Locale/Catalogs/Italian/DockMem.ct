@@ -1,0 +1,23 @@
+## version $VER: DockMem.catalog 1.0 (24.03.2020)
+## language italiano
+## codeset 0
+;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
+;#language english
+;#version 1
+;
+; DockClock
+;
+;
+MSG_Description
+Misuratore di memoria per DockBot
+; A memory meter for DockBot
+;
+MSG_LBL_Chip
+Chip %d%%
+; Chip %d%%
+;
+MSG_LBL_Fast
+Fast %d%%
+; Fast %d%%
+;

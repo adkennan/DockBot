@@ -9,13 +9,13 @@
 #include "dock.h"
 
 #include <exec/memory.h>
-//#include <exec/io.h>
 #include <exec/ports.h>
 #include <dos/dostags.h>
 #include <clib/exec_protos.h>
 #include <clib/dos_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
+#include <clib/layers_protos.h>
 #include <devices/timer.h>
 
 #include "dock_handle.h"
@@ -154,28 +154,31 @@ struct DockWindow* create_dock(VOID)
         dock->cfg.showGadgetLabels = TRUE;
         dock->cfg.showGadgetBorders = TRUE;
 
-        if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
+        if( dock->renderLI = NewLayerInfo() ) {
 
-            if( init_gadget_classes(dock) ) {
+            if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 
-                if( init_gadgets(dock) ) {    
+                if( init_gadget_classes(dock) ) {
 
-                    if( init_config_notification(dock) ) {
+                    if( init_gadgets(dock) ) {    
+
+                        if( init_config_notification(dock) ) {
                         
-                        if( init_timer_notification(dock) ) {
+                            if( init_timer_notification(dock) ) {
 
-                            if( init_screennotify(dock) ) {
+                                if( init_screennotify(dock) ) {
 
-                                if( get_prog_path(dock) ) {
-
-                                    return dock;
+                                    if( get_prog_path(dock) ) {
+    
+                                        return dock;
+                                    }
                                 }
                             }
-                        }
-                    }        
+                        }        
+                    }
                 }
             }
-        }
+        }    
 
         // Uh oh!    
         free_dock(dock);
@@ -206,12 +209,18 @@ VOID free_dock(struct DockWindow* dock)
 
     delete_port(dock->pubPort);
 
+    free_icon_brushes(dock);
+
     if( dock->cfg.bgBrushPath ) {
         FREE_STRING(dock->cfg.bgBrushPath);
     
         if( dock->bgBrush ) {
             DB_FreeBrush(dock->bgBrush);
         }
+    }
+
+    if( dock->renderLI ) {
+        DisposeLayerInfo(dock->renderLI);
     }
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));

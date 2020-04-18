@@ -26,15 +26,13 @@
 #define DIR_BUF_SIZE 512
 
 
-struct DgNode * add_dock_gadget(struct DockPrefs *prefs, Object *obj, STRPTR name)
+struct DgNode * add_dock_gadget(struct DockPrefs *prefs, STRPTR name)
 {
     struct DgNode *dg;
 
     DEBUG(printf("add_dock_gadget: %s\n", name));
 
     if( dg = DB_AllocGadget(name) ) {
-
-        dg->dg = obj;
 
         AddTail((struct List *)&prefs->cfg.gadgets, (struct Node *)dg);
 

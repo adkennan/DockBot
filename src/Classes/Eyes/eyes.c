@@ -102,6 +102,9 @@ VOID init_eyes(struct EyesGadgetData *data)
 
             AreaEnd(&rp);
         }
+
+        ReleasePen(screen->ViewPort.ColorMap, fillPen);
+
         UnlockPubScreen(NULL, screen);
     }   
 }

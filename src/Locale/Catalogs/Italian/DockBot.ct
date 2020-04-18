@@ -1,7 +1,8 @@
 ## version $VER: DockBot.catalog 1.9 (2020-04-17)
-## language español
+## language italiano
 ## codeset 0
 ;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
 ;#language english
 ;#version 1
 ;
@@ -11,7 +12,7 @@
 ; Generic
 ;
 MSG_OK
-OK
+_OK
 ; OK
 ;
 ; Errors
@@ -19,86 +20,86 @@ OK
 ; Error returned when OpenLibrary fails.
 ;
 MSG_ERR_OpenLibrary
-No es posible abrir version %d de %s.
+Impossibile aprire la versione %d di %s.
 ; Unable to open version %d of %s.
 ;
 MSG_ERR_CantAddDirectory
-Disculpe, los directorios no pueden ser agregados a la barra.
+Spiacente, le directory non possono essere aggiunte al Dock.
 ; Sorry, directories cannot be added to the dock.
 ;
 ; Menu Strings
 MSG_MENU_Project
-Proyecto
+Progetto
 ; Project
 ;
 MSG_MENU_Settings
-Configuraciones
+Preferenze
 ; Settings
 ;
 MSG_MENU_About
-Acerca de...
+Informazioni...
 ; About...
 MSG_KEY_About
 ?
 ; ?
 ;
 MSG_MENU_Help
-Ayuda
+Aiuto
 ; Help
 ;
 MSG_MENU_Iconify
-Iconificar
+Iconifica
 ; Iconify
 MSG_KEY_Iconify
 I
 ; I
 ;
 MSG_MENU_Quit
-Salir
+Esci
 ; Quit
 MSG_KEY_Quit
-S
+E
 ; Q
 ;
 MSG_MENU_EditMode
-Editar
+Modifica
 ; Edit
 MSG_KEY_EditMode
-E
+M
 ; E
 ;
 MSG_MENU_Save
-Guardar Configuraciónes
+Salva le Impostazioni
 ; Save Settings
 MSG_KEY_Save
-G
+W
 ; W
 ;
 MSG_MENU_Revert
-Revertir Configuración
+Ripristinare le Impostazioni
 ; Revert Settings
 MSG_KEY_Revert
 Z
 ; Z
 ;
 MSG_MENU_OpenPrefs
-Configuración abierta...
+Impostazioni Aperte...
 ; Open Preferences...
 MSG_KEY_OpenPrefs
-C
+A
 ; S
 ;
 ; About Dialog
 MSG_ABOUT_Title
-Acerca de DockBot
+Informazioni su DockBot
 ; About DockBot
 ;
 MSG_ABOUT_Text
-DockBot Version %s\n\nUna barra para AmigaOS 3\n\n© Andrew Kennan\n\n%s
+DockBot versione %s\n\nBarra Dock per AmigaOS 3.x\n\n© 2019 - 2020 Andrew Kennan\n\nadkennan@gmail.com\n\n%s
 ; DockBot Version %s\n\nA Dock For AmigaOS 3\n\n© Andrew Kennan\n\n%s
 ;
 MSG_CX_Description
-Una barra para AmigaOS 3
+Barra Dock per AmigaOS 3.x
 ; A Dock For AmigaOS 3
 ; 
 ;

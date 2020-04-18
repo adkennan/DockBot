@@ -1,4 +1,4 @@
-## version $VER: DockBot.catalog 1.0 (2020-03-22)
+## version $VER: DockBot.catalog 1.9 (2020-04-17)
 ## language français
 ## codeset 0
 ;
@@ -21,17 +21,19 @@ OK
 MSG_ERR_OpenLibrary
 Impossible d'ouvrir la version %d de %s.
 ; Unable to open version %d of %s.
+;
+MSG_ERR_CantAddDirectory
+Désolé, les dossiers ne peuvent pas être ajoutés au dock.
+; Sorry, directories cannot be added to the dock.
+;
 ; Menu Strings
 MSG_MENU_Project
 Projet
 ; Project
 ;
 MSG_MENU_Settings
-Préférences...
-; Settings...
-MSG_KEY_Settings
-S
-; S
+Préférences
+; Settings
 ;
 MSG_MENU_About
 A propos...
@@ -57,6 +59,35 @@ Quitter
 MSG_KEY_Quit
 Q
 ; Q
+;
+MSG_MENU_EditMode
+Editer
+; Edit
+MSG_KEY_EditMode
+E
+; E
+;
+MSG_MENU_Save
+Enregistrer les paramétres
+; Save Settings
+MSG_KEY_Save
+W
+; W
+;
+MSG_MENU_Revert
+Retablir les paramétres
+; Revert Settings
+MSG_KEY_Revert
+Z
+; Z
+;
+MSG_MENU_OpenPrefs
+Ouvrir les paramétres...
+; Open Preferences...
+MSG_KEY_OpenPrefs
+S
+; S
+;
 ; About Dialog
 MSG_ABOUT_Title
 A propos de DockBot

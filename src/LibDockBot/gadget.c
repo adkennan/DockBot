@@ -85,5 +85,3 @@ VOID __asm __saveds DB_UnregisterPort(
 
     DoMethodA(obj, (Msg)&msg);
 }
-
-

@@ -30,8 +30,6 @@
 
 #define APP_NAME "DockBotPrefs"
 
-#define DB_BUTTON_CLASS "DockButton"
-
 enum {
     OBJ_MENU_ABOUT      = 1001,
     OBJ_MENU_QUIT       = 1002,
@@ -87,7 +85,7 @@ struct DockPrefs
     BOOL editGadgetIsNew;
 };
 
-struct DgNode *add_dock_gadget(struct DockPrefs *prefs, Object *btn, STRPTR name);
+struct DgNode *add_dock_gadget(struct DockPrefs *prefs, STRPTR name);
 
 VOID remove_dock_gadget(struct DgNode *dg);
 

@@ -184,7 +184,7 @@ BOOL set_brush(struct ButtonGadgetData *data, struct TR_Project *window, STRPTR 
             DB_FreeBrush(data->brushImg);   
         }
 
-        data->brushImg = DB_LoadBrush(newPath, TRUE);
+        data->brushImg = DB_LoadBrush(newPath, BF_CREATE_MASK);
 
         TR_SetAttribute(window, OBJ_ICON, TRAT_Icon_Brush, (ULONG)data->brushImg);
 
@@ -432,7 +432,7 @@ DB_METHOD_DM(READCONFIG,DockMessageConfig)
         else if( IS_KEY(S_BRUSH, v) ) {
             GET_STRING(v, data->brushPath)
 
-            data->brushImg = DB_LoadBrush(data->brushPath, TRUE);
+            data->brushImg = DB_LoadBrush(data->brushPath, BF_CREATE_MASK);
         }
     }    
 

@@ -1,0 +1,20 @@
+## version $VER: DockClock.catalog 1.0 (24.03.2020)
+## language italiano
+## codeset 0
+;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
+;#language english
+;#version 1
+;
+; DockClock
+;
+;
+MSG_Description
+Gadget orologio per DockBot
+; A clock gadget for DockBot
+;
+;
+MSG_UI_Format
+Formato
+; Format
+;

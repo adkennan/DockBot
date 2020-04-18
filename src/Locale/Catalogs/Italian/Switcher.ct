@@ -1,0 +1,28 @@
+## version $VER: Switcher.catalog 1.0 (24.03.2020)
+## language italiano
+## codeset 0
+;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
+;#basename switcher
+;#language english
+;#version 0
+;
+; DockBot Window Switcher
+;
+;
+MSG_Description
+Switcher di schermi e finestre per DockBot
+; Window and screen switcher for DockBot
+;
+MSG_POS_Dock
+Finestra Dock
+; Dock Window
+MSG_POS_Screen
+Schermo Centrato
+; Screen Centre
+MSG_UI_Position
+Posizione
+; Position
+MSG_UI_Key
+Tasto
+; Key

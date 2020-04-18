@@ -1,7 +1,8 @@
-## version $VER: DockBotPrefs.catalog 1.0 (2019-11-26)
-## language español
+## version $VER: DockBotPrefs.catalog 1.0 (24.03.2020)
+## language italiano
 ## codeset 0
 ;
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
 ;#language english
 ;#version 1
 ;
@@ -10,11 +11,11 @@
 ; Application Info
 ;
 MSG_APP_Title
-Preferencias de DockBot
+Preferenze di DockBot
 ; DockBot Preferences
 ;
 MSG_APP_Info
-Editor de preferencias de DockBot
+Editor delle preferenze di DockBot
 ; Preferences editor for DockBot
 ;
 ; Generic
@@ -23,173 +24,173 @@ MSG_OK
 _OK
 ; OK
 MSG_Cancel
-Cancelar
+_Annulla
 ; Cancel
 ;
 ; Errors
 ;
 MSG_ERR_ClassList
-No es posible cargar listas de clases.
+Impossibile caricare la lista delle classi.
 ; Couldn't load class list.
 ;
 MSG_ERR_LoadConfig
-No es posible cargar configuración.
+Impossibile caricare la configurazione.
 ; Couldn't load config.
 ;
 MSG_ERR_OpenWindow
-No es posible abrir ventana.
+Impossibile aprire la finestra.
 ; Couldn't open window.
 ;
 MSG_ERR_OpenLibrary
-No es posible abrir version %d de %s.
+Impossibile aprire la versione %d di %s.
 ; Unable to open version %d of %s.
 ;
 MSG_ERR_EditorFailure
-No es posible mostrar editor de diálogo.
+Impossibile visualizzare l'editor di dialogo.
 ; Unable to display editor dialogue.
 ;
 MSG_ERR_CantAddDirectory
-Disculpe, los directorios no pueden ser agregados a la barra.
+Spiacente, le directory non possono essere aggiunte al Dock.
 ; Sorry, directories cannot be added to the dock.
 ;
 ; Positions
 ;
 MSG_POS_Left
-Izquierda
+Sinistra
 ; Left
 MSG_POS_Right
-derecha
+Destra
 ; Right
 MSG_POS_Top
-Arriba
+Alto
 ; Top
 MSG_POS_Bottom
-Abajo
+Basso
 ; Bottom
 ;
 ; Alignments
 ;
 MSG_ALIGN_TopLeft
-Arriba/Izquierda
+Alto/sinistra
 ; Top/Left
 MSG_ALIGN_Center
-Centro
+Centrato
 ; Center
 MSG_ALIGN_BottomRight
-Abajo/Derecha
+Basso/destra
 ; Bottom/Right
 ;
 ; New Gadget Dialog
 ;
 MSG_NGD_Title
-Nuevo gadget de barra
+Nuovo gadget Dock
 ; New Dock Gadget
 ;
 MSG_NGD_ChooseGadget
-Escoja gadget
+Seleziona gadget
 ; Choose Gadget
 ;
 MSG_NGD_About
-Acerca de
+Informazioni
 ; About
 ;
 ; Main Window Menu
 ;
 MSG_MENU_Project
-Proyecto
+Progetto
 ; Project
 ;
 MSG_MENU_About
-?_Acerca de
+?_Informazioni
 ; ?_About
 ;
 MSG_MENU_Quit
-S_Salir
+E_Esci
 ; Q_Quit
 ;
 ; Main Window
 ;
 MSG_MW_Title
-Preferencias de DockBot
+Preferenze di DockBot
 ; DockBot Preferences
 ;
 MSG_MW_DockSettings
-Configuraciones de Barra
+Configurazione Dock
 ; Dock Settings
 ;
 MSG_MW_Position
-Posición
+Posizione
 ; Position
 ;
 MSG_MW_Alignment
-Alineación
+Allineamento
 ; Alignment
 ;
 MSG_MW_ShowLabels
-Mostrar etiquetas
+Mostra etichette
 ; Show Labels
 ;
 MSG_MW_ShowBorders
-Mostrar Marcos
+Mostra bordi
 ; Show Borders
 ;
 MSG_MW_Background
-Imagen de fondo
+Immagine di sfondo
 ; Background Image
 ;
 MSG_MW_Gadgets
-Gadgets
+Gadget
 ; Gadgets
 ;
 MSG_MW_NewGadget
-_Nuevo...
+_Nuovo...
 ; _New...
 ;
 MSG_MW_EditGadget
-_Editar...
+_Modifica...
 ; _Edit...
 ;
 MSG_MW_DeleteGadget
-Borrar
+_Elimina
 ; Delete
 ;
 MSG_MW_GadgetUp
-_Arriba
+_Alto
 ; _Up
 ;
 MSG_MW_GadgetDown
-_Abajo
+_Basso
 ; _Down
 ;
 MSG_MW_ConfigSave
-Guardar
+_Salva
 ; Save
 ;
 MSG_MW_ConfigTest
-Probar
+_Prova
 ; Test
 ;
 MSG_MW_ConfigUse
-Usar
+_Usa
 ; Use
 ;
 ; Delete Gadget Dialog
 ;
 MSG_DEL_Title
-Borrar gadget
+Eliminazione gadget
 ; Delete Gadget
 ;
 MSG_DEL_Text
-¿Está seguro/a de que desea borrar este gadget?
+Sei sicuro di voler eliminare questo gadget?
 ; Are you sure you want to delete this gadget?
 ;
 MSG_DEL_Buttons
-_OK|Cancelar
+_OK|_Annulla
 ; _OK|Cancel
 ;
 ; Background image selector
 ;
 MSG_FR_ChooseBackground
-Elige una imagen de fondo
+Seleziona immagine di sfondo
 ; Choose a background
 ;

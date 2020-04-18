@@ -70,9 +70,19 @@ VOID create_lines(struct ClockGadgetData *data)
     STRPTR start;
     UWORD len = strlen(data->format) + 1;
 
-    if( !(data->splitFormat = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) ) {
-        return;
+    if( data->splitFormat && data->formatLen != len ) {
+
+        DB_FreeMem(data->splitFormat, data->formatLen);
+        data->splitFormat = NULL;
     }
+    
+    if( ! data->splitFormat ) {
+        if( !(data->splitFormat = (STRPTR)DB_AllocMem(len, MEMF_ANY) ) ) {
+            return;
+        }
+    }
+
+    data->formatLen = len;
 
     CopyMem(data->format, data->splitFormat, len);     
 
@@ -249,7 +259,7 @@ DB_METHOD_D(DISPOSE)
 
         DEBUG(DB_Printf(__METHOD__ " Free splitFormat\n"));
 
-        DB_FreeMem(data->splitFormat, strlen(data->format) + 1);
+        DB_FreeMem(data->splitFormat, data->formatLen);
     }
 
     DEBUG(DB_Printf(__METHOD__ " Free format\n"));
@@ -371,6 +381,8 @@ DB_METHOD_DM(GETSIZE,DockMessageGetSize)
 
             msg->w = w + 4;
             msg->h = h + 4;
+
+            DEBUG(DB_Printf(__METHOD__ " w: %ld, h: %ld\n", msg->w, msg->h));
 
             FreeScreenDrawInfo(screen, drawInfo);
         }

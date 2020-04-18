@@ -14,6 +14,8 @@
 #include <clib/layers_protos.h>
 #include <clib/graphics_protos.h>
 
+#include <graphics/gfxmacros.h>
+
 #include "dock_handle.h"
 
 BOOL create_dock_handle(struct DockWindow *dock)
@@ -99,10 +101,12 @@ VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *
 {
     UWORD x, y, bx, by, bw, bh, stepX, stepY, ex, ey;
 
+    DEBUG(printf(__FUNC__ ": (%ld, %ld) -> (%ld, %ld)\n", (LONG)b->x, (LONG)b->y, (LONG)b->w, (LONG)b->h));
+
     if( ! dock->bgBrush ) {
 
         SetAPen(rp, 0);
-        RectFill(rp, b->x, b->y, b->w, b->h);
+        RectFill(rp, b->x, b->y, b->x + b->w - 1, b->y + b->h - 1);
 
         return;
     }
@@ -122,8 +126,15 @@ VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *
         by = y % stepY;
     }    
 
-    ex = b->x + b->w;
-    ey = b->y + b->h;
+    ex = b->x + b->w - 1;
+    if( ex >= dock->renderW ) {
+        ex = dock->renderW - 1;
+    }
+
+    ey = b->y + b->h - 1;
+    if( ey >= dock->renderH ) {
+        ey = dock->renderH - 1;
+    }
     
     if( y + stepY >= ey ) {
         bh = ey - y;
@@ -171,24 +182,149 @@ VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *
                 (LONG)y, (LONG)stepY, (LONG)ey, (LONG)bh));
         }
     }    
-
 }
+
+VOID draw_edit_controls(struct DockWindow *dock, struct Screen *screen, struct RastPort *rp, Object *gadget)
+{
+    struct DrawInfo *drawInfo;
+    struct GadgetEnvironment env;
+    ULONG pen;
+    USHORT pat[] = { 0x5555, 0xAAAA };
+    UWORD i1, i2, i3;
+   
+    DB_GetDockGadgetEnvironment(gadget, &env);
+
+    if( OCLASS(gadget) == dock->handleClass ) {
+        return;
+    }
+
+    if( drawInfo = GetScreenDrawInfo(screen) ) {
+
+        pen = ObtainBestPenA(screen->ViewPort.ColorMap, 255, 255, 255, NULL);
+
+        SetDrMd(rp, JAM1);
+        SetAPen(rp, drawInfo->dri_Pens[BACKGROUNDPEN]);
+        SetBPen(rp, pen);
+        SetAfPt(rp, pat, 1);    
+    
+        RectFill(rp, env.gadgetBounds.x, env.gadgetBounds.y,
+                     env.gadgetBounds.x + env.gadgetBounds.w - 1, 
+                     env.gadgetBounds.y + env.gadgetBounds.h - 1);
+
+        SetAfPt(rp, NULL, 0);
+        ReleasePen(screen->ViewPort.ColorMap, pen);
+
+        FreeScreenDrawInfo(screen, drawInfo);
+    }
+
+    if( DOCK_HORIZONTAL(dock) ) {
+
+        i1 = II_ARROW_LEFT;
+        i2 = II_ARROW_RIGHT;
+        i3 = II_DELETE;
+
+        if( dock->runState == RS_CHANGING && dock->editCount & 1 ) {
+            switch( dock->editOp ) {
+                case EO_MOVE_UP:
+                    i1 = II_ARROW_LEFT_INV;
+                    break;
+
+                case EO_MOVE_DOWN:
+                    i2 = II_ARROW_RIGHT_INV;
+                    break;
+
+                case EO_DELETE:
+                    i3 = II_DELETE_INV;
+                    break;
+            }
+        }
+    } else {
+
+        i1 = II_ARROW_UP;
+        i2 = II_DELETE;
+        i3 = II_ARROW_DOWN;
+
+        if( dock->runState == RS_CHANGING && dock->editCount & 1 ) {
+            switch( dock->editOp ) {
+                case EO_MOVE_UP:
+                    i1 = II_ARROW_UP_INV;
+                    break;
+
+                case EO_MOVE_DOWN:
+                    i3 = II_ARROW_DOWN_INV;
+                    break;
+
+                case EO_DELETE:
+                    i2 = II_DELETE_INV;
+                    break;
+
+            }
+        }
+    }
+    
+    DEBUG(printf(__FUNC__ ": %d, %d, %d\n", i1, i2, i3));    
+
+    if( env.index > 1 ) {
+        DB_DrawBrush(dock->iconBrush, rp, i1 * dock->iconW, 0,
+                env.gadgetBounds.x, env.gadgetBounds.y, dock->iconW, dock->iconH);
+    }
+
+    DB_DrawBrush(dock->iconBrush, rp, i2 * dock->iconW, 0,
+            env.gadgetBounds.x + env.gadgetBounds.w - 1 - dock->iconW,
+            env.gadgetBounds.y, dock->iconW, dock->iconH);
+
+    if( ! env.isLast ) {
+        DB_DrawBrush(dock->iconBrush, rp, i3 * dock->iconW, 0,
+                env.gadgetBounds.x,
+                env.gadgetBounds.y + env.gadgetBounds.h - 1 - dock->iconH,
+                 dock->iconW, dock->iconH);
+    }
+}
+
+VOID update_window(struct DockWindow *dock, struct Rect *b)
+{
+    DEBUG(printf(__FUNC__ ": (%d,%d) (%d,%d)\n", b->x, b->y, b->w, b->h));
+
+    BltBitMapRastPort(dock->renderBm, b->x, b->y, dock->win->RPort, b->x, b->y, b->w, b->h, 0xC0);
+}
+
+VOID update_entire_window(struct DockWindow *dock)
+{
+    struct Rect r;
+
+    if( ! dock->win || ! dock->renderBm ) {
+        return;
+    }
+    
+    DEBUG(printf(__FUNC__ "\n"));
+
+    r.x = 0;
+    r.y = 0;
+    r.w = dock->renderW;
+    r.h = dock->renderH;
+
+    BeginRefresh(dock->win);              
+
+    update_window(dock, &r);
+
+    EndRefresh(dock->win, TRUE);
+}
+
 
 VOID draw_gadgets(struct DockWindow *dock)
 {
-    struct Window *win;
     struct RastPort *rp;
     struct DgNode *curr;
     struct Rect r;
+    struct Screen *screen;
 
-    if( dock->win ) {
+    if( dock->renderBm ) {
     
-        win = dock->win;
-        rp = win->RPort;
+        rp = dock->renderL->rp;
         r.x = 0;
         r.y = 0;
-        r.w = win->Width;
-        r.h = win->Height;
+        r.w = dock->renderW;
+        r.h = dock->renderH;
 
         fill_background(dock, rp, &r);
 
@@ -200,21 +336,31 @@ VOID draw_gadgets(struct DockWindow *dock)
         if( ! dock->cfg.showGadgetBorders ) {
             DB_DrawOutsetFrame(rp, &r);
         }
+
+        if( DOCK_EDITING(dock) && dock->hoverGad != NULL ) {
+            if( screen = LockPubScreen(NULL) ) {
+                
+                draw_edit_controls(dock, screen, rp, dock->hoverGad);
+
+                UnlockPubScreen(NULL, screen);
+            }
+        }
+
+        update_window(dock, &r);
     }
 }
 
 
 VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 {
-    struct Window *win;
+    struct Screen *screen;
     struct RastPort *rp;
     struct GadgetEnvironment env;
     struct Rect r;
 
-    if( dock->win ) {
+    if( dock->renderBm ) {
     
-        win = dock->win;
-        rp = win->RPort;
+        rp = dock->renderL->rp;
 
         DB_GetDockGadgetEnvironment(gadget, &env);
 
@@ -226,15 +372,26 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 
             r.x = 0;
             r.y = 0;
-            r.w = win->Width;
-            r.h = win->Height;
+            r.w = dock->renderW;
+            r.h = dock->renderH;
 
             DB_DrawOutsetFrame(rp, &r);
         }
+
+        if( DOCK_EDITING(dock) && gadget == dock->hoverGad ) {
+            if( screen = LockPubScreen(NULL) ) {
+
+                draw_edit_controls(dock, screen, rp, gadget);
+                
+                UnlockPubScreen(NULL, screen);
+            }
+        }
+
+        update_window(dock, &env.gadgetBounds);
     }
 }
 
-Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
+struct DgNode *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
 {
     struct DgNode *curr;
 
@@ -242,7 +399,7 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
                         
         if( dock_gadget_hit_test(curr->dg, x, y) ) {
 
-            return curr->dg;
+            return curr;
         }
     }
     return NULL;    
@@ -250,8 +407,6 @@ Object *get_gadget_at(struct DockWindow *dock, UWORD x, UWORD y)
 
 VOID hide_gadget_label(struct DockWindow *dock)
 {
-    dock->hoverGad = NULL;
-    
     if( dock->hoverWin ) {
         CloseWindow(dock->hoverWin);
         dock->hoverWin = NULL;
@@ -279,8 +434,6 @@ VOID show_gadget_label(struct DockWindow *dock, Object *gadget, STRPTR label)
 	};
 
     hide_gadget_label(dock);
-
-    dock->hoverGad = gadget;
 
     text.ITextFont = &ta;
    
@@ -351,12 +504,12 @@ VOID update_hover_gadget(struct DockWindow *dock)
 {
     WORD mx = dock->win->MouseX;
     WORD my = dock->win->MouseY;
+    struct DgNode *node;
     Object *gadget;
+    Object *oldHoverGad;
     STRPTR label;
 
-    if( !dock->cfg.showGadgetLabels ) {
-        return;
-    }
+    oldHoverGad = dock->hoverGad;
 
     if( mx < 0 || my < 0
      || mx > dock->win->LeftEdge + dock->win->Width
@@ -364,23 +517,45 @@ VOID update_hover_gadget(struct DockWindow *dock)
 
         hide_gadget_label(dock);     
 
+        dock->hoverGad = NULL;
         dock->hoverCount = HOVER_COUNT;
 
-    } else if( (gadget = get_gadget_at(dock, mx, my) ) ) {
+        if( oldHoverGad ) {
+            draw_gadget(dock, oldHoverGad);
+        }
+
+    } else if( (node = get_gadget_at(dock, mx, my) ) ) {
+
+        gadget = node->dg;
 
         if( gadget == dock->hoverGad ) {
             return;
         }
 
-        if( dock->hoverCount <= 0 ) {
-            dock_gadget_get_label(gadget, &label);
-        
-            if( label && strlen(label) > 0 ) {
+        dock->hoverGad = gadget;
 
-                show_gadget_label(dock, gadget, label);
-            }                
-        } else {
-            dock->hoverCount--;
+        if( dock->cfg.showGadgetLabels ) {
+            if( dock->hoverCount <= 0 ) {
+                dock_gadget_get_label(gadget, &label);
+        
+                if( label && strlen(label) > 0 ) {
+
+                    show_gadget_label(dock, gadget, label);
+                }                
+            } else {
+                dock->hoverCount--;
+            }
+        }
+
+        if( dock->runState == RS_EDITING ) {
+
+            if( oldHoverGad ) {
+                draw_gadget(dock, oldHoverGad);
+            }
+
+            if( dock->hoverGad ) {
+                draw_gadget(dock, dock->hoverGad);
+            }
         }
     }
 }

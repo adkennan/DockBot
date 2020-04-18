@@ -15,14 +15,16 @@ OK
 ;
 MSG_ERR_OpenLibrary (//)
 Unable to open version %d of %s.
+;
+MSG_ERR_CantAddDirectory (//)
+Sorry, directories cannot be added to the dock.
+;
 ; Menu Strings
 MSG_MENU_Project (//)
 Project
 ;
 MSG_MENU_Settings (//)
-Settings...
-MSG_KEY_Settings (//)
-S
+Settings
 ;
 MSG_MENU_About (//)
 About...
@@ -41,6 +43,27 @@ MSG_MENU_Quit (//)
 Quit
 MSG_KEY_Quit (//)
 Q
+;
+MSG_MENU_EditMode (//)
+Edit
+MSG_KEY_EditMode (//)
+E
+;
+MSG_MENU_Save (//)
+Save Settings
+MSG_KEY_Save (//)
+W
+;
+MSG_MENU_Revert (//)
+Revert Settings
+MSG_KEY_Revert (//)
+Z
+;
+MSG_MENU_OpenPrefs (//)
+Open Preferences...
+MSG_KEY_OpenPrefs (//)
+S
+;
 ; About Dialog
 MSG_ABOUT_Title (//)
 About DockBot

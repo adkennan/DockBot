@@ -69,7 +69,9 @@ VOID handle_timer_message(struct DockWindow *dock)
     while( msg = GetMsg(dock->timerPort) ) {
     }
 
-    if( dock->runState == RS_RUNNING ) {
+    if( dock->runState == RS_RUNNING
+        || dock->runState == RS_CHANGING 
+        || dock->runState == RS_EDITING ) {
 
         FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
@@ -83,6 +85,13 @@ VOID handle_timer_message(struct DockWindow *dock)
             dock->runState = RS_STOPPED;
             break;
 
+        case RS_CHANGING:
+            handle_change_config(dock);
+
+            set_timer(dock, TIMER_INTERVAL);
+            break;            
+
+        case RS_EDITING:
         case RS_RUNNING:
             update_hover_gadget(dock);
 

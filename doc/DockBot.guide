@@ -77,7 +77,9 @@ A startup script named DockBotStart will be placed in SYS:WBStartup. If you move
 
 @node configuration "Configuration - The DockBot Manual"
 
-A configuration application named DockBotPrefs is included. It can be launched by choosing the Settings option from the DockBot Project menu.
+The gadgets in the DockBot window can be altered by choosing the Edit option from the Settings menu. In Edit mode, gadgets can be moved around the Dock or deleted. Icons dropped onto the window will be added as new Buttons. Choosing Save Settings from the Settings menu will save the changes. Revert Settings will discard the changes and reload the last saved configuration.
+
+More options are available in the Preferences editor. Open it by choosing Open Settings from the Settings menu.
 
 The settings window is divided into two parts. The top part controls the position and orientation of the window. The lower part defines the gadgets that appear in the window.
 
@@ -197,22 +199,21 @@ The following third party software has been used in the development of DockBot:
 - adoc (http://aminet.net/package/dev/misc/adoc-1.02)
 - ADtoHT2 (http://aminet.net/package/text/hyper/ADtoHT2_1)
 - Flexcat (http://aminet.net/package/dev/misc/FlexCat-2.18.lha)
+- KingCON (http://aminet.net/packages/util/shell/KingCON_1.3.lha)
 
-I use the following script to initialize my development environment:
+I use the script src/StartDockBotDev to initialize my environment. It expects the following assigns:
 
-	ASSIGN sc:         SYS:Applications/Development/SasC
-	ASSIGN lib:        sc:lib
-	ASSIGN include:    sc:include
-	ASSIGN cxxinclude: sc:cxxinclude
+- DOCKBOT: pointing to the directory containing DockBot.
+- DEV: pointing to a directory with this structure:
 
-	ASSIGN lib:        SYS:Dev/Triton/lib     ADD
-	ASSIGN include:    SYS:Dev/Triton/include ADD
-
-	ASSIGN include:    SYS:Dev/ScreenNotify/include ADD
-
-	PATH   sc:c        ADD
-
-I have adoc, ADtoHT2 and FlexCat installed in my path as well.
+  DEV:
+  |-- C
+  |   |-- adoc
+  |   \\-- ADToHT
+  |-- FlexCat/
+  |-- SasC/
+  |-- ScreenNotify/
+  \\-- Triton/
 
 @endnode
 
@@ -345,7 +346,6 @@ Here is an incomplete list of things that could be done to improve DockBot:
 - More translations.
 - Support multiple dock windows.
 - Docks on different public screens.
-- Change the Button class to allow choosing any image instead of always using an icon.
 - Detect new versions of workbench.library and use that to launch programs or open drawers.
 - New gadgets such as a sub-dock.
 - Maybe an AREXX port...
@@ -369,6 +369,8 @@ I'd like to thank the following people for their contributions to DockBot:
 - flype for submitting the code to support screennotify.library and a French translation.
 - Gulliver for submitting language catalogs.
 - shanshe for a bugfix to the gadget layout.
+- Samir Hawamdeh for the Italian translation.
+- Joel Edberg for bug reports and convincing me to add Edit Mode.
 
 Your suggestions and contributions make me want to keep developing DockBot.
 
@@ -376,6 +378,12 @@ Your suggestions and contributions make me want to keep developing DockBot.
 
 @node history "History - The DockBot Manual"
 
+Version 1.9 (17-Apr-2020):
+
+* Edit Mode! Gadgets can now be rearranged, added and removed from within the Dock.
+* Moved all rendering to an off-screen bitmap.
+* Fixed some memory leaking bugs in Prefs tool.
+* Italian translation by Samir Hawamdeh. Thanks!
 
 Version 1.8 (23-Mar-2020):
 

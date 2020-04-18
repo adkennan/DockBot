@@ -13,7 +13,8 @@
 #include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
-
+#include <clib/graphics_protos.h>
+#include <clib/layers_protos.h>
 
 UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
 {
@@ -27,6 +28,40 @@ UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
             return (UWORD)screen->Width;        
     }
     return 0;
+}
+
+
+VOID update_render_bitmap(struct DockWindow *dock, struct Screen *screen, UWORD w, UWORD h)
+{
+    struct DrawInfo *di;
+    
+    DEBUG(printf(__FUNC__ ": From %dx%d to %dx%d\n", dock->renderW, dock->renderH, w, h));
+
+    if( di = GetScreenDrawInfo(screen) ) {
+        if( dock->renderBm == NULL || 
+            dock->renderW != w || 
+            dock->renderH != h || 
+            dock->renderD != di->dri_Depth ) {
+
+            if( dock->renderL != NULL ) {
+                DeleteLayer(0L, dock->renderL);
+            }   
+
+            if( dock->renderBm != NULL ) {
+                FreeBitMap(dock->renderBm);
+            }
+
+            dock->renderBm = AllocBitMap(w + 8, h + 8, di->dri_Depth, 0, screen->RastPort.BitMap);
+
+            dock->renderD = di->dri_Depth;
+            dock->renderW = w;
+            dock->renderH = h;
+
+            dock->renderL = CreateUpfrontLayer(dock->renderLI, dock->renderBm, 0, 0, w, h, LAYERSIMPLE, NULL);
+
+        }
+        FreeScreenDrawInfo(screen, di);
+    }
 }
 
 
@@ -72,7 +107,7 @@ VOID layout_gadgets(struct DockWindow *dock)
 
             max = 0;
 
-            if( dock->cfg.pos == DP_TOP || dock->cfg.pos == DP_BOTTOM ) {
+            if( DOCK_HORIZONTAL(dock) ) {
 
                 i = 0;
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
@@ -109,6 +144,8 @@ VOID layout_gadgets(struct DockWindow *dock)
 
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
                 
+                    env.index = i;
+                    env.isLast = i == gadgetCount - 1;
                     env.gadgetBounds.x = x;
                     env.gadgetBounds.w = sizes[i];
                     env.gadgetBounds.h = max;
@@ -118,8 +155,6 @@ VOID layout_gadgets(struct DockWindow *dock)
                     x += sizes[i];
                     i++;
                 }                
-
-                ChangeWindowBox(dock->win, wx, wy, x, y);
 
             } else {
     
@@ -158,6 +193,8 @@ VOID layout_gadgets(struct DockWindow *dock)
 
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
                 
+                    env.index = i;
+                    env.isLast = i == gadgetCount - 1;
                     env.gadgetBounds.y = y;
                     env.gadgetBounds.w = max;
                     env.gadgetBounds.h = sizes[i];
@@ -168,18 +205,18 @@ VOID layout_gadgets(struct DockWindow *dock)
                     i++;
                 }                
 
-                ChangeWindowBox(dock->win, wx, wy, x, y);
             }
+
+            ChangeWindowBox(dock->win, wx, wy, x, y);
+            
+            update_render_bitmap(dock, screen, x, y);
 
             DB_FreeMem(sizes, sizeof(UWORD) * gadgetCount);
         }
 
         UnlockPubScreen(NULL, screen);
     }
-
-    dock->runState = RS_RUNNING;
 }
-
 
 VOID disable_layout(struct DockWindow *dock)
 {

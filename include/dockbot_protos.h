@@ -886,7 +886,7 @@ VOID __asm __saveds DB_DebugLog(
 
 APTR __asm __saveds DB_LoadBrush(
     register __a0 STRPTR fileName,
-    register __d0 BOOL createMask);
+    register __d0 UWORD flags);
 
 VOID __asm __saveds DB_FreeBrush(
     register __a0 APTR brush);
