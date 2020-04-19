@@ -224,6 +224,7 @@ VOID hide_dock_window(struct DockWindow *dock)
 
     if( dock->renderL ) {
         DeleteLayer(0L, dock->renderL);
+        dock->renderL = NULL;
     }
 
     if( dock->renderBm ) {

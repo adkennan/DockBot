@@ -93,6 +93,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 free_app_icon(dock);
                 remap_gadgets(dock);
                 enable_layout(dock);
+                draw_gadgets(dock);
                 dock->runState = RS_RUNNING;
                 break;
 
@@ -110,6 +111,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 }
                 remap_gadgets(dock);
                 enable_layout(dock);
+                draw_gadgets(dock);
                 dock->runState = RS_RUNNING;
                 break;
 
