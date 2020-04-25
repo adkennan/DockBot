@@ -45,19 +45,22 @@ VOID update_render_bitmap(struct DockWindow *dock, struct Screen *screen, UWORD 
 
             if( dock->renderL != NULL ) {
                 DeleteLayer(0L, dock->renderL);
+                dock->renderL = NULL;
             }   
 
             if( dock->renderBm != NULL ) {
                 FreeBitMap(dock->renderBm);
+                dock->renderBm = NULL;
             }
 
-            dock->renderBm = AllocBitMap(w + 8, h + 8, di->dri_Depth, 0, screen->RastPort.BitMap);
+            if( dock->renderBm = AllocBitMap(w + 8, h + 8, di->dri_Depth, 0, screen->RastPort.BitMap) ) {
 
-            dock->renderD = di->dri_Depth;
-            dock->renderW = w;
-            dock->renderH = h;
+                dock->renderD = di->dri_Depth;
+                dock->renderW = w;
+                dock->renderH = h;
 
-            dock->renderL = CreateUpfrontLayer(dock->renderLI, dock->renderBm, 0, 0, w, h, LAYERSIMPLE, NULL);
+                dock->renderL = CreateUpfrontLayer(dock->renderLI, dock->renderBm, 0, 0, w, h, LAYERSIMPLE, NULL);
+            }
 
         }
         FreeScreenDrawInfo(screen, di);
@@ -220,11 +223,14 @@ VOID layout_gadgets(struct DockWindow *dock)
 
 VOID disable_layout(struct DockWindow *dock)
 {
+    DEBUG(printf(__FUNC__ "\n"));
     dock->disableLayout = TRUE;
 }
 
 VOID enable_layout(struct DockWindow *dock)
 {
+    DEBUG(printf(__FUNC__ "\n"));
+
     dock->disableLayout = FALSE;
 
     layout_gadgets(dock);

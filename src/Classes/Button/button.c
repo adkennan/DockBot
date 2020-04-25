@@ -280,6 +280,7 @@ DB_METHOD_D(DISPOSE)
     }
 
     if( data->brushImg ) {
+        DEBUG(DB_Printf(__METHOD__ "Free brush %lx\n", data->brushImg));
         DB_FreeBrush(data->brushImg);
     }
 
@@ -334,7 +335,9 @@ DB_METHOD_D(REMAP)
     
     if( screen = LockPubScreen(NULL) ) {
 
-        LayoutIconA(data->diskObj, screen, NULL);
+        if( data->diskObj ) {
+            LayoutIconA(data->diskObj, screen, NULL);
+        }
 
         UnlockPubScreen(NULL, screen);
     }

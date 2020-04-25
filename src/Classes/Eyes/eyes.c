@@ -65,48 +65,25 @@ VOID init_eyes(struct EyesGadgetData *data)
     UWORD rx = xs - 1;
     UWORD ry = ys - 1;
     struct Eye *eye;
-    struct RastPort rp;
-    LONG fillPen;
-    struct Screen *screen;
 
     DEBUG(DB_Printf(__METHOD__ "\n"));
 
-    // Get ready to draw the mask.
-    InitRastPort(&rp);
-    rp.BitMap = data->mask;
-    rp.AreaInfo = &data->ai;
-    rp.TmpRas = &data->tr;
+    if( data->eyes = (struct Eye *)DB_AllocMem(data->eyeCount * sizeof(struct Eye), MEMF_CLEAR) ) {
 
-    if( screen = LockPubScreen(NULL) ) {
+        for( i = 0; i < data->eyeCount; i++ ) {
 
-        fillPen = ObtainBestPenA(screen->ViewPort.ColorMap, 0, 0, 0, NULL);
+            eye = &data->eyes[i];
+            eye->cx = 2 + xs + (2 * xs * i);
+            eye->cy = 2 + ys;
+            eye->sx = data->sx + eye->cx;
+            eye->sy = data->sy + eye->cy;
+            eye->rx = rx;
+            eye->ry = ry;
+            eye->ix = eye->cx;
+            eye->iy = eye->cy;
 
-        SetAPen(&rp, fillPen);
-
-        if( data->eyes = (struct Eye *)DB_AllocMem(data->eyeCount * sizeof(struct Eye), MEMF_CLEAR) ) {
-
-            for( i = 0; i < data->eyeCount; i++ ) {
-
-                eye = &data->eyes[i];
-                eye->cx = 2 + xs + (2 * xs * i);
-                eye->cy = 2 + ys;
-                eye->sx = data->sx + eye->cx;
-                eye->sy = data->sy + eye->cy;
-                eye->rx = rx;
-                eye->ry = ry;
-                eye->ix = eye->cx;
-                eye->iy = eye->cy;
-
-                AreaEllipse(&rp, eye->cx, eye->cy, eye->rx, eye->ry); 
-            }
-
-            AreaEnd(&rp);
         }
-
-        ReleasePen(screen->ViewPort.ColorMap, fillPen);
-
-        UnlockPubScreen(NULL, screen);
-    }   
+    }
 }
 
 VOID free_eyes(struct EyesGadgetData *data)
@@ -162,72 +139,62 @@ VOID measure_eyes(struct EyesGadgetData *data)
     }
 }
 
-VOID draw_eyes(struct EyesGadgetData *data)
+VOID draw_eyes(struct EyesGadgetData *data, struct RastPort *rp)
 {
     UWORD i;
     LONG fillPen, outlinePen;
     struct Screen *screen;
     struct Eye *eye;
-    struct Rect b;
 
     if( screen = LockPubScreen(NULL) ) {
 
         fillPen = ObtainBestPenA(screen->ViewPort.ColorMap, 0xff << 24, 0xff << 24, 0xff << 24, NULL);
         outlinePen = ObtainBestPenA(screen->ViewPort.ColorMap, 0, 0, 0, NULL);
 
-        SetAPen(&data->rp, fillPen);
+        rp->AreaInfo = &data->ai;
+        rp->TmpRas = &data->tr;
+
+        SetAPen(rp, fillPen);
 
         for( i = 0; i < data->eyeCount; i++ ) {
 
             eye = &data->eyes[i];
 
-            AreaEllipse(&data->rp, eye->cx, eye->cy, eye->rx, eye->ry); 
+            AreaEllipse(rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry); 
+
+            AreaEnd(rp);
         }
 
-        AreaEnd(&data->rp);
-
-        SetAPen(&data->rp, outlinePen);
+        SetAPen(rp, outlinePen);
 
         for( i = 0; i < data->eyeCount; i++ ) {
 
             eye = &data->eyes[i];
 
-            AreaEllipse(&data->rp, eye->ix, eye->iy, 3, 3);
+            AreaEllipse(rp, data->cx + eye->ix, data->cy + eye->iy, 3, 3);
 
-            DrawEllipse(&data->rp, eye->cx, eye->cy, eye->rx, eye->ry);
+            AreaEnd(rp);
+
+            DrawEllipse(rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry);
         }
     
-        AreaEnd(&data->rp);
-
         data->needsRedraw = FALSE;
+
+        rp->AreaInfo = NULL;
+        rp->TmpRas = NULL;
 
         ReleasePen(screen->ViewPort.ColorMap, fillPen);
         ReleasePen(screen->ViewPort.ColorMap, outlinePen);
 
         UnlockPubScreen(NULL, screen);
     }   
-
-    b.x = 0;
-    b.y = 0;
-    b.w = data->w;
-    b.h = data->h;
 }
 
-VOID free_offscreen_bm(struct EyesGadgetData *data)
+VOID free_drawing_buffers(struct EyesGadgetData *data)
 {
     DEBUG(DB_Printf(__METHOD__ "\n"));
 
-    data->rp.BitMap = NULL;
-    data->rp.AreaInfo = NULL;
-    data->rp.TmpRas = NULL;
-
-    if( data->initialized ) {
-
-        FreeBitMap(data->bm);
-        FreeBitMap(data->mask);
-
-        data->initialized = FALSE; 
-    }
+    data->initialized = FALSE; 
 
     if( data->aiBuf ) {
         DB_FreeMem(data->aiBuf, data->aiBufSize);
@@ -235,62 +202,46 @@ VOID free_offscreen_bm(struct EyesGadgetData *data)
     }
 
     if( data->trBuf ) {
-        DB_FreeMem(data->trBuf, data->trBufSize);
+        FreeRaster(data->trBuf, data->w * 2, data->h * 2);
         data->trBuf = NULL;
     }
 }
 
-VOID init_offscreen_bm(Object *o, struct EyesGadgetData *data)
+VOID init_drawing_data(Object *o, struct EyesGadgetData *data)
 {
     struct Screen *screen;
     struct GadgetEnvironment env;
 
     if( data->initialized ) {
-        free_offscreen_bm(data);
+        free_drawing_buffers(data);
     }  
 
     DB_GetDockGadgetEnvironment(o, &env);
 
-    data->trBufSize = RASSIZE(env.gadgetBounds.w * 2, env.gadgetBounds.h * 2);
     data->aiBufSize = 20 * data->eyeCount;
 
     if( screen = LockPubScreen(NULL) ) {
 
-        if( data->trBuf = DB_AllocMem(data->trBufSize, MEMF_CHIP|MEMF_CLEAR) ) {
+        if( data->trBuf = AllocRaster(env.gadgetBounds.w * 2, env.gadgetBounds.h * 2) ) {
 
-            if( data->aiBuf = DB_AllocMem(data->aiBufSize, MEMF_CHIP|MEMF_CLEAR) ) {
+            if( data->aiBuf = DB_AllocMem(data->aiBufSize, MEMF_CLEAR) ) {
 
-                if( data->bm = AllocBitMap(env.gadgetBounds.w, env.gadgetBounds.h, screen->BitMap.Depth, BMF_CLEAR, NULL) ) {
+                InitArea(&data->ai, data->aiBuf, data->eyeCount);
 
-                    if( data->mask = AllocBitMap(env.gadgetBounds.w, env.gadgetBounds.h, 1, BMF_CLEAR, NULL) ) {
+                InitTmpRas(&data->tr, data->trBuf, data->trBufSize);
 
-                        InitArea(&data->ai, data->aiBuf, data->aiBufSize);
-
-                        InitTmpRas(&data->tr, data->trBuf, data->trBufSize);
-
-                        InitRastPort(&data->rp);
-
-                        data->rp.BitMap = data->bm;
-                        data->rp.AreaInfo = &data->ai;
-                        data->rp.TmpRas = &data->tr;
-
-                        data->w = env.gadgetBounds.w;
-                        data->h = env.gadgetBounds.h;
-                        data->cx = env.gadgetBounds.x;
-                        data->cy = env.gadgetBounds.y;
-                        data->sx = env.windowBounds.x + env.gadgetBounds.x;
-                        data->sy = env.windowBounds.y + env.gadgetBounds.y;
-                        data->d = screen->BitMap.Depth;
+                data->w = env.gadgetBounds.w;
+                data->h = env.gadgetBounds.h;
+                data->cx = env.gadgetBounds.x;
+                data->cy = env.gadgetBounds.y;
+                data->sx = env.windowBounds.x + env.gadgetBounds.x;
+                data->sy = env.windowBounds.y + env.gadgetBounds.y;
+                data->d = screen->BitMap.Depth;
     
-                        data->initialized = TRUE;
-                    } else {
-                        DEBUG(DB_Printf(__METHOD__ "AllocBitMap for mask failed\n"));
-                    }
+                data->initialized = TRUE;
 
-                } else {
-                    DEBUG(DB_Printf(__METHOD__ "AllocBitMap failed\n"));
-                }
             }
+
         }
 
         UnlockPubScreen(NULL, screen);
@@ -310,7 +261,7 @@ DB_METHOD_D(DISPOSE)
 
     free_eyes(data);
 
-    free_offscreen_bm(data);
+    free_drawing_buffers(data);
 
     return 1;
 }
@@ -326,30 +277,19 @@ DB_METHOD_DM(DRAW,DockMessageDraw)
         env.gadgetBounds.w != data->w || 
         env.gadgetBounds.h != data->h ) {
         free_eyes(data);
-        free_offscreen_bm(data);
+        free_drawing_buffers(data);
     }
 
     if( ! data->initialized ) {
 
-        init_offscreen_bm(o, data);
+        init_drawing_data(o, data);
         init_eyes(data);
         measure_eyes(data);
     }
 
     if( data->initialized ) {
 
-        if( data->needsRedraw ) {
-            draw_eyes(data);
-        }
-
-        BltMaskBitMapRastPort(
-            data->bm, 0, 0, 
-            msg->rp, 
-            env.gadgetBounds.x, env.gadgetBounds.y, 
-            env.gadgetBounds.w, env.gadgetBounds.h, 
-            0xE0,
-            data->mask->Planes[0]
-        );
+        draw_eyes(data, msg->rp);
 
         if( env.showBorders ) {
             DB_DrawOutsetFrame(msg->rp, &env.gadgetBounds);

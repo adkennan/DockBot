@@ -78,12 +78,9 @@ struct EyesGadgetData
     UWORD sx, sy;           // Position within screen
 	UWORD aiBufSize, trBufSize;
     struct Eye *eyes;
-	struct BitMap *bm;      // \                          |
-	struct RastPort rp;     //  \                         |
-	struct AreaInfo ai;     //   > For off-screen drawing |
-	struct TmpRas tr;       //  /                         |
-	UBYTE *aiBuf, *trBuf;   // /                          |
-    struct BitMap *mask;
+	struct AreaInfo ai;
+	struct TmpRas tr;   
+	UBYTE *aiBuf, *trBuf;
 	BOOL initialized;
     BOOL needsRedraw;
 };

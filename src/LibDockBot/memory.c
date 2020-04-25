@@ -107,6 +107,11 @@ VOID *AllocMemInternalReal(struct DockBotLibrary *lib, ULONG byteSize, ULONG att
     if( (attributes & MEMF_CHIP) || ! mc->fastPool ) {
        
         if( result = AllocPooled(mc->chipPool, byteSize) ) {
+
+#ifdef DEBUG_BUILD
+            DebugLog("ALLOC CHIP Memory: 0x%lx 0x%lx %ld\n", result, (BYTE *)result + byteSize, byteSize);
+#endif
+
             mc->chipAllocated += byteSize;
             mc->chipAllocCount++;
 
@@ -186,6 +191,9 @@ VOID FreeMemInternalReal(struct DockBotLibrary *lib, VOID *memoryBlock, ULONG by
 
     if( TypeOfMem(memoryBlock) & MEMF_CHIP ) {
 
+#ifdef DEBUG_BUILD
+        DebugLog("FREE CHIP Memory: 0x%lx 0x%lx %ld\n", memoryBlock, (BYTE *)memoryBlock + byteSize, byteSize);
+#endif
         FreePooled(mc->chipPool, memoryBlock, byteSize);
         mc->chipFreeCount++;
         mc->chipAllocated -= byteSize;
