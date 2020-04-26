@@ -97,6 +97,10 @@ VOID handle_timer_message(struct DockWindow *dock)
 
             set_timer(dock, TIMER_INTERVAL);
             break;
+
+        case RS_HIDDEN:
+            set_timer(dock, TIMER_INTERVAL);
+            break;
         
         default:
             break;

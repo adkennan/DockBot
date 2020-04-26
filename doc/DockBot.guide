@@ -200,6 +200,8 @@ The following third party software has been used in the development of DockBot:
 - ADtoHT2 (http://aminet.net/package/text/hyper/ADtoHT2_1)
 - Flexcat (http://aminet.net/package/dev/misc/FlexCat-2.18.lha)
 - KingCON (http://aminet.net/packages/util/shell/KingCON_1.3.lha)
+- mmulib (http://aminet.net/packages/util/libs/MMULib)
+- sashimi (http://aminet.net/package/dev/debug/Sashimi.lha)
 
 I use the script src/StartDockBotDev to initialize my environment. It expects the following assigns:
 
@@ -209,8 +211,12 @@ I use the script src/StartDockBotDev to initialize my environment. It expects th
   DEV:
   |-- C
   |   |-- adoc
-  |   \\-- ADToHT
+  |   |-- ADToHT
+  |   \\-- Sashimi
   |-- FlexCat/
+  |-- MuTools
+  |   |-- MuForce
+  |   \\--MuGuardianAngel
   |-- SasC/
   |-- ScreenNotify/
   \\-- Triton/
@@ -225,6 +231,8 @@ The src drawer contains a number of scripts used to build DockBot:
 - CompileDist - Compiles DockBot for all 68000, 68020 and 68040 CPUs for distribution.
 - BuildDocs - Generates autodocs and converts them to AmigaGuide.
 - Package - Generates a release package.
+- StartMuForce - Runs MuForce, MuGuardianAngel and Sashimi
+- StopMyForce - Stops MuForce, MuGuardianAngel and Sashimi
 
 The Compile script has the following options:
 

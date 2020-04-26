@@ -82,7 +82,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 if( ! show_app_icon(dock) ) {
                     return;
                 }
-                dock->runState = RS_RUNNING;
+                dock->runState = RS_HIDDEN;
                 break;
 
             case RS_UNICONIFYING:
@@ -101,7 +101,7 @@ VOID run_event_loop(struct DockWindow *dock)
                 DEBUG(printf("runState = RS_HIDING\n"));
                 disable_layout(dock);
                 hide_dock_window(dock);
-                dock->runState = RS_RUNNING;
+                dock->runState = RS_HIDDEN;
                 break;
 
             case RS_SHOWING:
@@ -136,9 +136,10 @@ VOID run_event_loop(struct DockWindow *dock)
                 enable_notification(dock);
                 break;
 
-            case RS_EDITING:
-            case RS_RUNNING:
-            case RS_QUITTING:
+            case RS_STOPPED:
+                break;
+
+            default:
                 winsig      = WIN_SIG(dock);
                 docksig     = DOCK_SIG(dock);
                 iconsig     = ICON_SIG(dock);
@@ -150,14 +151,9 @@ VOID run_event_loop(struct DockWindow *dock)
 
                 totsig = winsig | docksig | iconsig | notifysig | timersig | gadgetsig | cxsig | screensig | SIGBREAKF_CTRL_C;
 
-                while( dock->runState == RS_RUNNING || 
-                       dock->runState == RS_EDITING ||   
-                        dock->runState == RS_CHANGING ||                    
-                        dock->runState == RS_QUITTING ) {
+                customsig = get_custom_sigs(dock);
 
-                    customsig = get_custom_sigs(dock);
-
-                    signals = Wait( totsig | customsig );
+                signals = Wait( totsig | customsig );
 
                     if( signals & SIGBREAKF_CTRL_C ) {
                         SetSignal(0, SIGBREAKF_CTRL_C);
@@ -199,7 +195,7 @@ VOID run_event_loop(struct DockWindow *dock)
                     if( signals & screensig ) {
                         handle_screennotify(dock);
                     }
-                }
+                
                 break;
         }
     }

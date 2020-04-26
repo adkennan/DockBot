@@ -11,6 +11,7 @@ assign include: DEV:ScreenNotify/include ADD
 path   sc:c        ADD QUIET
 path   DEV:flexcat ADD QUIET
 path   DEV:c       ADD QUIET
+path   DEV:MuTools ADD QUIET
 
 avail  flush >NIL:
 

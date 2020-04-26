@@ -221,16 +221,6 @@ VOID hide_dock_window(struct DockWindow *dock)
     	CloseWindow(dock->win);
         dock->win = NULL;
     }
-
-    if( dock->renderL ) {
-        DeleteLayer(0L, dock->renderL);
-        dock->renderL = NULL;
-    }
-
-    if( dock->renderBm ) {
-        FreeBitMap(dock->renderBm);
-        dock->renderBm = NULL;
-    }
 }
 
 VOID launch_dropped_icon(struct DockWindow *dock, struct AppMessage *msg)

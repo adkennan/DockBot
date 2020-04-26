@@ -67,7 +67,9 @@ typedef enum {
     RS_START_EDIT = 10,
 	RS_EDITING = 11,
     RS_STOP_EDIT = 12,
-	RS_CHANGING = 13
+	RS_CHANGING = 13,
+
+    RS_HIDDEN = 14
 } RunState;
 
 typedef enum {
@@ -304,6 +306,7 @@ VOID disable_layout(struct DockWindow *dock);
 
 VOID enable_layout(struct DockWindow *dock);
 
+VOID free_render_bitmap(struct DockWindow *dock);
 
 // cx.c - Commodities Exchange handling
 

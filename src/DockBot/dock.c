@@ -219,6 +219,8 @@ VOID free_dock(struct DockWindow* dock)
         }
     }
 
+    free_render_bitmap(dock);
+
     if( dock->renderLI ) {
         DisposeLayerInfo(dock->renderLI);
     }
