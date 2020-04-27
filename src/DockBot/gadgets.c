@@ -310,15 +310,52 @@ VOID update_entire_window(struct DockWindow *dock)
     EndRefresh(dock->win, TRUE);
 }
 
+struct Region *clip_to_gadget(struct DockWindow *dock, struct GadgetEnvironment *env)
+{
+    struct Region *oldR, *newR = NULL;
+    struct Rectangle bounds;
+
+    if( newR = NewRegion() ) {
+
+        bounds.MinX = env->gadgetBounds.x;
+        bounds.MinY = env->gadgetBounds.y;
+        bounds.MaxX = env->gadgetBounds.x + env->gadgetBounds.w - 1;
+        bounds.MaxY = env->gadgetBounds.y + env->gadgetBounds.h - 1;
+
+        DEBUG(printf(__FUNC__ ": Clip to %ld,%ld -> %ld,%ld\n", 
+            bounds.MinX, bounds.MinY, bounds.MaxX, bounds.MaxY));
+
+        OrRectRegion(newR, &bounds);
+
+        oldR = InstallClipRegion(dock->renderL, newR);
+    }
+
+    return oldR;
+}
+
+VOID unclip_gadget(struct DockWindow *dock, struct Region *r)
+{
+    struct Region *oldR;
+    if( r ) {
+
+        oldR = InstallClipRegion(dock->renderL, r);
+
+        if( oldR ) {
+            DisposeRegion(oldR);
+        }
+    }
+}
 
 VOID draw_gadgets(struct DockWindow *dock)
 {
     struct RastPort *rp;
     struct DgNode *curr;
+    struct GadgetEnvironment env;
     struct Rect r;
     struct Screen *screen;
+    struct Region *region;
 
-    if( dock->renderBm ) {
+    if( dock->renderL ) {
     
         rp = dock->renderL->rp;
         r.x = 0;
@@ -329,24 +366,36 @@ VOID draw_gadgets(struct DockWindow *dock)
         fill_background(dock, rp, &r);
 
         FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
+    
+            DEBUG(printf(__FUNC__ ": Drawing %s\n", curr->n.ln_Name));
 
-            dock_gadget_draw(curr->dg, rp);
+            DB_GetDockGadgetEnvironment(curr->dg, &env);
+
+            if( region = clip_to_gadget(dock, &env) ) {
+
+                dock_gadget_draw(curr->dg, rp);
+
+                if( dock->hoverGad == curr->dg && DOCK_EDITING(dock) ) {
+
+                    if( screen = LockPubScreen(NULL) ) {
+                    
+                        draw_edit_controls(dock, screen, rp, dock->hoverGad);
+
+                        UnlockPubScreen(NULL, screen);
+                    }                
+                }
+
+                unclip_gadget(dock, region);
+            }
         }
         
         if( ! dock->cfg.showGadgetBorders ) {
             DB_DrawOutsetFrame(rp, &r);
         }
 
-        if( DOCK_EDITING(dock) && dock->hoverGad != NULL ) {
-            if( screen = LockPubScreen(NULL) ) {
-                
-                draw_edit_controls(dock, screen, rp, dock->hoverGad);
-
-                UnlockPubScreen(NULL, screen);
-            }
-        }
-
         update_window(dock, &r);
+    } else {
+        DEBUG(printf(__FUNC__ ": ERROR: No render layer!\n"));
     }
 }
 
@@ -357,37 +406,44 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
     struct RastPort *rp;
     struct GadgetEnvironment env;
     struct Rect r;
+    struct Region *region;
 
-    if( dock->renderBm ) {
-    
-        rp = dock->renderL->rp;
+    if( dock->renderL ) {
 
         DB_GetDockGadgetEnvironment(gadget, &env);
+    
+        if( region = clip_to_gadget(dock, &env) ) {
+            
+            rp = dock->renderL->rp;
 
-        fill_background(dock, rp, &env.gadgetBounds);
+            fill_background(dock, rp, &env.gadgetBounds);
 
-        dock_gadget_draw(gadget, rp);
+            dock_gadget_draw(gadget, rp);
 
-        if( ! dock->cfg.showGadgetBorders ) {
+            if( ! dock->cfg.showGadgetBorders ) {
 
-            r.x = 0;
-            r.y = 0;
-            r.w = dock->renderW;
-            r.h = dock->renderH;
+                r.x = 0;
+                r.y = 0;
+                r.w = dock->renderW;
+                r.h = dock->renderH;
 
-            DB_DrawOutsetFrame(rp, &r);
-        }
-
-        if( DOCK_EDITING(dock) && gadget == dock->hoverGad ) {
-            if( screen = LockPubScreen(NULL) ) {
-
-                draw_edit_controls(dock, screen, rp, gadget);
-                
-                UnlockPubScreen(NULL, screen);
+                DB_DrawOutsetFrame(rp, &r);
             }
-        }
 
-        update_window(dock, &env.gadgetBounds);
+            if( DOCK_EDITING(dock) && gadget == dock->hoverGad ) {
+
+                if( screen = LockPubScreen(NULL) ) {
+
+                    draw_edit_controls(dock, screen, rp, gadget);
+                
+                    UnlockPubScreen(NULL, screen);
+                }
+            }
+
+            unclip_gadget(dock, region);
+
+            update_window(dock, &env.gadgetBounds);
+        }
     }
 }
 
