@@ -154,24 +154,21 @@ struct DockWindow* create_dock(VOID)
         dock->cfg.showGadgetLabels = TRUE;
         dock->cfg.showGadgetBorders = TRUE;
 
-        if( dock->renderLI = NewLayerInfo() ) {
+        if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 
-            if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
+            if( init_gadget_classes(dock) ) {
 
-                if( init_gadget_classes(dock) ) {
+                if( init_gadgets(dock) ) {    
 
-                    if( init_gadgets(dock) ) {    
-
-                        if( init_config_notification(dock) ) {
+                    if( init_config_notification(dock) ) {
                         
-                            if( init_timer_notification(dock) ) {
+                        if( init_timer_notification(dock) ) {
 
-                                if( init_screennotify(dock) ) {
+                            if( init_screennotify(dock) ) {
 
-                                    if( get_prog_path(dock) ) {
+                                if( get_prog_path(dock) ) {
     
-                                        return dock;
-                                    }
+                                    return dock;
                                 }
                             }
                         }        
@@ -217,12 +214,6 @@ VOID free_dock(struct DockWindow* dock)
         if( dock->bgBrush ) {
             DB_FreeBrush(dock->bgBrush);
         }
-    }
-
-    free_render_bitmap(dock);
-
-    if( dock->renderLI ) {
-        DisposeLayerInfo(dock->renderLI);
     }
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));

@@ -30,88 +30,6 @@ UWORD get_max_window_size(struct Screen *screen, DockPosition pos)
     return 0;
 }
 
-VOID free_render_bitmap(struct DockWindow *dock)
-{
-    struct Region *r;
-    
-    DEBUG(printf(__FUNC__ "\n"));
-
-    if( dock->renderL != NULL ) {
-
-        DEBUG(printf(__FUNC__ ": Remove clip region\n"));
-    
-        r = InstallClipRegion(dock->renderL, NULL);    
-            
-        if( r ) {
-
-            DEBUG(printf(__FUNC__ ": Dispose region\n"));
-
-            DisposeRegion(r);
-        }    
-
-        DEBUG(printf(__FUNC__ ": Delete layer\n"));
-
-        DeleteLayer(0L, dock->renderL);
-        dock->renderL = NULL;
-    }   
-
-    if( dock->renderBm != NULL ) {
-
-
-        DEBUG(printf(__FUNC__ ": Free bitmap\n"));
-
-        FreeBitMap(dock->renderBm);
-        dock->renderBm = NULL;
-    }
-
-    DEBUG(printf(__FUNC__ ": Done\n"));
-}
-
-VOID update_render_bitmap(struct DockWindow *dock, struct Screen *screen, UWORD w, UWORD h)
-{
-    struct DrawInfo *di;
-    struct Region *r;
-    struct Rectangle bounds;
-    
-    DEBUG(printf(__FUNC__ ": From %dx%d to %dx%d\n", dock->renderW, dock->renderH, w, h));
-
-    if( di = GetScreenDrawInfo(screen) ) {
-        if( dock->renderBm == NULL || 
-            dock->renderW != w || 
-            dock->renderH != h || 
-            dock->renderD != di->dri_Depth ) {
-
-            free_render_bitmap(dock);
-
-            if( dock->renderBm = AllocBitMap(w, h, di->dri_Depth, 0, screen->RastPort.BitMap) ) {
-
-                dock->renderD = di->dri_Depth;
-                dock->renderW = w;
-                dock->renderH = h;
-
-                dock->renderL = CreateUpfrontLayer(dock->renderLI, dock->renderBm, 0, 0, w - 1, h - 1, LAYERSIMPLE, NULL);
-
-                if( r = NewRegion() ) {
-                    
-                    bounds.MinX = 0;
-                    bounds.MinY = 0;
-                    bounds.MaxX = w - 1;
-                    bounds.MaxY = h - 1;
-
-                    OrRectRegion(r, &bounds);
-
-                    InstallClipRegion(dock->renderL, r);
-                }
-            }
-
-        }
-        FreeScreenDrawInfo(screen, di);
-    }
-
-    DEBUG(printf(__FUNC__ ": Done\n"));
-}
-
-
 VOID layout_gadgets(struct DockWindow *dock)
 {
     UWORD w, h, x, y, i, max, size, maxSize, wx, wy;
@@ -254,10 +172,9 @@ VOID layout_gadgets(struct DockWindow *dock)
 
             }
 
+            ChangeWindowBox(dock->win, wx, wy, 1, 1);
             ChangeWindowBox(dock->win, wx, wy, x, y);
             
-            update_render_bitmap(dock, screen, x, y);
-
             DB_FreeMem(sizes, sizeof(UWORD) * gadgetCount);
         }
 
