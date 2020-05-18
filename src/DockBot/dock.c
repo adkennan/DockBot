@@ -163,7 +163,7 @@ struct DockWindow* create_dock(VOID)
 
                 if( init_gadgets(dock) ) {    
 
-                   if( init_config_notification(dock) ) {
+                    if( init_config_notification(dock) ) {
                         
                         if( init_timer_notification(dock) ) {
 
@@ -215,7 +215,7 @@ VOID free_dock(struct DockWindow* dock)
 
     free_render_bitmap(dock);
 
-    DB_FreeMem(dock, sizeof(struct DockWindow));
+	DB_FreeMem(dock, sizeof(struct DockWindow));
 
     DEBUG(printf("Done\n"));
 }

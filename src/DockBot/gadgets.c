@@ -124,7 +124,7 @@ VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *
 
     ex = b->x + b->w - 1;
     ey = b->y + b->h - 1;
-   
+    
     x = sx;
     y = sy;
 
@@ -265,7 +265,9 @@ VOID update_entire_window(struct DockWindow *dock)
     DEBUG(printf(__FUNC__ "\n"));
 
     BeginRefresh(dock->win);
+
     update_window(dock, 0, 0, dock->renderW, dock->renderH);
+
     EndRefresh(dock->win, TRUE);
 }
 
@@ -291,6 +293,7 @@ struct Region *clip_to_gadget(struct DockWindow *dock, struct GadgetEnvironment 
         OrRectRegion(newR, &bounds);
 
         oldR = InstallClipRegion(dock->renderL, newR);
+    
     }
 
     return oldR;
@@ -306,7 +309,7 @@ VOID unclip_gadget(struct DockWindow *dock, struct Region *r)
 
     if( r ) {
 
-        oldR = InstallClipRegion(dock->win->WLayer, r);
+        oldR = InstallClipRegion(dock->renderL, r);
 
         if( oldR ) {
             DisposeRegion(oldR);
@@ -328,8 +331,8 @@ VOID draw_gadgets(struct DockWindow *dock)
         rp =  &dock->renderRP;
         r.x = 0;
         r.y = 0;
-        r.w = dock->win->Width;
-        r.h = dock->win->Height;
+        r.w = dock->renderW;
+        r.h = dock->renderH;
 
         fill_background(dock, rp, &r);
 
