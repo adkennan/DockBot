@@ -16,6 +16,7 @@
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/layers_protos.h>
+#include <clib/graphics_protos.h>
 #include <devices/timer.h>
 
 #include "dock_handle.h"
@@ -154,24 +155,23 @@ struct DockWindow* create_dock(VOID)
         dock->cfg.showGadgetLabels = TRUE;
         dock->cfg.showGadgetBorders = TRUE;
 
-        if( dock->renderLI = NewLayerInfo() ) {
+        InitRastPort(&dock->renderRP);
 
-            if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
+        if( dock->pubPort = CreatePort(APP_NAME, 0L) ) {
 
-                if( init_gadget_classes(dock) ) {
+            if( init_gadget_classes(dock) ) {
 
-                    if( init_gadgets(dock) ) {    
+                if( init_gadgets(dock) ) {    
 
-                        if( init_config_notification(dock) ) {
+                    if( init_config_notification(dock) ) {
                         
-                            if( init_timer_notification(dock) ) {
+                        if( init_timer_notification(dock) ) {
 
-                                if( init_screennotify(dock) ) {
+                            if( init_screennotify(dock) ) {
 
-                                    if( get_prog_path(dock) ) {
+                                if( get_prog_path(dock) ) {
     
-                                        return dock;
-                                    }
+                                    return dock;
                                 }
                             }
                         }        
@@ -211,19 +211,9 @@ VOID free_dock(struct DockWindow* dock)
 
     free_icon_brushes(dock);
 
-    if( dock->cfg.bgBrushPath ) {
-        FREE_STRING(dock->cfg.bgBrushPath);
-    
-        if( dock->bgBrush ) {
-            DB_FreeBrush(dock->bgBrush);
-        }
-    }
+    free_config(dock);
 
     free_render_bitmap(dock);
-
-    if( dock->renderLI ) {
-        DisposeLayerInfo(dock->renderLI);
-    }
 
 	DB_FreeMem(dock, sizeof(struct DockWindow));
 

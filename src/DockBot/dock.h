@@ -94,6 +94,7 @@ typedef enum {
 	II_ARROW_UP_INV = 7,
 	II_ARROW_DOWN_INV = 8,
 	II_DELETE_INV = 9,
+    II_NONE = 10
 } IconIndex;
 
 #define ICON_COUNT 10
@@ -114,10 +115,6 @@ struct DockWindow
     struct AppWindow *appWin;
     struct MsgPort *awPort;
     struct Menu* menu;
-	struct BitMap *renderBm;
-	struct Layer_Info *renderLI;
-	struct Layer *renderL;
-	UWORD renderW, renderH, renderD;
 
     // Built in classes
     Class *handleClass;
@@ -172,6 +169,13 @@ struct DockWindow
 	UWORD editCount;
 	UWORD editOp;
 	struct DgNode *editNode;
+
+	// Rendering
+    struct RastPort renderRP;
+	struct Layer_Info *renderLI;
+	struct Layer *renderL;
+	struct BitMap *renderBM;
+	UWORD renderW, renderH;
 };
 
 #define TIMER_INTERVAL 250L
@@ -202,6 +206,8 @@ VOID show_about(struct DockWindow *dock);
 // settings.c
 
 BOOL load_config(struct DockWindow *dock);
+
+VOID free_config(struct DockWindow *dock);
 
 BOOL init_config_notification(struct DockWindow *dock);
 

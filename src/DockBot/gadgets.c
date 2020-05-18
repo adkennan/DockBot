@@ -99,9 +99,7 @@ VOID remove_dock_gadgets(struct DockWindow *dock)
 
 VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *b)
 {
-    UWORD x, y, bx, by, bw, bh, stepX, stepY, ex, ey;
-
-    DEBUG(printf(__FUNC__ ": (%ld, %ld) -> (%ld, %ld)\n", (LONG)b->x, (LONG)b->y, (LONG)b->w, (LONG)b->h));
+    UWORD x, y, sx, sy, stepX, stepY, ex, ey;
 
     if( ! dock->bgBrush ) {
 
@@ -113,73 +111,31 @@ VOID fill_background(struct DockWindow *dock, struct RastPort *rp, struct Rect *
 
     DB_GetBrushSize(dock->bgBrush, &stepX, &stepY);
 
-    x = b->x;
-    y = b->y;
+    sx = b->x;
+    sy = b->y;
     
-    bx = 0;
-    if( x > 0 ) {
-        bx = x % stepX;
+    if( sx > 0 ) {
+        sx = sx - (sx % stepX);
     }
     
-    by = 0;
-    if( y > 0 ) {
-        by = y % stepY;
+    if( sy > 0 ) {
+        sy = sy - (sy % stepY);
     }    
 
     ex = b->x + b->w - 1;
-    if( ex >= dock->renderW ) {
-        ex = dock->renderW - 1;
-    }
-
     ey = b->y + b->h - 1;
-    if( ey >= dock->renderH ) {
-        ey = dock->renderH - 1;
-    }
     
-    if( y + stepY >= ey ) {
-        bh = ey - y;
-    } else if( by > 0 ) {
-        bh = stepY - by;
-    } else {
-        bh = stepY;
-    }
-
-    DEBUG(printf(__FUNC__ ": y = %ld, stepY = %ld, ey = %ld, bh = %ld\n",
-       (LONG)y, (LONG)stepY, (LONG)ey, (LONG)bh));
+    x = sx;
+    y = sy;
 
     while( y < ey ) {
 
-        if( x + stepX >= ex ) {
-            bw = ex - x;
-        } else if( bx > 0 ) {
-            bw = stepX - bx;
-        } else {
-            bw = stepX;
-        }
-    
-        DB_DrawBrush(dock->bgBrush, rp, bx, by, x, y, bw, bh);
+        DB_DrawBrush(dock->bgBrush, rp, 0, 0, x, y, stepX, stepY);
 
-        bx = 0;
-        x += bw;
+        x += stepX;
         if( x >= ex ) {
-            x = b->x;
-            if( x > 0 ) {
-                bx = x % stepX;
-            }
-
-            y += bh;    
-            by = 0;
-
-            if( y + stepY >= ey ) {
-                bh = ey - y;
-            } else if( by > 0 ) {
-                bh = stepY - by;
-            } else {
-                bh = stepY;
-            }
-
-            DEBUG(printf(__FUNC__ ": y = %ld, stepY = %ld, ey = %ld, bh = %ld\n",
-                (LONG)y, (LONG)stepY, (LONG)ey, (LONG)bh));
+            x = sx;
+            y += stepY;    
         }
     }    
 }
@@ -238,6 +194,11 @@ VOID draw_edit_controls(struct DockWindow *dock, struct Screen *screen, struct R
                     break;
             }
         }
+
+        if( env.isLast ) {
+            i2 = II_NONE;
+        }
+
     } else {
 
         i1 = II_ARROW_UP;
@@ -260,63 +221,67 @@ VOID draw_edit_controls(struct DockWindow *dock, struct Screen *screen, struct R
 
             }
         }
+
+        if( env.isLast ) {
+            i3 = II_NONE;
+        }
+    }
+
+    if( env.index <= 1 ) {
+        i1 = II_NONE;
+    }
+
+
+    if( i1 != II_NONE ) {
+        DB_DrawBrush(dock->iconBrush, rp, i1 * dock->iconW, 0,
+            env.gadgetBounds.x, env.gadgetBounds.y, dock->iconW, dock->iconH);
     }
     
-    DEBUG(printf(__FUNC__ ": %d, %d, %d\n", i1, i2, i3));    
-
-    if( env.index > 1 ) {
-        DB_DrawBrush(dock->iconBrush, rp, i1 * dock->iconW, 0,
-                env.gadgetBounds.x, env.gadgetBounds.y, dock->iconW, dock->iconH);
+    if( i2 != II_NONE ) {
+        DB_DrawBrush(dock->iconBrush, rp, i2 * dock->iconW, 0,
+                env.gadgetBounds.x + env.gadgetBounds.w - 1 - dock->iconW,
+                env.gadgetBounds.y, dock->iconW, dock->iconH);
     }
 
-    DB_DrawBrush(dock->iconBrush, rp, i2 * dock->iconW, 0,
-            env.gadgetBounds.x + env.gadgetBounds.w - 1 - dock->iconW,
-            env.gadgetBounds.y, dock->iconW, dock->iconH);
-
-    if( ! env.isLast ) {
+    if( i3 != II_NONE ) {
         DB_DrawBrush(dock->iconBrush, rp, i3 * dock->iconW, 0,
                 env.gadgetBounds.x,
                 env.gadgetBounds.y + env.gadgetBounds.h - 1 - dock->iconH,
-                 dock->iconW, dock->iconH);
+                dock->iconW, dock->iconH);
     }
 }
 
-VOID update_window(struct DockWindow *dock, struct Rect *b)
+VOID update_window(struct DockWindow *dock, UWORD x, UWORD y, UWORD w, UWORD h)
 {
-    DEBUG(printf(__FUNC__ ": (%d,%d) (%d,%d)\n", b->x, b->y, b->w, b->h));
+    DEBUG(printf(__FUNC__ ": %d,%d %d,%d\n", x, y, w, h));
 
-    BltBitMapRastPort(dock->renderBm, b->x, b->y, dock->win->RPort, b->x, b->y, b->w, b->h, 0xC0);
+    if( dock->renderBM && dock->win ) {
+        BltBitMapRastPort(dock->renderBM, x, y, dock->win->RPort, x, y, w, h, 0xC0);
+    }
 }
 
 VOID update_entire_window(struct DockWindow *dock)
 {
-    struct Rect r;
-
-    if( ! dock->win || ! dock->renderBm ) {
-        return;
-    }
-    
     DEBUG(printf(__FUNC__ "\n"));
 
-    r.x = 0;
-    r.y = 0;
-    r.w = dock->renderW;
-    r.h = dock->renderH;
+    BeginRefresh(dock->win);
 
-    BeginRefresh(dock->win);              
-
-    update_window(dock, &r);
+    update_window(dock, 0, 0, dock->renderW, dock->renderH);
 
     EndRefresh(dock->win, TRUE);
 }
 
 struct Region *clip_to_gadget(struct DockWindow *dock, struct GadgetEnvironment *env)
 {
-    struct Region *oldR, *newR = NULL;
+    struct Region *oldR, *newR;
     struct Rectangle bounds;
 
-    if( newR = NewRegion() ) {
+    if( ! dock->renderL ) {
+        return NULL;
+    }
 
+    if( newR = NewRegion() ) {
+    
         bounds.MinX = env->gadgetBounds.x;
         bounds.MinY = env->gadgetBounds.y;
         bounds.MaxX = env->gadgetBounds.x + env->gadgetBounds.w - 1;
@@ -328,6 +293,7 @@ struct Region *clip_to_gadget(struct DockWindow *dock, struct GadgetEnvironment 
         OrRectRegion(newR, &bounds);
 
         oldR = InstallClipRegion(dock->renderL, newR);
+    
     }
 
     return oldR;
@@ -336,6 +302,11 @@ struct Region *clip_to_gadget(struct DockWindow *dock, struct GadgetEnvironment 
 VOID unclip_gadget(struct DockWindow *dock, struct Region *r)
 {
     struct Region *oldR;
+
+    if( ! dock->renderL ) {
+        return;
+    }
+
     if( r ) {
 
         oldR = InstallClipRegion(dock->renderL, r);
@@ -355,9 +326,9 @@ VOID draw_gadgets(struct DockWindow *dock)
     struct Screen *screen;
     struct Region *region;
 
-    if( dock->renderL ) {
-    
-        rp = dock->renderL->rp;
+    if( dock->renderBM ) {
+
+        rp =  &dock->renderRP;
         r.x = 0;
         r.y = 0;
         r.w = dock->renderW;
@@ -393,9 +364,7 @@ VOID draw_gadgets(struct DockWindow *dock)
             DB_DrawOutsetFrame(rp, &r);
         }
 
-        update_window(dock, &r);
-    } else {
-        DEBUG(printf(__FUNC__ ": ERROR: No render layer!\n"));
+        update_window(dock, 0, 0, dock->renderW, dock->renderH);
     }
 }
 
@@ -408,14 +377,14 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
     struct Rect r;
     struct Region *region;
 
-    if( dock->renderL ) {
+    if( dock->renderBM ) {
+
+        rp = &dock->renderRP;
 
         DB_GetDockGadgetEnvironment(gadget, &env);
     
         if( region = clip_to_gadget(dock, &env) ) {
             
-            rp = dock->renderL->rp;
-
             fill_background(dock, rp, &env.gadgetBounds);
 
             dock_gadget_draw(gadget, rp);
@@ -424,8 +393,8 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
 
                 r.x = 0;
                 r.y = 0;
-                r.w = dock->renderW;
-                r.h = dock->renderH;
+                r.w = dock->win->Width;
+                r.h = dock->win->Height;
 
                 DB_DrawOutsetFrame(rp, &r);
             }
@@ -441,9 +410,10 @@ VOID draw_gadget(struct DockWindow *dock, Object *gadget)
             }
 
             unclip_gadget(dock, region);
-
-            update_window(dock, &env.gadgetBounds);
         }
+
+        update_window(dock, env.gadgetBounds.x, env.gadgetBounds.y,
+                            env.gadgetBounds.w, env.gadgetBounds.h );
     }
 }
 

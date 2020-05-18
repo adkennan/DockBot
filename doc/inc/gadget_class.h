@@ -1,6 +1,6 @@
 @DATABASE "gadget_class.h"
 @MASTER   "Stuff:Andrew/DockBot/include/gadget_class.h"
-@REMARK   This file was created by ADtoHT 2.1 on 07-Feb-20 20:51:30
+@REMARK   This file was created by ADtoHT 2.1 on 05-May-20 21:03:29
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 
@@ -51,7 +51,7 @@ VOID geta4(VOID);
 //#define CLASS_DESC
 //#define CLASS_COPYRIGHT
 
-#define PARENT_CLASS    @{"DB_ROOT_CLASS" LINK "dockbot.h/File" 91}
+#define PARENT_CLASS    @{"DB_ROOT_CLASS" LINK "dockbot.h/File" 101}
 
 // Instance Data
 //#define PRIVATE_DATA

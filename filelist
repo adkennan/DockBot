@@ -13,7 +13,9 @@ DockBot/README.md
 DockBot/DockBot.readme.info
 DockBot/DockBot.prefs
 DockBot/Screenshot.info
-DockBot/bin
+DockBot/bin/68000
+DockBot/bin/68020
+DockBot/bin/68040
 DockBot/Install.info
 DockBot/LICENCE.info
 DockBot/README.md.info

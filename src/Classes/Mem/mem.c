@@ -108,7 +108,8 @@ VOID draw_mem(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
     RectFill(rp, frame.x, frame.y, frame.x + frame.w - 2, frame.y + frame.h - 2);
 
     DB_DrawOutsetFrame(rp, &frame);
-    
+
+
     sprintf((STRPTR)&buf, label, (free * 100L) / total);
 
     text.ITextFont = &ta;

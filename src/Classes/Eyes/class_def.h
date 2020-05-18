@@ -80,6 +80,7 @@ struct EyesGadgetData
     struct Eye *eyes;
 	struct AreaInfo ai;
 	struct TmpRas tr;   
+    struct RastPort rp;
 	UBYTE *aiBuf, *trBuf;
 	BOOL initialized;
     BOOL needsRedraw;

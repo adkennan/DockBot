@@ -1,6 +1,6 @@
 @DATABASE "dockbot_pragmas.h"
 @MASTER   "Stuff:Andrew/DockBot/include/dockbot_pragmas.h"
-@REMARK   This file was created by ADtoHT 2.1 on 03-Dec-19 21:18:59
+@REMARK   This file was created by ADtoHT 2.1 on 05-May-20 21:03:26
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 
@@ -18,7 +18,7 @@
 /*                                  */
 /************************************/
 /* Dock gadget functions*/
-#pragma libcall DockBotBase DB_GetDockGadgetBounds 1e 9802
+#pragma libcall DockBotBase DB_GetDockGadgetEnvironment 1e 9802
 #pragma libcall DockBotBase DB_RequestDockQuit 24 801
 #pragma libcall DockBotBase DB_RequestDockGadgetDraw 2a 801
 #pragma libcall DockBotBase DB_RequestLaunch 30 0BA9805
@@ -46,4 +46,23 @@
 #pragma libcall DockBotBase DB_ListClasses 9c 801
 /* User Messages*/
 #pragma libcall DockBotBase DB_ShowError a2 801
+/* Gadget Message Ports*/
+#pragma libcall DockBotBase DB_RegisterPort a8 9802
+#pragma libcall DockBotBase DB_UnregisterPort ae 9802
+/* Config cleanup*/
+#pragma libcall DockBotBase DB_DisposeConfig b4 801
+/* More gadget stuff*/
+#pragma libcall DockBotBase DB_DisposeDockGadget ba 801
+#pragma libcall DockBotBase DB_FreeGadget c0 801
+#pragma libcall DockBotBase DB_AllocGadget c6 801
+/* Debug Logging*/
+#pragma libcall DockBotBase DB_RegisterDebugStream cc 801
+#pragma libcall DockBotBase DB_DebugLog d2 9802
+/* Brushes*/
+#pragma libcall DockBotBase DB_LoadBrush d8 0802
+#pragma libcall DockBotBase DB_FreeBrush de 801
+#pragma libcall DockBotBase DB_DrawBrush e4 5432109808
+#pragma libcall DockBotBase DB_GetBrushSize ea A9803
+/* File Requester*/
+#pragma libcall DockBotBase DB_SelectFile f0 BA9804
 @ENDNODE

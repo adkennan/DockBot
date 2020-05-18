@@ -146,42 +146,39 @@ VOID draw_eyes(struct EyesGadgetData *data, struct RastPort *rp)
     struct Screen *screen;
     struct Eye *eye;
 
+    data->rp.BitMap = rp->BitMap;
+    data->rp.Layer = rp->Layer;    
+
     if( screen = LockPubScreen(NULL) ) {
 
         fillPen = ObtainBestPenA(screen->ViewPort.ColorMap, 0xff << 24, 0xff << 24, 0xff << 24, NULL);
         outlinePen = ObtainBestPenA(screen->ViewPort.ColorMap, 0, 0, 0, NULL);
 
-        rp->AreaInfo = &data->ai;
-        rp->TmpRas = &data->tr;
-
-        SetAPen(rp, fillPen);
+        SetAPen(&data->rp, fillPen);
 
         for( i = 0; i < data->eyeCount; i++ ) {
 
             eye = &data->eyes[i];
 
-            AreaEllipse(rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry); 
+            AreaEllipse(&data->rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry); 
 
-            AreaEnd(rp);
+            AreaEnd(&data->rp);
         }
 
-        SetAPen(rp, outlinePen);
+        SetAPen(&data->rp, outlinePen);
 
         for( i = 0; i < data->eyeCount; i++ ) {
 
             eye = &data->eyes[i];
 
-            AreaEllipse(rp, data->cx + eye->ix, data->cy + eye->iy, 3, 3);
+            AreaEllipse(&data->rp, data->cx + eye->ix, data->cy + eye->iy, 3, 3);
 
-            AreaEnd(rp);
+            AreaEnd(&data->rp);
 
-            DrawEllipse(rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry);
+            DrawEllipse(&data->rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry);
         }
     
         data->needsRedraw = FALSE;
-
-        rp->AreaInfo = NULL;
-        rp->TmpRas = NULL;
 
         ReleasePen(screen->ViewPort.ColorMap, fillPen);
         ReleasePen(screen->ViewPort.ColorMap, outlinePen);
@@ -229,6 +226,10 @@ VOID init_drawing_data(Object *o, struct EyesGadgetData *data)
                 InitArea(&data->ai, data->aiBuf, data->eyeCount);
 
                 InitTmpRas(&data->tr, data->trBuf, data->trBufSize);
+
+                InitRastPort(&data->rp);
+                data->rp.TmpRas = &data->tr;
+                data->rp.AreaInfo = &data->ai;
 
                 data->w = env.gadgetBounds.w;
                 data->h = env.gadgetBounds.h;

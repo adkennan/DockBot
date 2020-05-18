@@ -16,6 +16,16 @@
 #define ICON_PATH_HI "PROGDIR:icons_hi"
 #define ICON_PATH_MED "PROGDIR:icons_med"
 
+VOID free_config(struct DockWindow *dock)
+{
+    if( dock->bgBrush ) {
+        DB_FreeBrush(dock->bgBrush);
+        dock->bgBrush = NULL;
+    }
+
+    FREE_STRING(dock->cfg.bgBrushPath);
+}
+
 BOOL load_config(struct DockWindow *dock)
 {
     struct DockSettings *s;
@@ -23,6 +33,8 @@ BOOL load_config(struct DockWindow *dock)
     BOOL r = FALSE;
 
     DEBUG(printf(__FUNC__ ": %s\n", CONFIG_FILE));
+
+    free_config(dock);
 
     if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 

@@ -1,6 +1,6 @@
 @DATABASE "dockbot_protos.h"
 @MASTER   "Stuff:Andrew/DockBot/include/dockbot_protos.h"
-@REMARK   This file was created by ADtoHT 2.1 on 07-Feb-20 20:51:19
+@REMARK   This file was created by ADtoHT 2.1 on 05-May-20 21:03:27
 @REMARK   Do not edit
 @REMARK   ADtoHT is © 1993-1995 Christian Stieber
 
@@ -36,7 +36,7 @@
 *   SYNOPSIS
 *       @{"DB_GetDockGadgetEnvironment" LINK "dockbot/DB_GetDockGadgetEnvironment"}(obj, env)
 *                                   A0    A1
-*       VOID @{"DB_GetDockGadgetEnvironment" LINK "dockbot/DB_GetDockGadgetEnvironment"}(Object *, @{"struct GadgetEnvironment" LINK "dockbot.h/File" 149} *)
+*       VOID @{"DB_GetDockGadgetEnvironment" LINK "dockbot/DB_GetDockGadgetEnvironment"}(Object *, @{"struct GadgetEnvironment" LINK "dockbot.h/File" 159} *)
 *
 *   FUNCTION
 *       Queries a dock gadget for it's position, size and information about
@@ -57,7 +57,7 @@
 ***************************************************************************/
 VOID __asm __saveds DB_GetDockGadgetEnvironment(
         register __a0 Object *obj,
-        register __a1 @{"struct GadgetEnvironment" LINK "dockbot.h/File" 149} *env);
+        register __a1 @{"struct GadgetEnvironment" LINK "dockbot.h/File" 159} *env);
 
 /****** @{"dockbot.library/DB_DrawOutsetFrame" LINK "dockbot/DB_DrawOutsetFrame"} *********************************
 *
@@ -67,7 +67,7 @@ VOID __asm __saveds DB_GetDockGadgetEnvironment(
 *   SYNOPSIS
 *       @{"DB_DrawOutsetFrame" LINK "dockbot/DB_DrawOutsetFrame"}(rp, bounds)
 *                          A0    A1
-*       VOID @{"DB_DrawOutsetFrame" LINK "dockbot/DB_DrawOutsetFrame"}(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 86} *);
+*       VOID @{"DB_DrawOutsetFrame" LINK "dockbot/DB_DrawOutsetFrame"}(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 96} *);
 *
 *   FUNCTION
 *       Draws a raised 3d frame with the supplied RastPort.
@@ -80,7 +80,7 @@ VOID __asm __saveds DB_GetDockGadgetEnvironment(
 *       A 3d frame will be drawn to the window.
 *
 *   EXAMPLE
-*       @{"struct Rect" LINK "dockbot.h/File" 86} bounds;
+*       @{"struct Rect" LINK "dockbot.h/File" 96} bounds;
 *       DB_GetDockGadgetBounds(obj, &bounds);
 *       @{"DB_DrawOutsetFrame" LINK "dockbot/DB_DrawOutsetFrame"}(rp, &bounds);
 *
@@ -98,7 +98,7 @@ VOID __asm __saveds DB_DrawOutsetFrame(
 *   SYNOPSIS
 *       @{"DB_DrawInsetFrame" LINK "dockbot/DB_DrawInsetFrame"}(rp, bounds)
 *                         A0    A1
-*       VOID @{"DB_DrawInsetFrame" LINK "dockbot/DB_DrawInsetFrame"}(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 86} *);
+*       VOID @{"DB_DrawInsetFrame" LINK "dockbot/DB_DrawInsetFrame"}(struct RastPort *, @{"struct Rect" LINK "dockbot.h/File" 96} *);
 *
 *   FUNCTION
 *       Draws a lowered 3d frame with the supplied RastPort.
@@ -111,7 +111,7 @@ VOID __asm __saveds DB_DrawOutsetFrame(
 *       A 3d frame will be drawn to the window.
 *
 *   EXAMPLE
-*       @{"struct Rect" LINK "dockbot.h/File" 86} bounds;
+*       @{"struct Rect" LINK "dockbot.h/File" 96} bounds;
 *       DB_GetDockGadgetBounds(obj, &bounds);
 *       @{"DB_DrawInsetFrame" LINK "dockbot/DB_DrawInsetFrame"}(rp, &bounds);
 *
@@ -239,7 +239,7 @@ VOID __asm __saveds DB_CloseSettings(
 *   SYNOPSIS
 *       @{"DB_DisposeConfig" LINK "dockbot/DB_DisposeConfig"}(cfg)
 *                        A0
-*       VOID @{"DB_DisposeConfig" LINK "dockbot/DB_DisposeConfig"}(@{"struct DockConfig" LINK "dockbot.h/File" 56} *);
+*       VOID @{"DB_DisposeConfig" LINK "dockbot/DB_DisposeConfig"}(@{"struct DockConfig" LINK "dockbot.h/File" 65} *);
 *
 *   FUNCTION
 *   Disposes of gadget objects and cleans up associated memory allocated
@@ -256,7 +256,7 @@ VOID __asm __saveds DB_CloseSettings(
 *
 ***************************************************************************/
 VOID __asm __saveds DB_DisposeConfig(
-    register __a0 @{"struct DockConfig" LINK "dockbot.h/File" 56} *cfg);
+    register __a0 @{"struct DockConfig" LINK "dockbot.h/File" 65} *cfg);
 
 
 /****** @{"dockbot.library/DB_ReadBeginBlock" LINK "dockbot/DB_ReadBeginBlock"} *********************************
@@ -346,7 +346,7 @@ BOOL __asm __saveds DB_ReadEndBlock(
 *   SYNOPSIS
 *       success = @{"DB_ReadSetting" LINK "dockbot/DB_ReadSetting"}(settings, value)
 *         D0                       A0        A1
-*       BOOL @{"DB_ReadSetting" LINK "dockbot/DB_ReadSetting"}(struct DockSettings *, @{"struct DockSettingValue" LINK "dockbot.h/File" 356} *);
+*       BOOL @{"DB_ReadSetting" LINK "dockbot/DB_ReadSetting"}(struct DockSettings *, @{"struct DockSettingValue" LINK "dockbot.h/File" 369} *);
 *
 *   FUNCTION
 *       Looks for the key and value separated by an equals sign on the current
@@ -361,7 +361,7 @@ BOOL __asm __saveds DB_ReadEndBlock(
 *
 *   EXAMPLE
 *       struct DockSettings *s;
-*       @{"struct DockSettingValue" LINK "dockbot.h/File" 356} val;
+*       @{"struct DockSettingValue" LINK "dockbot.h/File" 369} val;
 *       if( s = @{"DB_OpenSettingsRead" LINK "dockbot/DB_OpenSettingsRead"}("ENV:DockBot.prefs") ) {
 *         if( @{"DB_ReadBeginBlock" LINK "dockbot/DB_ReadBeginBlock"}(s) ) {
 *           while(!@{"DB_ReadEndBlock" LINK "dockbot/DB_ReadEndBlock"}(s)) {
@@ -509,7 +509,7 @@ BOOL __asm __saveds DB_WriteSetting(
 *   SYNOPSIS
 *       success = @{"DB_ReadConfig" LINK "dockbot/DB_ReadConfig"}(cfg,settings)
 *         D0                                    A0  A1
-*   BOOL @{"DB_ReadConfig" LINK "dockbot/DB_ReadConfig"}(@{"struct DockConfig" LINK "dockbot.h/File" 56} *, struct DockSettings *)
+*   BOOL @{"DB_ReadConfig" LINK "dockbot/DB_ReadConfig"}(@{"struct DockConfig" LINK "dockbot.h/File" 65} *, struct DockSettings *)
 *
 *   FUNCTION
 *       Reads the configuration data from the settings object and populates
@@ -524,7 +524,7 @@ BOOL __asm __saveds DB_WriteSetting(
 *
 ***************************************************************************/
 BOOL __asm __saveds DB_ReadConfig(
-    register __a0 @{"struct DockConfig" LINK "dockbot.h/File" 56} *cfg,
+    register __a0 @{"struct DockConfig" LINK "dockbot.h/File" 65} *cfg,
     register __a1 struct DockSettings *settings);
 
 /****** @{"dockbot.library/DB_WriteConfig" LINK "dockbot/DB_WriteConfig"} ***********************************
@@ -535,7 +535,7 @@ BOOL __asm __saveds DB_ReadConfig(
 *   SYNOPSIS
 *       success = @{"DB_WriteConfig" LINK "dockbot/DB_WriteConfig"}(cfg,settings)
 *         D0                                     A0  A1
-*   BOOL @{"DB_WriteConfig" LINK "dockbot/DB_WriteConfig"}(@{"struct DockConfig" LINK "dockbot.h/File" 56} *, struct DockSettings *)
+*   BOOL @{"DB_WriteConfig" LINK "dockbot/DB_WriteConfig"}(@{"struct DockConfig" LINK "dockbot.h/File" 65} *, struct DockSettings *)
 *
 *   FUNCTION
 *       Writes the configuration data in cfg to the settings object.
@@ -549,7 +549,7 @@ BOOL __asm __saveds DB_ReadConfig(
 *
 ***************************************************************************/
 BOOL __asm __saveds DB_WriteConfig(
-    register __a0 @{"struct DockConfig" LINK "dockbot.h/File" 56} *cfg,
+    register __a0 @{"struct DockConfig" LINK "dockbot.h/File" 65} *cfg,
     register __a1 struct DockSettings *settings);
 
 
@@ -732,9 +732,9 @@ VOID __asm __saveds DB_DisposeDockGadget(
     register __a0 Object *o);
 
 VOID __asm __saveds DB_FreeGadget(
-    register __a0 @{"struct DgNode" LINK "dockbot.h/File" 65} *dg);
+    register __a0 @{"struct DgNode" LINK "dockbot.h/File" 75} *dg);
 
-@{"struct DgNode" LINK "dockbot.h/File" 65} * __asm __saveds DB_AllocGadget(
+@{"struct DgNode" LINK "dockbot.h/File" 75} * __asm __saveds DB_AllocGadget(
     register __a0 STRPTR name);
 
 /****** @{"dockbot.library/DB_ListClasses" LINK "dockbot/DB_ListClasses"} *************************************
@@ -783,6 +783,12 @@ BOOL __asm __saveds DB_ListClasses(
 ***************************************************************************/
 VOID __asm __saveds DB_ShowError(
     register __a0 STRPTR message);
+
+STRPTR __asm __saveds DB_SelectFile(
+    register __a0 STRPTR title,
+    register __a1 STRPTR okText,
+    register __a2 STRPTR cancelText,
+    register __a3 STRPTR path);
 
 /****** @{"dockbot.library/DB_RegisterPort" LINK "dockbot/DB_RegisterPort"} ************************************
 *
@@ -889,6 +895,28 @@ VOID __asm __saveds DB_RegisterDebugStream(
 VOID __asm __saveds DB_DebugLog(
         register __a0 STRPTR fmt,
         register __a1 LONG *argv);
+
+APTR __asm __saveds DB_LoadBrush(
+    register __a0 STRPTR fileName,
+    register __d0 UWORD flags);
+
+VOID __asm __saveds DB_FreeBrush(
+    register __a0 APTR brush);
+
+VOID __asm __saveds DB_DrawBrush(
+    register __a0 APTR brush,
+    register __a1 struct RastPort *rp,
+    register __d0 UWORD srcX,
+    register __d1 UWORD srcY,
+    register __d2 UWORD dstX,
+    register __d3 UWORD dstY,
+    register __d4 UWORD w,
+    register __d5 UWORD h);
+
+VOID __asm __saveds DB_GetBrushSize(
+    register __a0 APTR brush,
+    register __a1 UWORD *w,
+    register __a2 UWORD *h);
 
 #endif
 @ENDNODE
