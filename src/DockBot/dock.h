@@ -312,8 +312,6 @@ VOID disable_layout(struct DockWindow *dock);
 
 VOID enable_layout(struct DockWindow *dock);
 
-VOID free_render_bitmap(struct DockWindow *dock);
-
 // cx.c - Commodities Exchange handling
 
 BOOL init_cx_broker(struct DockWindow *dock);

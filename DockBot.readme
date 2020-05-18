@@ -23,7 +23,6 @@ Changes:
 Version 1.9:
 
 * Edit Mode! Gadgets can now be rearranged, added and removed from within the Dock.
-* Moved all rendering to an off-screen bitmap.
 * Fixed some memory leaking bugs in Prefs tool.
 * Italian translation by Samir Hawamdeh. Thanks!
 
