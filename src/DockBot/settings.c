@@ -18,6 +18,13 @@
 
 VOID free_config(struct DockWindow *dock)
 {
+    dock->cfg.align = DA_CENTER;
+    dock->cfg.pos = DP_RIGHT;
+    dock->cfg.showGadgetLabels = TRUE;
+    dock->cfg.showGadgetBorders = TRUE;
+
+    NewList(&dock->cfg.gadgets);
+
     if( dock->bgBrush ) {
         DB_FreeBrush(dock->bgBrush);
         dock->bgBrush = NULL;
@@ -35,6 +42,8 @@ BOOL load_config(struct DockWindow *dock)
     DEBUG(printf(__FUNC__ ": %s\n", CONFIG_FILE));
 
     free_config(dock);
+
+    create_dock_handle(dock);
 
     if( s = DB_OpenSettingsRead(CONFIG_FILE) ) {
 

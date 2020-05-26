@@ -150,10 +150,6 @@ struct DockWindow* create_dock(VOID)
 
         dock->runState = RS_STARTING;
         dock->disableLayout = TRUE;
-        dock->cfg.align = DA_CENTER;
-        dock->cfg.pos = DP_RIGHT;
-        dock->cfg.showGadgetLabels = TRUE;
-        dock->cfg.showGadgetBorders = TRUE;
 
         InitRastPort(&dock->renderRP);
 
@@ -161,18 +157,15 @@ struct DockWindow* create_dock(VOID)
 
             if( init_gadget_classes(dock) ) {
 
-                if( init_gadgets(dock) ) {    
-
-                    if( init_config_notification(dock) ) {
+                if( init_config_notification(dock) ) {
                         
-                        if( init_timer_notification(dock) ) {
+                    if( init_timer_notification(dock) ) {
 
-                            if( init_screennotify(dock) ) {
+                        if( init_screennotify(dock) ) {
 
-                                if( get_prog_path(dock) ) {
+                             if( get_prog_path(dock) ) {
     
-                                    return dock;
-                                }
+                                return dock;
                             }
                         }        
                     }

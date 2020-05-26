@@ -70,16 +70,6 @@ BOOL free_gadget_classes(struct DockWindow *dock)
     return TRUE;
 }
 
-BOOL init_gadgets(struct DockWindow *dock)
-{
-    DEBUG(printf(__FUNC__ "\n"));
-
-    NewList(&dock->cfg.gadgets);
-
-    return create_dock_handle(dock);
-}
-
-
 VOID remove_dock_gadgets(struct DockWindow *dock)
 {
     struct DgNode *dg;

@@ -386,6 +386,12 @@ Your suggestions and contributions make me want to keep developing DockBot.
 
 @node history "History - The DockBot Manual"
 
+Version 1.10 (26-May-2020):
+
+* Fixed rendering bugs and a memory leak.
+* Moved all rendering to an off-screen bitmap.
+* Tolerate missing config file.
+
 Version 1.9 (17-Apr-2020):
 
 * Edit Mode! Gadgets can now be rearranged, added and removed from within the Dock.

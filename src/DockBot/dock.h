@@ -276,8 +276,6 @@ BOOL init_gadget_classes(struct DockWindow *dock);
 
 BOOL free_gadget_classes(struct DockWindow *dock);
 
-BOOL init_gadgets(struct DockWindow *dock);
-
 VOID draw_gadgets(struct DockWindow *dock);
 
 VOID draw_gadget(struct DockWindow *dock, Object *gadget);

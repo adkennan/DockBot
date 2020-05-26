@@ -2,7 +2,7 @@ Short:        A program launcher for OS 3.
 Uploader:     adkennan@gmail.com (Andrew Kennan)
 Author:       Andrew Kennan
 Type:         util/wb
-Version:      1.9
+Version:      1.10
 Architecture: m68k-amigaos >= 3.0
 Requires:     util/libs/IconLib_46.4.lha
 
@@ -19,6 +19,12 @@ This archive includes source code and binaries compiled for 68000, 68020 and
 The source repository can be found at https://github.com/adkennan/DockBot.
 
 Changes:
+
+Version 1.10:
+
+* Fixed rendering bugs and a memory leak.
+* Moved all rendering to an off-screen bitmap.
+* Tolerate missing config file.
 
 Version 1.9:
 

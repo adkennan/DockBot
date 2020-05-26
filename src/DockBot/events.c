@@ -35,9 +35,8 @@ VOID run_event_loop(struct DockWindow *dock)
             case RS_STARTING:
                 DEBUG(printf("runState = RS_STARTING\n"));
 
-                if( ! load_config(dock) ) {
-                    return;
-                }
+                load_config(dock);
+
                 if( ! init_cx_broker(dock) ) {
                     return;
                 }
@@ -57,13 +56,11 @@ VOID run_event_loop(struct DockWindow *dock)
                 DEBUG(printf("runState = RS_LOADING\n"));
                 disable_notification(dock);
                 disable_layout(dock);
+
                 remove_dock_gadgets(dock);
-                if( ! create_dock_handle(dock) ) {
-                    return;
-                }
-                if( ! load_config(dock) ) {
-                    return;
-                }
+
+                load_config(dock);
+
                 if( ! init_cx_broker(dock) ) {
                     return;
                 }

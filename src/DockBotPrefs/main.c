@@ -466,32 +466,30 @@ int main(char **argv, int argc)
 
                 if( prefs.mainWindow = open_main_window() ) {
     
-                    if( load_config(&prefs) ) {
+                    load_config(&prefs);
     
-                        if( DB_ListClasses(&prefs.classes) ) {
+                    if( DB_ListClasses(&prefs.classes) ) {
 
-                            TR_SetAttribute(prefs.mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
-                            TR_SetAttribute(prefs.mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
-                            TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
-                            TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_BORDERS, TRAT_Value, (ULONG)prefs.cfg.showGadgetBorders);
-                            TR_SetAttribute(prefs.mainWindow, OBJ_BG_BRUSH, 0L, (ULONG)prefs.cfg.bgBrushPath);
+                        TR_SetAttribute(prefs.mainWindow, OBJ_POSITION, TRAT_Value, (ULONG)prefs.cfg.pos);
+                        TR_SetAttribute(prefs.mainWindow, OBJ_ALIGNMENT, TRAT_Value, (ULONG)prefs.cfg.align);
+                        TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
+                        TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_BORDERS, TRAT_Value, (ULONG)prefs.cfg.showGadgetBorders);
+                        TR_SetAttribute(prefs.mainWindow, OBJ_BG_BRUSH, 0L, (ULONG)prefs.cfg.bgBrushPath);
         
-                            update_gadget_list(&prefs);
+                        update_gadget_list(&prefs);
 
-                            gadget_selected(&prefs, 0);
+                        gadget_selected(&prefs, 0);
 
-                            run_event_loop(&prefs);
+                        run_event_loop(&prefs);
                                
-                            free_config(&prefs);
-
-                        } else {
-                            DB_ShowError((STRPTR)MSG_ERR_ClassList);
-                        }
+                        free_config(&prefs);
 
                     } else {
-                        DB_ShowError((STRPTR)MSG_ERR_LoadConfig);
-                        }
+                        DB_ShowError((STRPTR)MSG_ERR_ClassList);
+                    }
+
                     TR_CloseProject(prefs.mainWindow);            
+
                 } else { 
                     DB_ShowError((STRPTR)MSG_ERR_OpenWindow);
                 }
