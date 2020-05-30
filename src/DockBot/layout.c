@@ -89,7 +89,7 @@ VOID update_render_bitmap(struct DockWindow *dock, UWORD w, UWORD h)
                                 w, h, 
                                 d, 
                                 BMF_DISPLAYABLE | il, 
-                                NULL) ) {
+                                screen->RastPort.BitMap) ) {
   
             dock->renderW = w;
             dock->renderH = h;
