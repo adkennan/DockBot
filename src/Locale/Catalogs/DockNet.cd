@@ -1,0 +1,15 @@
+#language english
+#version 1
+;
+; DockNet
+;
+;
+MSG_Description (//)
+A network meter for DockBot
+;
+MSG_LBL_RECV (//)
+D: %s
+;
+MSG_LBL_SENT (//)
+U: %s
+;
