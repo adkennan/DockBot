@@ -16,7 +16,7 @@
 #define CLASS_VERSION   1
 #define CLASS_REVISION  0
 #define CLASS_VER_STR   "1.0 (" DS ")"
-#define CLASS_COPYRIGHT "© 2020 Andrew Kennan"
+#define CLASS_COPYRIGHT "© 2020 flype"
 
 #define PRIVATE_DATA        NetGadgetData
 
@@ -24,7 +24,7 @@
 #define GADGET_LIB_INIT     net_lib_init
 #define GADGET_LIB_EXPUNGE  net_lib_expunge
 
-#undef METHOD_NEW
+#define METHOD_NEW			net_new
 #undef METHOD_DISPOSE
 #undef METHOD_ADDED
 #undef METHOD_REMOVED

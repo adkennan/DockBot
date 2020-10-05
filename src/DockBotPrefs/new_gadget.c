@@ -79,6 +79,10 @@ VOID class_selected(struct DockPrefs *prefs)
                     DB_FreeMem(text, len);
                 }
                 DisposeObject(g);
+            } else {
+
+                DEBUG(printf(" -> Could not create gadget %s\n", curr->ln_Name));
+
             }
 
             break;

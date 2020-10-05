@@ -99,5 +99,7 @@ VOID DB_Printf(STRPTR fmt, ...);
 
 struct TagItem *DB_MakeTagList(ULONG data, ...);
 
+APTR __saveds __asm GetLibData(VOID);
+
 #endif
 

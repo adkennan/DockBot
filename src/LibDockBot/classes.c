@@ -104,8 +104,14 @@ Object * __asm __saveds DB_CreateDockGadget(
                     AddTail((struct List*)&DockBotBaseFull->l_ClassLibs, (struct Node *)ln);
 
                     return o;
-                }           
+                } else {
+                    DEBUG(DebugLog("Failed to construct class %s\n", name));
+                }
+            } else {
+                DEBUG(DebugLog("Failed to alloc %ld bytes for lib node\n", sizeof(struct LibNode)));
             }
+        } else {
+            DEBUG(DebugLog("Failed to open library %s\n", libName));
         }
         if( o ) {
             DisposeObject(o);

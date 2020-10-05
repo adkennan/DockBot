@@ -16,7 +16,7 @@
 #include "DockNet_cat.h"
 
 struct FC_String DockNet_Strings[3] = {
-    { (STRPTR) "A network meter for DockBot", 0 },
+    { (STRPTR) "A Roadshow network meter for DockBot", 0 },
     { (STRPTR) "D: %s", 1 },
     { (STRPTR) "U: %s", 2 }
 };

@@ -5,7 +5,7 @@
 ;
 ;
 MSG_Description (//)
-A network meter for DockBot
+A Roadshow network meter for DockBot
 ;
 MSG_LBL_RECV (//)
 D: %s

@@ -8,6 +8,12 @@ assign include: DEV:Triton/include ADD
 
 assign include: DEV:ScreenNotify/include ADD
 
+if exists DEV:RoadshowSDK 
+
+	assign include:	DEV:RoadshowSDK/netinclude 	ADD
+
+endif
+
 path   sc:c        ADD QUIET
 path   DEV:flexcat ADD QUIET
 path   DEV:c       ADD QUIET
@@ -16,6 +22,6 @@ path   DEV:MuTools ADD QUIET
 avail  flush >NIL:
 
 cd DOCKBOT:src
-c:newshell WINDOW KCON:0/384/724/181/Shell/CLOSE/JUMP/SHOWDIR/AUTOICONIFY/FASTUPDATE
+c:newshell WINDOW CON:0/384/724/181/Shell/CLOSE/JUMP/SHOWDIR/AUTOICONIFY/FASTUPDATE
 cd DOCKBOT:bin/debug
-c:newshell WINDOW KCON:0/203/724/181/Shell/CLOSE/JUMP/SHOWDIR/AUTOICONIFY/FASTUPDATE
+c:newshell WINDOW CON:0/203/724/181/Shell/CLOSE/JUMP/SHOWDIR/AUTOICONIFY/FASTUPDATE

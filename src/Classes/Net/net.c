@@ -27,13 +27,62 @@
 #include "dockbot_pragmas.h"
 
 #include "class_def.h"
+#include "pragmas.h"
 
 struct Library *SocketBase;
 
 extern struct GfxBase *GfxBase;
 extern struct IntuitionBase *IntuitionBase;
+extern struct Library *DockGadgetBase;
+
+#define COUNTER_LIB_OK 10
+#define COUNTER_NOT_OK 20
 
 #define NET_TOOL "C:SampleNetSpeed"
+
+/**********************************************************
+ ** 
+ ** PRIVATE: OpenNetworkLib
+ ** 
+ **********************************************************/
+BOOL OpenNetworkLib(VOID)
+{
+    struct NetLibData *nld = (struct NetLibData *)GetLibData();
+
+    if( nld->socketLib ) {
+        DB_Printf(__METHOD__ "Socket Lib Available\n");
+        return TRUE;
+    }
+
+    DB_Printf(__METHOD__ "Opening Socket Lib...");
+
+    if( nld->socketLib = OpenLibrary("bsdsocket.library", 4) )
+    {
+        DB_Printf(__METHOD__ "Connected\n");
+
+        SocketBase = (struct Library *)nld->socketLib;
+        return TRUE;
+    }
+
+    DB_Printf(__METHOD__ "Failed\n");
+
+    return FALSE;
+}
+
+/**********************************************************
+ ** 
+ ** PRIVATE: CloseNetworkLib
+ ** 
+ **********************************************************/
+VOID CloseNetworkLib(VOID)
+{
+    struct NetLibData *nld = (struct NetLibData *)GetLibData();
+
+    if( nld->socketLib ) {
+        CloseLibrary(nld->socketLib);
+        SocketBase = NULL;
+    }   
+}
 
 /**********************************************************
  ** 
@@ -63,18 +112,13 @@ UBYTE * PrintSize(ULONG s, UBYTE * buf)
 
 ULONG __saveds net_lib_init(struct NetLibData *nld)
 {
+    nld->socketLib = NULL;
+    SocketBase = NULL;
+
     if( nld->graphicsLib = OpenLibrary("graphics.library", 37) )
     {
         GfxBase = (struct GfxBase *)nld->graphicsLib;
-    }
 
-    if( nld->socketLib = OpenLibrary("bsdsocket.library", 4) )
-    {
-        SocketBase = (struct Library *)nld->socketLib;
-    }
-
-    if( nld->graphicsLib && nld->socketLib )
-    {
         return 1;
     }
 
@@ -98,6 +142,20 @@ ULONG __saveds net_lib_expunge(struct NetLibData *nld)
     {
         CloseLibrary(nld->socketLib);
     }
+
+    return 1;
+}
+
+/**********************************************************
+ ** 
+ ** PRIVATE: NEW
+ ** 
+ **********************************************************/
+
+DB_METHOD_D(NEW)
+
+    data->counter = 0;
+    data->clicked = FALSE;
 
     return 1;
 }
@@ -138,7 +196,7 @@ VOID __saveds set_text_font(struct IntuiText *text)
  ** 
  **********************************************************/
 
-VOID draw_net(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWORD ix, STRPTR label, ULONG value)
+VOID draw_net(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWORD ix, STRPTR label, ULONG value, BOOL hasValue)
 {
     struct IntuiText text;
     struct TextAttr ta;
@@ -163,9 +221,13 @@ VOID draw_net(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
     frame.h -= 2;
 
     DB_DrawInsetFrame(rp, &frame);
-    
-    PrintSize(value, svalue);
-    sprintf((STRPTR)&buf, label, svalue);
+
+    if( hasValue ) {    
+        PrintSize(value, svalue);
+        sprintf((STRPTR)&buf, label, svalue);
+    } else {
+        sprintf((STRPTR)&buf, label, "--");
+    }
 
     text.ITextFont = &ta;
     text.ITextFont->ta_Name = di->dri_Font->tf_Message.mn_Node.ln_Name;
@@ -188,43 +250,59 @@ VOID draw_net(struct RastPort *rp, struct DrawInfo *di, struct Rect *bounds, UWO
  ** 
  **********************************************************/
 
-DB_METHOD_M(DRAW,DockMessageDraw)
+DB_METHOD_DM(DRAW,DockMessageDraw)
 
     struct Screen *screen;
     struct DrawInfo *drawInfo;
     struct GadgetEnvironment env;
+    SBQUAD_T byteRecv;
+    SBQUAD_T byteSent;          
+    struct TagItem tags[3];
+    BOOL hasValue = FALSE;
+
+    if( OpenNetworkLib() ) {
+           
+        tags[0].ti_Tag  = SBTM_GETREF(SBTC_GET_BYTES_RECEIVED);
+        tags[0].ti_Data = (ULONG)&byteRecv;
+                
+        tags[1].ti_Tag  = SBTM_GETREF(SBTC_GET_BYTES_SENT);
+        tags[1].ti_Data = (ULONG)&byteSent;
+            
+        tags[2].ti_Tag  = TAG_END;
+        tags[2].ti_Data = 0;
+            
+        if (SocketBaseTagList(tags) == 0)
+        {
+            hasValue = TRUE;
+
+        } else {
+
+            // Wrong socket lib?
+            CloseNetworkLib();
+
+            data->counter = COUNTER_NOT_OK;
+        }
+
+    } else {
+
+        data->counter = COUNTER_NOT_OK;
+    }
+
 
     if( screen = LockPubScreen(NULL) )
     {
         if( drawInfo = GetScreenDrawInfo(screen) )
         {
-            SBQUAD_T byteRecv;
-            SBQUAD_T byteSent;
-            
-            struct TagItem tags[3];
-            
-            tags[0].ti_Tag  = SBTM_GETREF(SBTC_GET_BYTES_RECEIVED);
-            tags[0].ti_Data = (ULONG)&byteRecv;
-            
-            tags[1].ti_Tag  = SBTM_GETREF(SBTC_GET_BYTES_SENT);
-            tags[1].ti_Data = (ULONG)&byteSent;
-            
-            tags[2].ti_Tag  = TAG_END;
-            tags[2].ti_Data = 0;
-            
-            if (SocketBaseTagList(tags) == 0)
-            {
-                DB_GetDockGadgetEnvironment(o, &env);
-                
-                draw_net(msg->rp, drawInfo, &env.gadgetBounds, 0, (STRPTR)MSG_LBL_RECV, byteRecv.sbq_Low);
-                draw_net(msg->rp, drawInfo, &env.gadgetBounds, 1, (STRPTR)MSG_LBL_SENT, byteSent.sbq_Low);
-            }
+            DB_GetDockGadgetEnvironment(o, &env);
+              
+            draw_net(msg->rp, drawInfo, &env.gadgetBounds, 0, (STRPTR)MSG_LBL_RECV, byteRecv.sbq_Low, hasValue);
+            draw_net(msg->rp, drawInfo, &env.gadgetBounds, 1, (STRPTR)MSG_LBL_SENT, byteSent.sbq_Low, hasValue);
             
             FreeScreenDrawInfo(screen, drawInfo);
         }
 
         UnlockPubScreen(NULL, screen);
-    }     
+    }
     return 1;    
 }
 
@@ -280,7 +358,7 @@ DB_METHOD_D(TICK)
         return 1;
     }
 
-    data->counter = 10;
+    data->counter = COUNTER_LIB_OK;
 
     DB_RequestDockGadgetDraw(o);
 

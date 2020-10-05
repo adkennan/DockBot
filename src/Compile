@@ -210,9 +210,19 @@ ENDIF
 IF $COMPILENET EQ Y
   echo Compiling Classes/Net
   echo " "
-  cd Classes/Net
-  smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
-  cd //
+
+  IF EXISTS DEV:RoadshowSDK 
+
+    cd Classes/Net
+    smake -b //$DEFFILE <CLEAN> <CLEANOBJ> DIR=$OUTDIR CPU=<CPU> DEF_DS=$DS DEF_BV=$BV
+    cd //
+
+  ELSE
+
+    echo "Roadshow SDK not found. Unable to compile Classes/Net."
+
+  ENDIF
+    
 ENDIF
 
 IF $COMPILESWITCHER EQ Y

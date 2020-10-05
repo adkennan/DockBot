@@ -105,7 +105,6 @@ ULONG GADGET_LIB_INIT(struct GADGET_LIB_DATA *gld);
 ULONG GADGET_LIB_EXPUNGE(struct GADGET_LIB_DATA *gld);
 #endif
 
-
 /**** Prevent Execution ****/
 
 LONG __asm LibStart(VOID)
@@ -183,6 +182,7 @@ APTR FuncTable[] = {
     ExtFuncLib,
 
     GetEngine,
+    GetLibData,
     (APTR)-1
 };
 
@@ -190,7 +190,7 @@ struct ExecBase *SysBase;
 struct IntuitionBase *IntuitionBase;
 struct Library *DockBotBase;
 extern struct Library *TritonBase;
-struct ClassLibrary *ClassLib;
+struct ClassLibrary *DockGadgetBase;
 struct Library *LocaleBase;
 struct Library *UtilityBase;
 
@@ -228,7 +228,7 @@ struct ClassLibrary * __saveds __asm InitLib(
                             cb->cl_UtilityBase = UtilityBase;
                             TritonBase = NULL;
         
-                            ClassLib = cb;
+                            DockGadgetBase = cb;
     
                             return cb;
                         
@@ -308,6 +308,18 @@ Class* __saveds __asm GetEngine(
 {
     return ClassLibraryBase->cl_GadgetClass;
 }
+
+APTR __saveds __asm GetLibData(VOID)
+{
+#ifdef GADGET_LIB_DATA
+
+    return &DockGadgetBase->cl_Data;
+#else
+    return NULL
+#endif
+
+}
+
 
 #define METHOD_DEF(NAME) ULONG __saveds METHOD_ ## NAME (Class *c, Object *o, Msg msg);
 
@@ -432,9 +444,9 @@ ULONG __saveds InitEditor(Class *c, Object *o, Msg msg)
 {
     BOOL res = TRUE;
 
-    if( !ClassLib->cl_TritonBase ) {
-        if( ClassLib->cl_TritonBase = OpenLibrary(TRITONNAME, TRITONVERSION) ) {
-            TritonBase = ClassLib->cl_TritonBase;
+    if( !DockGadgetBase->cl_TritonBase ) {
+        if( DockGadgetBase->cl_TritonBase = OpenLibrary(TRITONNAME, TRITONVERSION) ) {
+            TritonBase = DockGadgetBase->cl_TritonBase;
         } else {
             res = FALSE;
         }

@@ -24,7 +24,7 @@ LIBS=		LIB:sc.lib LIB:amiga.lib LIB:triton.lib
 #
 # Build Library
 
-$(LIBFILE): catalog $(OBJECTS) $(LIBS) $(PRAGMA_FILE)
+$(LIBFILE): catalog $(PRAGMA_FILE) $(OBJECTS) $(LIBS)
 	$(LINKER) WITH << 
 TO $(LIBDIR)$(LIBFILE)
 FROM $(OBJECTS)

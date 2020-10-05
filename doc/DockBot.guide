@@ -27,7 +27,7 @@ DockBot is free software released under the @{"MIT licence" link licence}.
 
 The MIT License (MIT)
 
-Copyright (c) 2019 Andrew Kennan
+Copyright (c) 2020 Andrew Kennan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -99,7 +99,7 @@ There are two ways to add a gadget to the dock:
 
 - Click the New button and select the type of gadget to add.
 
-The five gadgets available are:
+The available gadgets are:
 
 - @{"DockButton" link configDockButton} - a button representing an executable file. Displays the icon of the executable.
 
@@ -110,6 +110,8 @@ The five gadgets available are:
 - Switcher - a window switcher.
 
 - Eyes - Eyes that follow your mouse pointer.
+
+- DockNet - A network monitor for Roadshow.
 
 Once added to the dock, gadgets can be ordered with the Up and Down buttons. If the gadget has additional configuration options the Edit button will be enabled when the gadget is selected.
 
@@ -202,6 +204,7 @@ The following third party software has been used in the development of DockBot:
 - KingCON (http://aminet.net/packages/util/shell/KingCON_1.3.lha)
 - mmulib (http://aminet.net/packages/util/libs/MMULib)
 - sashimi (http://aminet.net/package/dev/debug/Sashimi.lha)
+- Roadshow SDK (http://roadshow.apc-tcp.de/download-de.php)
 
 I use the script src/StartDockBotDev to initialize my environment. It expects the following assigns:
 
@@ -217,6 +220,7 @@ I use the script src/StartDockBotDev to initialize my environment. It expects th
   |-- MuTools
   |   |-- MuForce
   |   \\--MuGuardianAngel
+  |-- RoadshowSDK
   |-- SasC/
   |-- ScreenNotify/
   \\-- Triton/
@@ -252,6 +256,7 @@ The Compile script has the following options:
 - CLOCK/S      Compile the clock class only.
 - EYES/S       Compile the eyes class only.
 - MEM/S        Compile the mem class only.
+- NET/S        Compile the net class only.
 - SWITCHER/S   Compile the switcher class only.
 
 CompileDist only has a single option:
@@ -374,7 +379,7 @@ It's a great thrill to receive positive feedback about DockBot but what is best 
 
 I'd like to thank the following people for their contributions to DockBot:
 
-- flype for submitting the code to support screennotify.library and a French translation.
+- flype for submitting the code to support screennotify.library, a French translation and the DockNet gadget.
 - Gulliver for submitting language catalogs.
 - shanshe for a bugfix to the gadget layout.
 - Samir Hawamdeh for the Italian translation.
@@ -385,6 +390,11 @@ Your suggestions and contributions make me want to keep developing DockBot.
 @endnode
 
 @node history "History - The DockBot Manual"
+
+Version 1.11 (XX-Oct-2020):
+
+* A Network Monitor for Roadshow contributed by flype. Awesome!
+* A couple more things...
 
 Version 1.10 (26-May-2020):
 
