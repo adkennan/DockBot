@@ -23,7 +23,7 @@ struct FC_String {
     LONG id;
 };
 
-extern struct FC_String DockBotPrefs_Strings[43];
+extern struct FC_String DockBotPrefs_Strings[44];
 
 #define MSG_APP_Title (DockBotPrefs_Strings[0].msg)
 #define _MSG_APP_Title (DockBotPrefs_Strings+0)
@@ -111,5 +111,7 @@ extern struct FC_String DockBotPrefs_Strings[43];
 #define _MSG_DEL_Buttons (DockBotPrefs_Strings+41)
 #define MSG_FR_ChooseBackground (DockBotPrefs_Strings[42].msg)
 #define _MSG_FR_ChooseBackground (DockBotPrefs_Strings+42)
+#define MSG_MW_Padding (DockBotPrefs_Strings[43].msg)
+#define _MSG_MW_Padding (DockBotPrefs_Strings+43)
 
 #endif

@@ -61,6 +61,8 @@ WBRun - Runs programs as if executed by Workbench by Sylvain Rougier and Pierre 
 
 ScreenNotify - (Optional) Stefan Becker's handy library allows applications to be notified when the Workbench screen mode is changing. 
 
+Roadshow - (Optional) The DockNet gadget uses a feature not found in older network stacks.
+
 @endnode
 
 @node installation "Installation - The DockBot Manual"
@@ -90,6 +92,8 @@ Alignment can be one of Top/Left, Centre or Bottom/Right. This lets you control 
 When checked, the Show Labels checkbox will cause a tooltip to be displayed next to gadgets when the mouse is hovered over the window.
 
 The Show Borders checkbox controls whether individual gadgets will draw borders around themselves.
+
+The Padding slider controls how much extra space is added to the size of any gadgets.
 
 Background Image selects a picture to display behind the gadgets. Any image format you have a DataType for can be used.
 
@@ -384,6 +388,7 @@ I'd like to thank the following people for their contributions to DockBot:
 - shanshe for a bugfix to the gadget layout.
 - Samir Hawamdeh for the Italian translation.
 - Joel Edberg for bug reports and convincing me to add Edit Mode.
+- Åsmund Nordel for discovering that not all libraries shipped with OS3.0 are V39.
 
 Your suggestions and contributions make me want to keep developing DockBot.
 
@@ -391,10 +396,11 @@ Your suggestions and contributions make me want to keep developing DockBot.
 
 @node history "History - The DockBot Manual"
 
-Version 1.11 (XX-Oct-2020):
+Version 1.11 (08-Oct-2020):
 
 * A Network Monitor for Roadshow contributed by flype. Awesome!
-* A couple more things...
+* Requested locale.library version is now 38 as shipped with OS 3.0. Thanks Åsmund Nordel!
+* You can now control the amount of padding around gadgets.
 
 Version 1.10 (26-May-2020):
 

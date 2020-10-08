@@ -128,7 +128,7 @@ VOID update_render_bitmap(struct DockWindow *dock, UWORD w, UWORD h)
 
 VOID layout_gadgets(struct DockWindow *dock)
 {
-    UWORD w, h, x, y, i, max, size, maxSize, wx, wy;
+    UWORD w, h, x = 0, y = 0, i, max, size = 0, maxSize, wx, wy;
     struct DgNode *curr;
     struct Screen *screen;   
     UWORD* sizes;
@@ -144,10 +144,12 @@ VOID layout_gadgets(struct DockWindow *dock)
     env.align = dock->cfg.align;
     env.pos = dock->cfg.pos;
     env.showBorders = dock->cfg.showGadgetBorders;
+    env.padding = dock->cfg.gadgetPadding;
 
     if( screen = LockPubScreen(NULL)) {
 
-        if( ! dock->cfg.showGadgetBorders ) {
+/*
+        if( ! dock->cfg.showGadgetBorders && dock->cfg.gadgetPadding == 0 ) {
             size = 1;   
             x = 1;
             y = 1;                    
@@ -156,6 +158,7 @@ VOID layout_gadgets(struct DockWindow *dock)
             y = 0;
             x = 0;
         }      
+*/
         maxSize = get_max_window_size(screen, dock->cfg.pos);
 
         gadgetCount = 0;    
@@ -174,6 +177,9 @@ VOID layout_gadgets(struct DockWindow *dock)
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
                     dock_gadget_get_size(curr->dg, dock->cfg.pos, dock->cfg.align, &w, &h);
+                        
+                    w += dock->cfg.gadgetPadding * 2;
+                    h += dock->cfg.gadgetPadding * 2;
 
                     if( size + w > maxSize ) {
                         break;
@@ -223,6 +229,9 @@ VOID layout_gadgets(struct DockWindow *dock)
                 FOR_EACH_GADGET(&dock->cfg.gadgets, curr) {
 
                     dock_gadget_get_size(curr->dg, dock->cfg.pos, dock->cfg.align, &w, &h);
+
+                    w += dock->cfg.gadgetPadding * 2;
+                    h += dock->cfg.gadgetPadding * 2;
 
                     if( size + h > maxSize ) {
                         break;

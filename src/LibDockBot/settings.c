@@ -55,6 +55,8 @@ struct Values BooleanValues[] = {
     { NULL, 0 }
 };
 
+#define MAX_PADDING 8
+
 extern struct Library *DOSBase;
 extern struct Library *SysBase;
 extern struct DockBotLibrary *DockBotBaseFull;
@@ -477,6 +479,14 @@ BOOL __asm __saveds DB_ReadConfig(
                 else if( IS_KEY(S_BACKGROUND, v) ) {
                     GET_STRING(v, cfg->bgBrushPath)
                 }
+
+                else if( IS_KEY(S_PADDING, v) ) {
+                    GET_INTEGER(v, cfg->gadgetPadding)
+                    if( cfg->gadgetPadding > MAX_PADDING ) {
+                        cfg->gadgetPadding = MAX_PADDING;
+                    }
+                }
+
             }
         }
     }
@@ -490,6 +500,7 @@ BOOL __asm __saveds DB_WriteConfig(
 {
     BOOL r = TRUE;
     struct DgNode *curr;
+    UBYTE padding[3] = {0,0,0};
 
     if( DB_WriteBeginBlock(settings) ) {
 
@@ -510,6 +521,11 @@ BOOL __asm __saveds DB_WriteConfig(
         }
 
         if( cfg->bgBrushPath && ! DB_WriteSetting(settings, S_BACKGROUND, cfg->bgBrushPath) ) {
+            goto error;
+        }
+
+        padding[0] = '0' + (UBYTE)cfg->gadgetPadding;
+        if( ! DB_WriteSetting(settings, S_PADDING, (STRPTR)&padding) ) {
             goto error;
         }
 

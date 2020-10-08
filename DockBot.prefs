@@ -2,6 +2,7 @@ begin
   align=right
   position=left
   labels=true
+  padding=0
   begin
     gadget=Switcher
     key=ctrl tab

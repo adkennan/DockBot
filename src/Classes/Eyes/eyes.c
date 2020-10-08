@@ -158,6 +158,8 @@ VOID draw_eyes(struct EyesGadgetData *data, struct RastPort *rp)
 
         for( i = 0; i < data->eyeCount; i++ ) {
 
+            DEBUG(DB_Printf(__METHOD__ " Fill Eye %ld\n", (ULONG)i));
+
             eye = &data->eyes[i];
 
             AreaEllipse(&data->rp, data->cx + eye->cx, data->cy + eye->cy, eye->rx, eye->ry); 
@@ -223,7 +225,7 @@ VOID init_drawing_data(Object *o, struct EyesGadgetData *data)
 
             if( data->aiBuf = DB_AllocMem(data->aiBufSize, MEMF_CLEAR) ) {
 
-                InitArea(&data->ai, data->aiBuf, data->eyeCount);
+                InitArea(&data->ai, data->aiBuf, data->eyeCount * 2);
 
                 InitTmpRas(&data->tr, data->trBuf, data->trBufSize);
 

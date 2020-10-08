@@ -155,6 +155,19 @@ TR_Project *open_main_window(VOID) {
                     Space,
                     BeginLine,
                         Space,
+                        TextN(MSG_MW_Padding),
+                        Space,
+                        HorizGroup,
+                            SliderGadget(MIN_PADDING, MAX_PADDING, MIN_PADDING, OBJ_PADDING),
+                            Space,
+                            Integer(MIN_PADDING), TRAT_ID, OBJ_PADDING,
+                            Space,
+                        EndGroup,
+                        Space,
+                    EndLine,
+                    Space,
+                    BeginLine,
+                        Space,
                         TextN(MSG_MW_Background),
                         Space,
                         HorizGroup,
@@ -312,6 +325,10 @@ VOID run_event_loop(struct DockPrefs *prefs)
 
                             case OBJ_BG_BRUSH:
                                 update_background_path(prefs, msgProj, (STRPTR)msgData);
+                                break;
+
+                            case OBJ_PADDING:
+                                prefs->cfg.gadgetPadding = (UWORD)msgData;
                                 break;
                         }
                         break;
@@ -475,6 +492,7 @@ int main(char **argv, int argc)
                         TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_LABELS, TRAT_Value, (ULONG)prefs.cfg.showGadgetLabels);
                         TR_SetAttribute(prefs.mainWindow, OBJ_SHOW_BORDERS, TRAT_Value, (ULONG)prefs.cfg.showGadgetBorders);
                         TR_SetAttribute(prefs.mainWindow, OBJ_BG_BRUSH, 0L, (ULONG)prefs.cfg.bgBrushPath);
+                        TR_SetAttribute(prefs.mainWindow, OBJ_PADDING, 0L, (ULONG)prefs.cfg.gadgetPadding);
         
                         update_gadget_list(&prefs);
 

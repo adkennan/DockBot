@@ -194,3 +194,11 @@ MSG_FR_ChooseBackground
 Seleziona immagine di sfondo
 ; Choose a background
 ;
+;
+; Padding around gadgets
+;
+MSG_MW_Padding
+Imbottitura
+; Padding
+;
+; ***NEW***

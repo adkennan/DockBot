@@ -30,7 +30,10 @@
 
 #define APP_NAME "DockBotPrefs"
 
-enum {
+#define MIN_PADDING 0
+#define MAX_PADDING 8
+
+enum { 
     OBJ_MENU_ABOUT      = 1001,
     OBJ_MENU_QUIT       = 1002,
 
@@ -40,6 +43,7 @@ enum {
     OBJ_SHOW_BORDERS    = 1016,
     OBJ_BG_BRUSH        = 1017,
     OBJ_BTN_BG_BRUSH    = 1018,
+    OBJ_PADDING         = 1019,
     
     OBJ_GADGETS         = 1020,
 

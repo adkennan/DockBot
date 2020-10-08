@@ -146,3 +146,8 @@ _OK|Cancel
 MSG_FR_ChooseBackground (//)
 Choose a background
 ;
+;
+; Padding around gadgets
+;
+MSG_MW_Padding (//)
+Padding

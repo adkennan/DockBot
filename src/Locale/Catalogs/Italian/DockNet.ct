@@ -1,0 +1,22 @@
+## version $VER: <name>.catalog 1.<rev> (08.10.2020)
+## language english
+## codeset 0
+;
+;#language english
+;#version 1
+;
+; DockNet
+;
+;
+MSG_Description
+
+; A Roadshow network meter for DockBot
+;
+MSG_LBL_RECV
+
+; D: %s
+;
+MSG_LBL_SENT
+
+; U: %s
+;

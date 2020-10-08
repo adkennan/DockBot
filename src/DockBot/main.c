@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 
                                 if( CxBase = open_lib("commodities.library", 39, FALSE) ) {
 
-                                    if( LocaleBase = open_lib("locale.library", 39, FALSE) ) {
+                                    if( LocaleBase = open_lib("locale.library", 38, FALSE) ) {
     
                                         ScreenNotifyBase = open_lib("screennotify.library", 1, TRUE);
 

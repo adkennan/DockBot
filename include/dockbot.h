@@ -70,6 +70,7 @@ struct DockConfig
 	BOOL showGadgetBorders;
 	struct List gadgets;
     STRPTR bgBrushPath;
+	UWORD gadgetPadding;
 };
 
 struct DgNode
@@ -164,6 +165,7 @@ struct GadgetEnvironment {
     UWORD index;
 	BOOL showBorders;
     BOOL isLast;
+	UWORD padding;
 };
 
 struct DockMessageAdded
@@ -364,6 +366,7 @@ int atoi(const char *);
 #define S_LABELS "labels"
 #define S_BORDERS "borders"
 #define S_BACKGROUND "background"
+#define S_PADDING "padding"
 #define S_GADGET "gadget"
 
 struct DockSettingValue

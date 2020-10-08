@@ -19,7 +19,7 @@
 
 #include <stdio.h>
 
-struct FC_String DockBotPrefs_Strings[43] = {
+struct FC_String DockBotPrefs_Strings[44] = {
     { (STRPTR) "DockBot Preferences", 0 },
     { (STRPTR) "Preferences editor for DockBot", 1 },
     { (STRPTR) "OK", 2 },
@@ -62,7 +62,8 @@ struct FC_String DockBotPrefs_Strings[43] = {
     { (STRPTR) "Delete Gadget", 39 },
     { (STRPTR) "Are you sure you want to delete this gadget?", 40 },
     { (STRPTR) "_OK|Cancel", 41 },
-    { (STRPTR) "Choose a background", 42 }
+    { (STRPTR) "Choose a background", 42 },
+    { (STRPTR) "Padding", 43 }
 };
 
 STATIC struct Catalog *DockBotPrefsCatalog = NULL;
@@ -86,7 +87,7 @@ VOID open_catalog(VOID)
 		return;
 	}
 
-    for (i = 0, fc = DockBotPrefs_Strings;  i < 43;  i++, fc++) {
+    for (i = 0, fc = DockBotPrefs_Strings;  i < 44;  i++, fc++) {
 	
 		fc->msg = GetCatalogStr(DockBotPrefsCatalog, fc->id, (STRPTR) fc->msg);
     }

@@ -193,3 +193,11 @@ MSG_FR_ChooseBackground
 Elige una imagen de fondo
 ; Choose a background
 ;
+;
+; Padding around gadgets
+;
+MSG_MW_Padding
+Relleno
+; Padding
+;
+; ***NEW***

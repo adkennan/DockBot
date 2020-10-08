@@ -23,6 +23,8 @@ Changes:
 Version 1.11:
 
 * A Network Monitor for Roadshow contributed by flype. Awesome!
+* Requested locale.library version is now 38 as shipped with OS 3.0. Thanks Åsmund Nordel!
+* You can now control the amount of padding around gadgets.
 
 Version 1.10:
 
