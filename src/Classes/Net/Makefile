@@ -1,4 +1,3 @@
-
 LIBNAME=	DockNet
 VERSION=	1
 REVISION=	0

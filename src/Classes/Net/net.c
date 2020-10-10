@@ -54,7 +54,7 @@ BOOL OpenNetworkLib(VOID)
         return TRUE;
     }
 
-    DB_Printf(__METHOD__ "Opening Socket Lib...");
+    DEBUG(DB_Printf(__METHOD__ "Opening Socket Lib..."));
 
     if( nld->socketLib = OpenLibrary("bsdsocket.library", 4) )
     {
