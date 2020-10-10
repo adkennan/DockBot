@@ -50,7 +50,7 @@ BOOL OpenNetworkLib(VOID)
     struct NetLibData *nld = (struct NetLibData *)GetLibData();
 
     if( nld->socketLib ) {
-        DB_Printf(__METHOD__ "Socket Lib Available\n");
+        DEBUG(DB_Printf(__METHOD__ "Socket Lib Available\n"));
         return TRUE;
     }
 
@@ -58,13 +58,13 @@ BOOL OpenNetworkLib(VOID)
 
     if( nld->socketLib = OpenLibrary("bsdsocket.library", 4) )
     {
-        DB_Printf(__METHOD__ "Connected\n");
+        DEBUG(DB_Printf(__METHOD__ "Connected\n"));
 
         SocketBase = (struct Library *)nld->socketLib;
         return TRUE;
     }
 
-    DB_Printf(__METHOD__ "Failed\n");
+    DEBUG(DB_Printf(__METHOD__ "Failed\n"));
 
     return FALSE;
 }
